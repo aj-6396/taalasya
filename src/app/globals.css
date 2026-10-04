@@ -27,18 +27,30 @@ body {
 
 @media print {
   body {
-    background: #0f172a !important;
-    color: #f8fafc !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  header, footer, nav, .no-print, .print\:hidden {
+  header,
+  footer,
+  nav,
+  .no-print,
+  .print\:hidden {
     display: none !important;
   }
 
   .print\:max-w-none {
     max-width: 100% !important;
     width: 100% !important;
+  }
+
+  .ticket-print-page {
+    page-break-after: always;
+    break-after: page;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1.5px solid #0f172a !important;
   }
 }

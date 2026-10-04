@@ -109,10 +109,17 @@ export default function RegistrationForm() {
       const generatedTicketId =
         verifyData.ticketId || `TKT-${mockPaymentId.slice(-8).toUpperCase()}`;
 
+      const ticketIdsList =
+        verifyData.ticketIds && verifyData.ticketIds.length > 0
+          ? verifyData.ticketIds.join(",")
+          : generatedTicketId;
+
       // Redirect immediately to payment success page
       router.push(
         `/success?ticket_id=${encodeURIComponent(
           generatedTicketId
+        )}&ticket_ids=${encodeURIComponent(
+          ticketIdsList
         )}&payment_id=${encodeURIComponent(
           mockPaymentId
         )}&order_id=${encodeURIComponent(

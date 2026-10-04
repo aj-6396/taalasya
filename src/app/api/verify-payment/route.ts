@@ -63,53 +63,75 @@ export async function POST(req: NextRequest) {
 
     const supabase = getAdminSupabase();
 
-    // 1. Idempotency Check: check if ticket already created for this paymentId
+    // 1. Idempotency Check: check if tickets already created for this paymentId
     try {
-      const { data: existingTicket } = await supabase
+      const { data: existingTickets } = await supabase
         .from("tickets")
         .select("*")
-        .eq("paymentId", razorpay_payment_id)
-        .maybeSingle();
+        .eq("paymentId", razorpay_payment_id);
 
-      if (existingTicket) {
+      if (existingTickets && existingTickets.length > 0) {
         return NextResponse.json({
           success: true,
-          ticketId: existingTicket.ticketId,
-          ticket: existingTicket,
-          message: "Ticket already generated for this payment.",
+          ticketId: existingTickets[0].ticketId,
+          ticketIds: existingTickets.map((t: any) => t.ticketId),
+          tickets: existingTickets,
+          message: "Tickets already generated for this payment.",
         });
       }
     } catch (checkErr) {
       console.warn("[Verify Payment] Supabase idempotency check warning:", checkErr);
     }
 
-    // 2. Generate unique Ticket ID & Record
-    const ticketId = crypto.randomUUID();
-    const amount = Math.round(EVENT_CONFIG.priceInINR * Number(quantity || 1));
+    // 2. Multi-Ticket Loop: Generate exact quantity of unique UUID tickets
+    const ticketQuantity = Math.max(1, Number(quantity) || 1);
+    const generatedTickets: any[] = [];
+    const generatedTicketIds: string[] = [];
 
-    const ticketData = {
-      ticketId,
-      name: name || "Valued Attendee",
-      email: email || "",
-      phone: phone || "",
-      paymentId: razorpay_payment_id,
-      orderId: razorpay_order_id,
-      amount,
-      status: "Valid",
-      eventName: EVENT_CONFIG.name,
-      createdAt: new Date().toISOString(),
-    };
+    for (let i = 0; i < ticketQuantity; i++) {
+      const ticketId = crypto.randomUUID();
+      generatedTicketIds.push(ticketId);
+      generatedTickets.push({
+        ticketId,
+        ticketIndex: i + 1,
+        totalTickets: ticketQuantity,
+        name: name || "Valued Attendee",
+        email: email || "",
+        phone: phone || "",
+        paymentId: razorpay_payment_id,
+        orderId: razorpay_order_id,
+        amount: Math.round(EVENT_CONFIG.priceInINR),
+        status: "Valid",
+        eventName: EVENT_CONFIG.name,
+        createdAt: new Date().toISOString(),
+      });
+    }
 
-    // 3. Insert into Supabase
+    // 3. Batch Insert into Supabase
     try {
       const { error: insertError } = await supabase
         .from("tickets")
-        .insert([ticketData]);
+        .insert(
+          generatedTickets.map((t) => ({
+            ticketId: t.ticketId,
+            name: t.name,
+            email: t.email,
+            phone: t.phone,
+            paymentId: t.paymentId,
+            orderId: t.orderId,
+            amount: t.amount,
+            status: "Valid",
+            eventName: t.eventName,
+            createdAt: t.createdAt,
+          }))
+        );
 
       if (insertError) {
         console.error("[Verify Payment] Supabase insert error:", insertError);
       } else {
-        console.log(`[Verify Payment] Successfully saved ticket ${ticketId} to Supabase.`);
+        console.log(
+          `[Verify Payment] Successfully saved ${generatedTickets.length} tickets to Supabase.`
+        );
       }
     } catch (dbErr) {
       console.error("[Verify Payment] Database write error:", dbErr);
@@ -118,9 +140,11 @@ export async function POST(req: NextRequest) {
     // 4. Return confirmed ticket details to client
     return NextResponse.json({
       success: true,
-      ticketId,
-      ticket: ticketData,
-      message: "Payment verified successfully. Ticket generated.",
+      ticketId: generatedTicketIds[0],
+      ticketIds: generatedTicketIds,
+      tickets: generatedTickets,
+      quantity: ticketQuantity,
+      message: `Payment verified. ${ticketQuantity} individual passes generated.`,
     });
   } catch (err: any) {
     console.error("[Verify Payment] Unexpected server error:", err);
