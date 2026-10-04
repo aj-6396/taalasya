@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { getAdminFirestore } from "@/lib/firebase/admin";
-import { sendTicketConfirmationEmail } from "@/lib/email";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 import { EVENT_CONFIG } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
@@ -100,18 +99,18 @@ export async function POST(req: NextRequest) {
 
     let savedToDatabase = false;
 
-    // Write to Firebase Firestore using Admin SDK
+    // Write to Supabase tickets table
     try {
-      const db = getAdminFirestore();
-      const ticketsRef = db.collection("tickets");
+      const supabase = getAdminSupabase();
 
       // Idempotency check: see if paymentId already has a generated ticket
-      const existingTicketQuery = await ticketsRef
-        .where("paymentId", "==", paymentId)
-        .limit(1)
-        .get();
+      const { data: existingTicket } = await supabase
+        .from("tickets")
+        .select("ticketId")
+        .eq("paymentId", paymentId)
+        .maybeSingle();
 
-      if (!existingTicketQuery.empty) {
+      if (existingTicket) {
         console.log(`[Webhook] Ticket already generated for paymentId: ${paymentId}`);
         return NextResponse.json(
           { status: "ok", message: "Duplicate payment already processed" },
@@ -119,7 +118,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Store in Firestore with exact schema
+      // Store in Supabase
       const ticketData = {
         ticketId,
         name: attendeeName,
@@ -130,37 +129,27 @@ export async function POST(req: NextRequest) {
         amount: amountInRupees,
         status: "Valid",
         eventName: EVENT_CONFIG.name,
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
       };
 
-      await ticketsRef.doc(ticketId).set(ticketData);
-      savedToDatabase = true;
-      console.log(`[Webhook] Ticket ${ticketId} saved to Firestore successfully.`);
-    } catch (dbErr) {
-      console.error("[Webhook] Failed to save ticket to Firestore:", dbErr);
-      // We don't fail immediately if Firestore is unconfigured in test environment
-    }
+      const { error: insertErr } = await supabase
+        .from("tickets")
+        .insert([ticketData]);
 
-    // Send professional HTML email with embedded QR code
-    if (attendeeEmail) {
-      try {
-        await sendTicketConfirmationEmail({
-          toEmail: attendeeEmail,
-          recipientName: attendeeName,
-          ticketId,
-          paymentId,
-          amount: amountInRupees,
-          qrCodeUrl,
-        });
-      } catch (emailErr) {
-        console.error("[Webhook] Error dispatching ticket email:", emailErr);
+      if (insertErr) {
+        console.error("[Webhook] Supabase insert error:", insertErr);
+      } else {
+        savedToDatabase = true;
+        console.log(`[Webhook] Ticket ${ticketId} saved to Supabase successfully.`);
       }
+    } catch (dbErr) {
+      console.error("[Webhook] Failed to save ticket to Supabase:", dbErr);
     }
 
     return NextResponse.json(
       {
         status: "ok",
-        message: "Payment captured, ticket generated and dispatched",
+        message: "Payment captured and ticket generated",
         ticketId,
         savedToDatabase,
       },

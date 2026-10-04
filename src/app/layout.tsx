@@ -13,10 +13,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TAALSYA 2026 | Zero-Cost Event Ticketing & Rapid Entry System",
+  title: "JHOOM '26: Dance Fest cum Dandiya Night | Taalasya Dance Society — BHU",
   description:
-    "Official registration, instant QR e-ticket delivery, and rapid turnstile entry management powered by Next.js, Firebase Firestore, and Razorpay.",
-  keywords: ["event ticketing", "entry management", "QR scanner", "Razorpay", "Firebase"],
+    "Official event portal for JHOOM '26: Dance Fest cum Dandiya Night on 13th October 2026 at Swatantrata Bhawan, Banaras Hindu University (BHU). Passes starting at ₹299 only. Developed by Ambuj Singh.",
+  authors: [{ name: "Ambuj Singh" }],
+  keywords: [
+    "JHOOM 26",
+    "Dance Fest cum Dandiya Night",
+    "Dandiya Night BHU",
+    "Taalasya",
+    "Taalasya Dance Society",
+    "BHU Varanasi",
+    "Swatantrata Bhawan",
+    "Ambuj Singh",
+    "QR Ticket",
+  ],
 };
 
 export const viewport: Viewport = {

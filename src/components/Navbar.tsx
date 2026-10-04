@@ -8,28 +8,42 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-0.5 shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 p-0.5 shadow-lg shadow-purple-500/25 group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Ticket className="w-5 h-5 text-indigo-400 group-hover:text-pink-400 transition-colors" />
+                <Ticket className="w-5 h-5 text-pink-400 group-hover:text-purple-400 transition-colors" />
               </div>
             </div>
             <div>
-              <span className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-                TAALSYA
-              </span>
-              <span className="hidden sm:inline-block ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                2026 Conclave
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-lg sm:text-xl tracking-tight bg-gradient-to-r from-pink-400 via-purple-300 to-indigo-300 bg-clip-text text-transparent">
+                  TAALASYA
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                  BHU
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 tracking-wider font-semibold uppercase">
+                JHOOM &apos;26 • Dance Society
+              </p>
             </div>
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-4">
+            <a
+              href={EVENT_CONFIG.instagramUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-semibold text-slate-400 hover:text-pink-400 transition-colors hidden sm:inline-flex items-center gap-1.5"
+            >
+              <span>{EVENT_CONFIG.instagramHandle}</span>
+            </a>
+
             <Link
               href="/#register"
-              className="text-sm font-medium text-slate-300 hover:text-white transition-colors hidden md:inline-flex items-center gap-1.5"
+              className="text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition-colors hidden md:inline-flex items-center gap-1.5"
             >
-              <Sparkles className="w-4 h-4 text-purple-400" />
-              Get Passes
+              <Sparkles className="w-4 h-4 text-pink-400" />
+              Book Passes
             </Link>
 
             <Link

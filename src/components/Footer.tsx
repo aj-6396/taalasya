@@ -9,27 +9,38 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-pink-500 p-0.5">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-pink-500 to-indigo-500 p-0.5">
                 <div className="w-full h-full bg-slate-950 rounded-[7px] flex items-center justify-center">
-                  <Ticket className="w-4 h-4 text-indigo-400" />
+                  <Ticket className="w-4 h-4 text-pink-400" />
                 </div>
               </div>
-              <span className="font-bold text-white text-base tracking-tight">
-                TAALSYA 2026
-              </span>
+              <div>
+                <span className="font-extrabold text-white text-base tracking-tight block">
+                  TAALASYA DANCE SOCIETY
+                </span>
+                <span className="text-[11px] text-pink-400 font-semibold">
+                  Banaras Hindu University (BHU) • JHOOM &apos;26
+                </span>
+              </div>
             </div>
             <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
-              Zero-Cost Event Ticketing & Rapid Entry Management System powered by Next.js App Router, Firebase Firestore, and Razorpay standard checkout & webhooks.
+              Official digital ticketing &amp; gate entry portal for JHOOM &apos;26: Dance Fest cum Dandiya Night, hosted by Taalasya Dance Society, Banaras Hindu University (BHU), Varanasi.
             </p>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <Code2 className="w-4 h-4 text-purple-400" />
-              <span>Full-Stack Next.js Architecture</span>
+            <div className="flex flex-col gap-1 text-xs text-slate-500">
+              <div className="flex items-center gap-2">
+                <Code2 className="w-4 h-4 text-purple-400" />
+                <span>Powered by Next.js, Supabase &amp; Razorpay</span>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] text-indigo-300 font-medium pl-6">
+                <span>Developer:</span>
+                <span className="text-white font-semibold">{EVENT_CONFIG.developer}</span>
+              </div>
             </div>
           </div>
 
           <div className="space-y-3">
             <p className="text-xs font-bold uppercase tracking-wider text-slate-300">
-              Quick Links
+              Navigation
             </p>
             <ul className="space-y-2 text-xs">
               <li>
@@ -39,12 +50,22 @@ export default function Footer() {
               </li>
               <li>
                 <a href="#register" className="hover:text-white transition-colors">
-                  Registration & Passes
+                  Book Dandiya &amp; Dance Pass
                 </a>
               </li>
               <li>
                 <a href="#details" className="hover:text-white transition-colors">
-                  Schedule & FAQ
+                  Dandiya Night &amp; Venue
+                </a>
+              </li>
+              <li>
+                <a
+                  href={EVENT_CONFIG.instagramUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-pink-400 hover:text-pink-300 transition-colors"
+                >
+                  Instagram ({EVENT_CONFIG.instagramHandle})
                 </a>
               </li>
               <li>
@@ -58,15 +79,15 @@ export default function Footer() {
 
           <div className="space-y-3">
             <p className="text-xs font-bold uppercase tracking-wider text-slate-300">
-              Security & Verification
+              Security &amp; Gate Entry
             </p>
             <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 space-y-1.5">
               <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
                 <Shield className="w-3.5 h-3.5" />
-                <span>HMAC Verified Webhooks</span>
+                <span>Verified QR Admission</span>
               </div>
               <p className="text-[11px] text-slate-500 leading-normal">
-                Tickets are only written to Firestore upon strict Razorpay cryptographic signature verification.
+                Passes are stored securely in Supabase with cryptographic Razorpay verification. Each QR code is strictly single-use at turnstiles.
               </p>
             </div>
           </div>
@@ -74,8 +95,11 @@ export default function Footer() {
 
         <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>© 2026 {EVENT_CONFIG.organizer}. All rights reserved.</p>
-          <p className="flex items-center gap-1">
-            Engineered with <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" /> for seamless event entry.
+          <p className="flex items-center gap-1.5">
+            <span>Engineered with</span>
+            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+            <span>by</span>
+            <strong className="text-slate-200 font-semibold">{EVENT_CONFIG.developer}</strong>
           </p>
         </div>
       </div>

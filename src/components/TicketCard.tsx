@@ -36,7 +36,7 @@ export default function TicketCard({ ticket }: TicketCardProps) {
             <div className="flex items-center gap-2">
               <TicketIcon className="w-5 h-5 text-white" />
               <span className="font-extrabold tracking-wider text-sm uppercase">
-                Official Entry Pass
+                JHOOM &apos;26 PASS
               </span>
             </div>
             <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-black/30 backdrop-blur-sm border border-white/20">
@@ -46,7 +46,10 @@ export default function TicketCard({ ticket }: TicketCardProps) {
           <h3 className="text-xl sm:text-2xl font-black mt-3 tracking-tight">
             {EVENT_CONFIG.name}
           </h3>
-          <p className="text-xs text-white/80 mt-1 flex items-center gap-1.5">
+          <p className="text-[11px] font-medium text-pink-200 mt-0.5">
+            {EVENT_CONFIG.organizer}
+          </p>
+          <p className="text-xs text-white/80 mt-1.5 flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5" />
             {EVENT_CONFIG.date} • {EVENT_CONFIG.time}
           </p>
@@ -111,21 +114,26 @@ export default function TicketCard({ ticket }: TicketCardProps) {
             </div>
           </div>
 
-          <p className="text-[11px] text-slate-400 flex items-center justify-center gap-1.5 pt-1">
-            <Shield className="w-3.5 h-3.5 text-emerald-400" />
-            Present this QR code on your phone or print at the entrance.
-          </p>
+          <div className="space-y-1 pt-1">
+            <p className="text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-emerald-400" />
+              Present this QR code on your phone or print at the entrance.
+            </p>
+            <p className="text-[10px] text-slate-500 font-mono">
+              Developed by {EVENT_CONFIG.developer}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Action buttons */}
-      <div className="flex items-center justify-center gap-3 mt-6 print:hidden">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6 print:hidden">
         <button
           onClick={handlePrint}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all cursor-pointer shadow"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white text-xs font-bold border border-indigo-400/30 transition-all cursor-pointer shadow-lg shadow-purple-600/25 active:scale-95"
         >
-          <Printer className="w-4 h-4 text-indigo-400" />
-          <span>Print / Save as PDF</span>
+          <Download className="w-4 h-4 text-white animate-bounce" />
+          <span>Save Ticket as PDF / Print</span>
         </button>
       </div>
     </div>

@@ -200,21 +200,21 @@ export default function RegistrationForm() {
           <div className="p-6 sm:p-10">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-slate-800">
               <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-semibold mb-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/10 text-pink-400 text-xs font-semibold mb-2">
                   <Sparkles className="w-3.5 h-3.5" />
-                  Instant Digital Ticket
+                  JHOOM &apos;26 • Dance Fest cum Dandiya Night
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                  Attendee Registration
+                  Book Your Fest &amp; Dandiya Pass
                 </h2>
                 <p className="text-sm text-slate-400 mt-1">
-                  Fill in your details. Official QR pass will be emailed immediately upon checkout.
+                  Starting at ₹{pricePerTicket} only. Hosted by Taalasya Dance Society at Swatantrata Bhawan, BHU.
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-right min-w-[150px]">
                 <p className="text-xs text-slate-400 uppercase tracking-wider font-medium">
-                  Standard Pass
+                  Starting Price
                 </p>
                 <p className="text-2xl sm:text-3xl font-black text-white">
                   ₹{pricePerTicket}
@@ -284,7 +284,7 @@ export default function RegistrationForm() {
                       className="w-full px-4 py-3.5 rounded-xl bg-slate-950/70 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                     />
                   </div>
-                  <p className="text-[11px] text-slate-500">QR Ticket is dispatched to this email.</p>
+                  <p className="text-[11px] text-slate-500">Required for attendee registration & entry verification.</p>
                 </div>
               </div>
 
@@ -362,7 +362,7 @@ export default function RegistrationForm() {
                 ) : (
                   <>
                     <CreditCard className="w-5 h-5" />
-                    <span>Pay ₹{totalAmount} & Receive Ticket</span>
+                    <span>Pay ₹{totalAmount} & Get JHOOM &apos;26 Pass</span>
                   </>
                 )}
               </button>

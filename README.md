@@ -1,6 +1,6 @@
-# 🎟️ TAALSYA 2026: Zero-Cost Event Ticketing & Entry Management System
+# 🎟️ JHOOM '26: Dance Fest cum Dandiya Night — Taalasya Dance Society (BHU)
 
-A production-ready, full-stack event ticketing and rapid entry management web application built with **Next.js (App Router)**, **Tailwind CSS**, **Firebase Firestore**, and **Razorpay Standard Checkout & Webhooks**.
+A production-ready, full-stack event ticketing and rapid entry management web application built for **JHOOM '26: Dance Fest cum Dandiya Night** (13th October 2026 at Swatantrata Bhawan, BHU) organized by **Taalasya Dance Society (BHU)**. Starting at ₹299 only. Developed by **Ambuj Singh**.
 
 ---
 
@@ -26,9 +26,7 @@ A production-ready, full-stack event ticketing and rapid entry management web ap
     `/success?order_id=...`         `POST /api/webhook`
     • Confetti Animation            • Verifies `x-razorpay-signature` HMAC
     • Live Ticket Card Preview      • Generates UUID `ticketId`
-    • Instant Print / PDF Save      • Writes to Firestore (`status: 'Valid'`)
-                                    • Dispatches HTML Email via Nodemailer
-                                      with Embedded QR Code
+    • Save Ticket as PDF Prompt     • Writes to Supabase (`status: 'Valid'`)
 ```
 
 ```
@@ -44,7 +42,7 @@ A production-ready, full-stack event ticketing and rapid entry management web ap
                                |
                  Sends QR Ticket UUID to Backend
                                v
-               [ POST /api/verify-ticket (Admin SDK) ]
+               [ POST /api/verify-ticket (Supabase SDK) ]
               +----------------+----------------+
               |                                 |
        If status == 'Valid'              If status == 'Used'
@@ -59,33 +57,32 @@ A production-ready, full-stack event ticketing and rapid entry management web ap
 
 - **Framework:** Next.js (App Router with TypeScript & Turbopack)
 - **Styling:** Tailwind CSS (Modern dark mode, glassmorphism, responsive mobile-first UI)
-- **Database:** Firebase Firestore
-  - **Admin SDK (`firebase-admin`):** Secure serverless writes, idempotent webhook ticket creation, and atomic status updates.
-  - **Client SDK (`firebase`):** Read-only configuration for client verification.
+- **Database:** Supabase (`@supabase/supabase-js`)
+  - **Service Role SDK (`getAdminSupabase`):** Secure serverless writes, idempotent webhook ticket creation, and atomic status updates.
+  - **Client SDK (`getSupabaseClient`):** Client-side connectivity and data fetching.
 - **Payment Gateway:** Razorpay Standard Checkout (`checkout.js`) & HMAC verified Webhooks (`crypto`).
 - **QR Scanner:** `html5-qrcode` with live video stream, front/rear camera toggle, and fallback manual ticket ID lookup.
 - **Audio Feedback:** Web Audio API synthesizer for zero-dependency gate chimes (success fanfare, double-pulse warning buzzer).
-- **Email Service:** `nodemailer` with professional responsive HTML ticket template and dynamic QR code embed (`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${ticketId}`).
 - **Icons & Animation:** `lucide-react` & `canvas-confetti`.
 
 ---
 
-## 🗄️ Firestore Database Schema
+## 🗄️ Supabase Database Schema
 
-Collection: **`tickets`**
+Table: **`tickets`**
 
 | Field | Type | Description |
 |---|---|---|
-| `ticketId` | `String` (UUID v4) | Unique ticket identifier encoded in QR |
-| `name` | `String` | Attendee's full name |
-| `email` | `String` | Attendee's email address |
-| `phone` | `String` | Attendee's mobile/WhatsApp contact |
-| `paymentId` | `String` | Razorpay payment identifier (`pay_...`) |
-| `orderId` | `String` | Razorpay order identifier (`order_...`) |
-| `amount` | `Number` | Total paid in INR |
-| `status` | `String` | Default: `'Valid'`, updates to `'Used'` upon scan |
-| `createdAt` | `Timestamp` | Date and time payment was confirmed |
-| `usedAt` | `Timestamp` | (Optional) Date and time ticket was scanned at gate |
+| `ticketId` | `text` (UUID v4 / PRIMARY KEY) | Unique ticket identifier encoded in QR |
+| `name` | `text` | Attendee's full name |
+| `email` | `text` | Attendee's email address |
+| `phone` | `text` | Attendee's mobile/WhatsApp contact |
+| `paymentId` | `text` | Razorpay payment identifier (`pay_...`) |
+| `orderId` | `text` | Razorpay order identifier (`order_...`) |
+| `amount` | `integer` | Total paid in INR |
+| `status` | `text` | Default: `'Valid'`, updates to `'Used'` upon scan |
+| `createdAt` | `timestamp with time zone` | Date and time payment was confirmed |
+| `usedAt` | `timestamp with time zone` | (Optional) Date and time ticket was scanned at gate |
 
 ---
 
@@ -107,8 +104,8 @@ Fill in your credentials in [`.env.local`](file:///d:/taalsya/.env.local):
 ```env
 # 1. App Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_EVENT_NAME="TAALSYA 2026: Youth & Cultural Extravaganza"
-NEXT_PUBLIC_EVENT_PRICE=499
+NEXT_PUBLIC_EVENT_NAME="JHOOM '26 — Dance Fest cum Dandiya Night"
+NEXT_PUBLIC_EVENT_PRICE=299
 NEXT_PUBLIC_ADMIN_SCAN_PIN=1234
 ADMIN_SCAN_PIN=1234
 
@@ -118,25 +115,11 @@ RAZORPAY_KEY_ID=rzp_test_...
 RAZORPAY_KEY_SECRET=...
 RAZORPAY_WEBHOOK_SECRET=your_custom_webhook_secret
 
-# 3. Firebase Client SDK (Firebase Console -> Project Settings)
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSy...
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-app.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-app.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
-NEXT_PUBLIC_FIREBASE_APP_ID=...
-
-# 4. Firebase Admin SDK (Project Settings -> Service Accounts -> Generate New Private Key)
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project-id.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC...\n-----END PRIVATE KEY-----\n"
-
-# 5. Nodemailer / Gmail SMTP (https://myaccount.google.com/apppasswords)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-16-character-app-password
-SMTP_FROM="TAALSYA Conclave <tickets@taalsya.org>"
+# 3. Supabase Configuration (Supabase Dashboard -> Project Settings -> API)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key-here
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key-here
 ```
 
 ### 3. Run Development Server
