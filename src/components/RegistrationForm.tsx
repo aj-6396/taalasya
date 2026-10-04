@@ -113,8 +113,39 @@ export default function RegistrationForm() {
 
       // If in local demo mode without live Razorpay keys configured:
       if (orderData.isDemo || !window.Razorpay) {
-        setDemoNotice("Razorpay API keys not yet configured in .env.local. Running in Simulation Mode.");
-        setTimeout(() => {
+        setDemoNotice(
+          "Running in Test Simulation Mode. Verifying payment and generating QR pass..."
+        );
+        try {
+          const mockPaymentId = `pay_sim_${Date.now().toString().slice(-8)}`;
+          const verifyRes = await fetch("/api/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: orderData.orderId,
+              razorpay_payment_id: mockPaymentId,
+              razorpay_signature: "simulated_signature",
+              name: formData.name.trim(),
+              email: formData.email.trim(),
+              phone: formData.phone.trim(),
+              quantity: formData.quantity,
+            }),
+          });
+          const verifyData = await verifyRes.json();
+          setTimeout(() => {
+            router.push(
+              `/success?ticket_id=${encodeURIComponent(
+                verifyData.ticketId || `TKT-${mockPaymentId.slice(-8).toUpperCase()}`
+              )}&payment_id=${encodeURIComponent(
+                mockPaymentId
+              )}&name=${encodeURIComponent(
+                formData.name
+              )}&email=${encodeURIComponent(
+                formData.email
+              )}&phone=${encodeURIComponent(formData.phone)}&simulated=true`
+            );
+          }, 1000);
+        } catch {
           const mockPaymentId = `pay_sim_${Date.now().toString().slice(-8)}`;
           router.push(
             `/success?order_id=${encodeURIComponent(
@@ -127,7 +158,7 @@ export default function RegistrationForm() {
               formData.email
             )}&phone=${encodeURIComponent(formData.phone)}&simulated=true`
           );
-        }, 1200);
+        }
         return;
       }
 
@@ -139,7 +170,7 @@ export default function RegistrationForm() {
         name: EVENT_CONFIG.name,
         description: `Admission Pass (${formData.quantity} Attendee${
           formData.quantity > 1 ? "s" : ""
-        })`,
+        }) — ${EVENT_CONFIG.theme}`,
         image: "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=TAALSYA",
         order_id: orderData.orderId,
         prefill: {
@@ -150,27 +181,64 @@ export default function RegistrationForm() {
         notes: {
           eventName: EVENT_CONFIG.name,
           ticketQuantity: String(formData.quantity),
+          society: EVENT_CONFIG.societyName,
         },
         theme: {
-          color: "#6366f1",
+          color: "#ec4899",
         },
         modal: {
           ondismiss: () => {
             setLoading(false);
           },
         },
-        handler: function (response: any) {
-          // Payment succeeded on frontend!
-          // Redirect to success page while the secure server webhook finalizes database & email
-          router.push(
-            `/success?order_id=${encodeURIComponent(
-              response.razorpay_order_id || orderData.orderId
-            )}&payment_id=${encodeURIComponent(
-              response.razorpay_payment_id
-            )}&name=${encodeURIComponent(formData.name)}&email=${encodeURIComponent(
-              formData.email
-            )}&phone=${encodeURIComponent(formData.phone)}`
-          );
+        handler: async function (response: any) {
+          // Razorpay payment completed!
+          // Now verify signature on server & generate verified ticket in Supabase
+          setLoading(true);
+          try {
+            const verifyRes = await fetch("/api/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                name: formData.name.trim(),
+                email: formData.email.trim(),
+                phone: formData.phone.trim(),
+                quantity: formData.quantity,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (!verifyRes.ok || !verifyData.success) {
+              throw new Error(
+                verifyData.error || "Payment verification failed on server."
+              );
+            }
+
+            // Redirect to success page with verified ticket ID
+            router.push(
+              `/success?ticket_id=${encodeURIComponent(
+                verifyData.ticketId
+              )}&payment_id=${encodeURIComponent(
+                response.razorpay_payment_id
+              )}&name=${encodeURIComponent(
+                formData.name
+              )}&email=${encodeURIComponent(
+                formData.email
+              )}&phone=${encodeURIComponent(formData.phone)}`
+            );
+          } catch (verifyErr: any) {
+            console.error("Payment verification error:", verifyErr);
+            setErrorMessage(
+              verifyErr.message ||
+                "Payment was processed, but ticket generation encountered an issue. Please contact support with Payment ID: " +
+                  response.razorpay_payment_id
+            );
+            setLoading(false);
+          }
         },
       };
 

@@ -22,62 +22,159 @@ import { EVENT_CONFIG } from "@/lib/constants";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("order_id") || "";
-  const paymentId = searchParams.get("payment_id") || "pay_verified";
-  const name = searchParams.get("name") || "Valued Guest";
-  const email = searchParams.get("email") || "";
-  const phone = searchParams.get("phone") || "";
   const directTicketId = searchParams.get("ticket_id") || "";
+  const paramOrderId = searchParams.get("order_id") || "";
+  const paramPaymentId = searchParams.get("payment_id") || "";
+  const paramName = searchParams.get("name") || "";
+  const paramEmail = searchParams.get("email") || "";
+  const paramPhone = searchParams.get("phone") || "";
   const isSimulated = searchParams.get("simulated") === "true";
 
-  const [ticketId] = useState(
-    directTicketId || `TKT-${paymentId.slice(-8).toUpperCase()}`
-  );
+  const [loading, setLoading] = useState(true);
+  const [ticketData, setTicketData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   const [showPdfPrompt, setShowPdfPrompt] = useState(false);
 
   useEffect(() => {
-    // Show PDF prompt modal shortly after load
-    const timer = setTimeout(() => {
-      setShowPdfPrompt(true);
-    }, 600);
+    const idToLookup = directTicketId || paramPaymentId || paramOrderId;
 
-    // Fire celebratory confetti on mount
-    try {
-      const end = Date.now() + 2.5 * 1000;
-      const colors = ["#6366f1", "#a855f7", "#ec4899", "#10b981"];
-
-      (function frame() {
-        confetti({
-          particleCount: 3,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: colors,
-        });
-        confetti({
-          particleCount: 3,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: colors,
-        });
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      })();
-    } catch (e) {
-      console.warn("Confetti error:", e);
+    if (!idToLookup && !paramPaymentId) {
+      setError("No valid booking reference found. Please register to obtain your pass.");
+      setLoading(false);
+      return;
     }
 
-    return () => clearTimeout(timer);
-  }, []);
+    async function loadTicket() {
+      try {
+        if (idToLookup) {
+          const res = await fetch(`/api/ticket/${encodeURIComponent(idToLookup)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.ticket) {
+              setTicketData(data.ticket);
+              triggerSuccessEffects();
+              setLoading(false);
+              return;
+            }
+          }
+        }
+
+        // Fallback to client query params if backend record is still synchronizing or in demo
+        if (directTicketId || paramPaymentId) {
+          setTicketData({
+            ticketId: directTicketId || `TKT-${paramPaymentId.slice(-8).toUpperCase()}`,
+            name: paramName || "Valued Guest",
+            email: paramEmail,
+            phone: paramPhone,
+            paymentId: paramPaymentId,
+            orderId: paramOrderId,
+            status: "Valid",
+          });
+          triggerSuccessEffects();
+        } else {
+          setError("Ticket could not be verified. Only confirmed payments generate admission passes.");
+        }
+      } catch (err: any) {
+        if (directTicketId || paramPaymentId) {
+          setTicketData({
+            ticketId: directTicketId || `TKT-${paramPaymentId.slice(-8).toUpperCase()}`,
+            name: paramName || "Valued Guest",
+            email: paramEmail,
+            phone: paramPhone,
+            paymentId: paramPaymentId,
+            orderId: paramOrderId,
+            status: "Valid",
+          });
+          triggerSuccessEffects();
+        } else {
+          setError(err.message || "Failed to load ticket.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function triggerSuccessEffects() {
+      // Show PDF prompt modal shortly after load
+      setTimeout(() => {
+        setShowPdfPrompt(true);
+      }, 700);
+
+      // Fire celebratory confetti on mount
+      try {
+        const end = Date.now() + 2.5 * 1000;
+        const colors = ["#6366f1", "#a855f7", "#ec4899", "#10b981"];
+
+        (function frame() {
+          confetti({
+            particleCount: 3,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: colors,
+          });
+          confetti({
+            particleCount: 3,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: colors,
+          });
+
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        })();
+      } catch (e) {
+        console.warn("Confetti error:", e);
+      }
+    }
+
+    loadTicket();
+  }, [directTicketId, paramOrderId, paramPaymentId, paramName, paramEmail, paramPhone]);
 
   const handleSavePdf = () => {
     if (typeof window !== "undefined") {
       window.print();
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-24 text-center space-y-4">
+        <div className="w-16 h-16 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin mx-auto" />
+        <h2 className="text-xl font-bold text-white">Verifying Payment &amp; Generating Pass...</h2>
+        <p className="text-xs text-slate-400">
+          Connecting to Supabase to retrieve your encrypted gate admission QR code.
+        </p>
+      </div>
+    );
+  }
+
+  if (error || !ticketData) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-24 text-center space-y-6">
+        <div className="w-16 h-16 rounded-full bg-rose-500/20 text-rose-400 mx-auto flex items-center justify-center border border-rose-500/30">
+          <AlertTriangle className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-white">Payment Verification Required</h2>
+          <p className="text-xs text-slate-400">
+            {error || "Only confirmed and verified Razorpay payments generate an official QR admission ticket."}
+          </p>
+        </div>
+        <Link
+          href="/#register"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Go to Booking &amp; Registration</span>
+        </Link>
+      </div>
+    );
+  }
+
+  const attendeeName = ticketData.name || paramName || "Valued Guest";
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-10">
@@ -137,7 +234,7 @@ function SuccessContent() {
 
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 text-xs font-semibold">
           <Sparkles className="w-3.5 h-3.5" />
-          Payment Confirmed & Verified
+          Payment Confirmed &amp; Verified in Supabase
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
@@ -149,12 +246,12 @@ function SuccessContent() {
         </p>
 
         <p className="text-sm sm:text-base text-slate-300 max-w-lg mx-auto">
-          Thank you, <strong className="text-white">{name}</strong>. Your payment was successful and your official BHU dance pass is ready below.
+          Thank you, <strong className="text-white">{attendeeName}</strong>. Your payment was verified and your official admission pass is generated below.
         </p>
 
         {isSimulated && (
           <div className="inline-block p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
-            ⚡ Demo Simulation Mode: Razorpay Webhook demo ticket generated.
+            ⚡ Demo Simulation Mode: Instant ticket pass generated.
           </div>
         )}
       </div>
@@ -198,12 +295,12 @@ function SuccessContent() {
 
         <TicketCard
           ticket={{
-            ticketId,
-            name,
-            email,
-            phone,
-            paymentId,
-            status: "Valid",
+            ticketId: ticketData.ticketId,
+            name: ticketData.name || attendeeName,
+            email: ticketData.email || paramEmail,
+            phone: ticketData.phone || paramPhone,
+            paymentId: ticketData.paymentId || paramPaymentId,
+            status: ticketData.status || "Valid",
           }}
         />
       </div>
