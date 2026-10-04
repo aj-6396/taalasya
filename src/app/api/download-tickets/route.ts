@@ -419,7 +419,7 @@ export async function POST(req: NextRequest) {
             .fontSize(8)
             .font("Helvetica-Oblique")
             .text(
-              `Developer Credits: ${EVENT_CONFIG.developer}  |  Organized by ${organizer}`,
+              `Organized by ${organizer}  •  Swatantrata Bhawan, BHU`,
               leftColX + 10,
               footerTop + 50,
               { align: "center", width: 595.28 - 140 }

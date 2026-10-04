@@ -155,13 +155,10 @@ export default function TicketCard({
             </div>
           </div>
 
-          <div className="space-y-1 pt-1">
+          <div className="pt-1">
             <p className="text-[11px] text-slate-400 flex items-center justify-center gap-1.5 print:text-slate-600">
               <Shield className="w-3.5 h-3.5 text-emerald-400 print:text-emerald-700" />
               Strictly single-person entry per QR code. Non-transferable once scanned.
-            </p>
-            <p className="text-[10px] text-slate-500 font-mono print:text-slate-600">
-              Developed by {EVENT_CONFIG.developer}
             </p>
           </div>
         </div>
