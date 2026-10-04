@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { EVENT_CONFIG } from "@/lib/constants";
+import { generateShortTicketId } from "@/lib/ticketId";
 
 export async function POST(req: NextRequest) {
   try {
@@ -90,7 +91,7 @@ export async function POST(req: NextRequest) {
     const generatedTicketIds: string[] = [];
 
     for (let i = 0; i < ticketQuantity; i++) {
-      const ticketId = crypto.randomUUID();
+      const ticketId = generateShortTicketId();
       generatedTicketIds.push(ticketId);
 
       const attendeeInfo = (Array.isArray(attendees) && attendees[i]) || {};

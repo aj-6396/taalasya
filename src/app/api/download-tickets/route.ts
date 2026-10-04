@@ -4,6 +4,7 @@ import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { EVENT_CONFIG } from "@/lib/constants";
+import { generateShortTicketId } from "@/lib/ticketId";
 
 export async function POST(req: NextRequest) {
   try {
@@ -49,8 +50,8 @@ export async function POST(req: NextRequest) {
     }> = [];
 
     for (let i = 0; i < ticketQuantity; i++) {
-      const ticketId = crypto.randomUUID();
       const attendeeInfo = (Array.isArray(attendees) && attendees[i]) || {};
+      const ticketId = attendeeInfo.ticketId || generateShortTicketId();
       const attendeeName =
         attendeeInfo.name?.trim() ||
         (i === 0 ? buyerName : `Guest ${i + 1} (${buyerName})`);

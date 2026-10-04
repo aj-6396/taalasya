@@ -569,30 +569,35 @@ export default function Scanner() {
         </button>
 
         {showManualInput && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (manualTicketId.trim()) {
-                verifyTicketId(manualTicketId.trim());
-              }
-            }}
-            className="flex gap-2 pt-2"
-          >
-            <input
-              type="text"
-              placeholder="Paste or type Ticket UUID..."
-              value={manualTicketId}
-              onChange={(e) => setManualTicketId(e.target.value)}
-              className="flex-1 px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <button
-              type="submit"
-              disabled={isProcessing || !manualTicketId.trim()}
-              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-colors disabled:opacity-50 cursor-pointer"
+          <div className="pt-2 space-y-2">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (manualTicketId.trim()) {
+                  verifyTicketId(manualTicketId.trim());
+                }
+              }}
+              className="flex gap-2"
             >
-              Verify
-            </button>
-          </form>
+              <input
+                type="text"
+                placeholder="Enter short code (e.g. 7K2M or JHM-7K2M)..."
+                value={manualTicketId}
+                onChange={(e) => setManualTicketId(e.target.value.toUpperCase())}
+                className="flex-1 px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <button
+                type="submit"
+                disabled={isProcessing || !manualTicketId.trim()}
+                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Verify
+              </button>
+            </form>
+            <p className="text-[11px] text-slate-500 px-1">
+              Tip: Volunteers can enter just the 4-char suffix (e.g. <span className="text-indigo-400 font-mono">7K2M</span>) or full code (<span className="text-indigo-400 font-mono">JHM-7K2M</span>).
+            </p>
+          </div>
         )}
       </div>
 

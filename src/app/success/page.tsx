@@ -20,6 +20,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TicketCard from "@/components/TicketCard";
 import { EVENT_CONFIG } from "@/lib/constants";
+import { generateShortTicketId } from "@/lib/ticketId";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -66,7 +67,7 @@ function SuccessContent() {
         // Fallback to client query params if backend record is still synchronizing or in demo
         if (directTicketId || paramPaymentId) {
           setTicketData({
-            ticketId: directTicketId || `TKT-${paramPaymentId.slice(-8).toUpperCase()}`,
+            ticketId: directTicketId || generateShortTicketId(),
             name: paramName || "Valued Guest",
             email: paramEmail,
             phone: paramPhone,
@@ -81,7 +82,7 @@ function SuccessContent() {
       } catch (err: any) {
         if (directTicketId || paramPaymentId) {
           setTicketData({
-            ticketId: directTicketId || `TKT-${paramPaymentId.slice(-8).toUpperCase()}`,
+            ticketId: directTicketId || generateShortTicketId(),
             name: paramName || "Valued Guest",
             email: paramEmail,
             phone: paramPhone,
@@ -157,9 +158,7 @@ function SuccessContent() {
 
   const allTicketIds: string[] = [...rawTicketIds];
   while (allTicketIds.length < quantity) {
-    allTicketIds.push(
-      `TKT-${(paramPaymentId || "PAY").slice(-4).toUpperCase()}-${(allTicketIds.length + 1).toString().padStart(2, "0")}`
-    );
+    allTicketIds.push(generateShortTicketId());
   }
 
   const allTickets = allTicketIds.map((tId, idx) => {

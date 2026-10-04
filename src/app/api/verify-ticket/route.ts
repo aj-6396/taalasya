@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSupabase } from "@/lib/supabase/admin";
+import { normalizeTicketLookup } from "@/lib/ticketId";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,13 +23,14 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanTicketId = ticketId.trim();
+    const candidateIds = normalizeTicketLookup(cleanTicketId);
 
     try {
       const supabase = getAdminSupabase();
       const { data: ticketData, error: fetchErr } = await supabase
         .from("tickets")
         .select("*")
-        .eq("ticketId", cleanTicketId)
+        .in("ticketId", candidateIds)
         .maybeSingle();
 
       if (fetchErr || !ticketData) {
@@ -78,7 +80,7 @@ export async function POST(req: NextRequest) {
         await supabase
           .from("tickets")
           .update({ status: "Used", usedAt })
-          .eq("ticketId", cleanTicketId);
+          .eq("ticketId", ticketData.ticketId);
 
         return NextResponse.json(
           {

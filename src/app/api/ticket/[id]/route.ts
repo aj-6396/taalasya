@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSupabase } from "@/lib/supabase/admin";
+import { normalizeTicketLookup } from "@/lib/ticketId";
 
 export async function GET(
   req: NextRequest,
@@ -13,10 +14,17 @@ export async function GET(
 
     try {
       const supabase = getAdminSupabase();
+      const candidateIds = normalizeTicketLookup(id);
+      const orClauses = [
+        ...candidateIds.map((cid) => `ticketId.eq.${cid}`),
+        `paymentId.eq.${id}`,
+        `orderId.eq.${id}`,
+      ].join(",");
+
       const { data: ticket, error } = await supabase
         .from("tickets")
         .select("*")
-        .or(`ticketId.eq.${id},paymentId.eq.${id},orderId.eq.${id}`)
+        .or(orClauses)
         .maybeSingle();
 
       if (error || !ticket) {
@@ -36,7 +44,16 @@ export async function GET(
         return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
       }
 
-      return NextResponse.json({ ticket });
+      // If part of an order with multiple passes, return all
+      const { data: allTickets } = await supabase
+        .from("tickets")
+        .select("*")
+        .or(`orderId.eq.${ticket.orderId},paymentId.eq.${ticket.paymentId}`);
+
+      return NextResponse.json({
+        ticket,
+        tickets: allTickets && allTickets.length > 0 ? allTickets : [ticket],
+      });
     } catch (err: any) {
       // In demo test mode:
       if (id.startsWith("demo_") || id.startsWith("order_demo_")) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { EVENT_CONFIG } from "@/lib/constants";
+import { generateShortTicketId } from "@/lib/ticketId";
 
 export async function POST(req: NextRequest) {
   try {
@@ -91,8 +92,8 @@ export async function POST(req: NextRequest) {
       console.warn("[Webhook] Attendee email not found in payment entity or notes:", paymentEntity);
     }
 
-    // Generate unique Ticket ID (UUID v4)
-    const ticketId = crypto.randomUUID();
+    // Generate short human-friendly Ticket ID
+    const ticketId = generateShortTicketId();
 
     // Generate dynamic QR Code URL
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${ticketId}`;

@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { EVENT_CONFIG } from "@/lib/constants";
+import { generateShortTicketId } from "@/lib/ticketId";
 
 declare global {
   interface Window {
@@ -146,7 +147,7 @@ export default function RegistrationForm() {
 
       const verifyData = await verifyRes.json();
       const generatedTicketId =
-        verifyData.ticketId || `TKT-${mockPaymentId.slice(-8).toUpperCase()}`;
+        verifyData.ticketId || generateShortTicketId();
 
       const ticketIdsList =
         verifyData.ticketIds && verifyData.ticketIds.length > 0
@@ -177,8 +178,9 @@ export default function RegistrationForm() {
       console.error("Payment processing error:", err);
       // Fallback redirect with generated pass
       const mockPaymentId = `pay_${Date.now().toString().slice(-8)}`;
+      const fallbackTicketId = generateShortTicketId();
       router.push(
-        `/success?ticket_id=TKT-${mockPaymentId.slice(-8).toUpperCase()}&payment_id=${mockPaymentId}&name=${encodeURIComponent(
+        `/success?ticket_id=${fallbackTicketId}&payment_id=${mockPaymentId}&name=${encodeURIComponent(
           formData.name.trim()
         )}&email=${encodeURIComponent(
           formData.email.trim()
