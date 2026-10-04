@@ -5,14 +5,6 @@ import QRCode from "qrcode";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { EVENT_CONFIG } from "@/lib/constants";
 
-// Optional: If Firebase Admin SDK is installed and configured in your project:
-// import admin from "firebase-admin";
-// if (!admin.apps.length) {
-//   admin.initializeApp({
-//     credential: admin.credential.cert({ ... }),
-//   });
-// }
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -24,6 +16,7 @@ export async function POST(req: NextRequest) {
       quantity = 1,
       email = "",
       phone = "",
+      attendees = [],
     } = body;
 
     const ticketQuantity = Math.max(1, Number(quantity) || 1);
@@ -35,13 +28,14 @@ export async function POST(req: NextRequest) {
     const organizer = eventDetails.organizer || EVENT_CONFIG.organizer;
 
     // =========================================================================
-    // 2. Multi-Ticket Loop & Database Insertion
+    // 1. Multi-Ticket Setup: Each attendee gets their own name & ticket ID
     // =========================================================================
     const tickets: Array<{
       ticketId: string;
       ticketIndex: number;
       totalTickets: number;
       name: string;
+      buyerName: string;
       email: string;
       phone: string;
       paymentId: string;
@@ -56,13 +50,21 @@ export async function POST(req: NextRequest) {
 
     for (let i = 0; i < ticketQuantity; i++) {
       const ticketId = crypto.randomUUID();
+      const attendeeInfo = (Array.isArray(attendees) && attendees[i]) || {};
+      const attendeeName =
+        attendeeInfo.name?.trim() ||
+        (i === 0 ? buyerName : `Guest ${i + 1} (${buyerName})`);
+      const attendeeEmail = attendeeInfo.email?.trim() || email || "";
+      const attendeePhone = attendeeInfo.phone?.trim() || phone || "";
+
       tickets.push({
         ticketId,
         ticketIndex: i + 1,
         totalTickets: ticketQuantity,
-        name: buyerName,
-        email: email || "",
-        phone: phone || "",
+        name: attendeeName,
+        buyerName,
+        email: attendeeEmail,
+        phone: attendeePhone,
         paymentId,
         orderId,
         status: "Valid",
@@ -95,12 +97,13 @@ export async function POST(req: NextRequest) {
       console.warn("[download-tickets] Database insertion note:", sbErr);
     }
 
-    // --- Firebase Admin Code Snippet (as requested) ---
+    // --- Firebase Admin Code Snippet ---
     // If you are using Firebase Admin SDK:
     // const firebasePromises = tickets.map((t) =>
     //   admin.firestore().collection("tickets").doc(t.ticketId).set({
     //     ticketId: t.ticketId,
-    //     buyerName: t.name,
+    //     buyerName: t.buyerName,
+    //     attendeeName: t.name,
     //     email: t.email,
     //     phone: t.phone,
     //     paymentId: t.paymentId,
@@ -115,7 +118,7 @@ export async function POST(req: NextRequest) {
     // await Promise.all(firebasePromises);
 
     // =========================================================================
-    // 3. Multi-Page PDF Generation (Server-Side using PDFKit & QRCode)
+    // 2. Multi-Page PDF Generation (Server-Side with PDFKit & QRCode)
     // =========================================================================
     const pdfBuffer = await new Promise<Buffer>(async (resolve, reject) => {
       try {
@@ -125,10 +128,9 @@ export async function POST(req: NextRequest) {
           margin: 0,
           autoFirstPage: true,
           info: {
-            Title: `${eventName} - Admission Passes`,
+            Title: `${eventName} - Official Passes`,
             Author: "Taalasya Dance Society (BHU)",
-            Subject: "Official Event Tickets",
-            Keywords: "JHOOM, Dandiya, BHU, Taalasya, Ticket",
+            Subject: "Official Gate Entry Tickets",
           },
         });
 
@@ -143,7 +145,7 @@ export async function POST(req: NextRequest) {
           // Generate zero-latency high-resolution QR Code Buffer
           const qrBuffer = await QRCode.toBuffer(currentTicket.ticketId, {
             type: "png",
-            width: 220,
+            width: 200,
             margin: 1,
             errorCorrectionLevel: "M",
             color: {
@@ -155,118 +157,134 @@ export async function POST(req: NextRequest) {
           // Pure white background
           doc.rect(0, 0, 595.28, 841.89).fill("#FFFFFF");
 
-          // Elegant Outer Ticket Border
+          // Outer Ticket Boundary (Crisp dark border on white sheet)
           doc
-            .roundedRect(36, 36, 523.28, 769.89, 16)
+            .roundedRect(36, 30, 523.28, 780, 14)
             .lineWidth(1.5)
             .strokeColor("#0f172a")
             .stroke();
 
-          // Inner Decorative Header Strip (Dark Indigo)
+          // Header Box (Dark Indigo block at top)
+          const headerBoxY = 40;
+          const headerBoxHeight = 115;
           doc
-            .roundedRect(44, 44, 507.28, 95, 12)
+            .roundedRect(44, headerBoxY, 507.28, headerBoxHeight, 10)
             .fillAndStroke("#0f172a", "#0f172a");
 
-          // Header Text Elements
+          // 1. Badge Top inside Header
+          const badgeText =
+            currentTicket.totalTickets > 1
+              ? `★ OFFICIAL ADMISSION PASS • PASS ${currentTicket.ticketIndex} OF ${currentTicket.totalTickets} ★`
+              : "★ OFFICIAL ADMISSION PASS ★";
+
           doc
             .fillColor("#ec4899")
-            .fontSize(10)
+            .fontSize(9)
             .font("Helvetica-Bold")
-            .text("★ OFFICIAL ADMISSION PASS ★", 56, 58, {
+            .text(badgeText, 54, headerBoxY + 12, {
               align: "center",
-              width: 483.28,
+              width: 487.28,
             });
 
+          // 2. Event Title (Carefully sized to avoid multi-line overflow)
           doc
             .fillColor("#FFFFFF")
-            .fontSize(22)
+            .fontSize(17)
             .font("Helvetica-Bold")
-            .text(eventName, 56, 74, {
+            .text(eventName, 54, headerBoxY + 30, {
               align: "center",
-              width: 483.28,
+              width: 487.28,
+              lineGap: 2,
             });
 
+          // 3. Organizer (Positioned safely near the bottom of header box)
           doc
             .fillColor("#cbd5e1")
-            .fontSize(10)
+            .fontSize(9)
             .font("Helvetica")
-            .text(organizer, 56, 106, {
+            .text(organizer, 54, headerBoxY + 86, {
               align: "center",
-              width: 483.28,
+              width: 487.28,
             });
 
-          // Single-Entry Highlighting Badge (Yellow / Amber Pill)
+          // Yellow Badge: "1 QR CODE = 1 ENTRY ONLY"
+          const pillY = 168;
+          const pillWidth = 220;
+          const pillX = (595.28 - pillWidth) / 2;
           doc
-            .roundedRect(197.64, 150, 200, 26, 13)
+            .roundedRect(pillX, pillY, pillWidth, 26, 13)
             .fillAndStroke("#fef3c7", "#f59e0b");
 
           doc
             .fillColor("#92400e")
-            .fontSize(10)
+            .fontSize(9.5)
             .font("Helvetica-Bold")
-            .text("1 QR CODE = 1 ENTRY ONLY", 197.64, 158, {
+            .text("1 QR CODE = 1 ENTRY ONLY", pillX, pillY + 8, {
               align: "center",
-              width: 200,
+              width: pillWidth,
             });
 
-          // Central QR Code Container Box
+          // QR Code Card Container
+          const qrBoxY = 204;
+          const qrBoxSize = 210;
+          const qrBoxX = (595.28 - qrBoxSize) / 2;
           doc
-            .roundedRect(177.64, 190, 240, 240, 16)
+            .roundedRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 12)
             .lineWidth(1)
             .strokeColor("#e2e8f0")
             .fillAndStroke("#ffffff", "#e2e8f0");
 
-          // Centrally Embed QR Code
-          doc.image(qrBuffer, 187.64, 200, {
-            width: 220,
-            height: 220,
+          // Draw QR Code centered inside the card
+          doc.image(qrBuffer, qrBoxX + 10, qrBoxY + 10, {
+            width: 190,
+            height: 190,
             align: "center",
           });
 
-          // Unique Gate Ticket ID Under QR
+          // Unique Gate Ticket ID Text under QR
           doc
             .fillColor("#64748b")
-            .fontSize(9)
+            .fontSize(8.5)
             .font("Helvetica")
-            .text("UNIQUE GATE TICKET ID (SCAN READY)", 56, 440, {
+            .text("UNIQUE GATE TICKET ID (SCAN READY)", 54, 426, {
               align: "center",
-              width: 483.28,
+              width: 487.28,
             });
 
           doc
             .fillColor("#0f172a")
-            .fontSize(11)
+            .fontSize(10.5)
             .font("Courier-Bold")
-            .text(currentTicket.ticketId, 56, 454, {
+            .text(currentTicket.ticketId, 54, 439, {
               align: "center",
-              width: 483.28,
+              width: 487.28,
             });
 
-          // Perforation Line with Scissor Indicator
+          // Scissor Perforation Cut Line
           doc
             .dash(5, { space: 4 })
-            .moveTo(56, 485)
-            .lineTo(539.28, 485)
+            .moveTo(54, 464)
+            .lineTo(541.28, 464)
             .strokeColor("#94a3b8")
             .stroke()
             .undash();
 
           doc
             .fillColor("#94a3b8")
-            .fontSize(8)
+            .fontSize(7.5)
             .font("Helvetica")
-            .text("✂ CUT OR FOLD HERE FOR GATE SCANNING ✂", 56, 492, {
+            .text("✂ CUT OR FOLD HERE FOR GATE SCANNING ✂", 54, 470, {
               align: "center",
-              width: 483.28,
+              width: 487.28,
             });
 
-          // Ticket Metadata Grid Table
-          const tableTop = 515;
-          const leftColX = 65;
-          const rightColX = 310;
-          const colWidth = 220;
+          // Metadata Grid Table (Clean 2-Column Layout)
+          const tableTop = 490;
+          const leftColX = 60;
+          const rightColX = 305;
+          const colWidth = 230;
 
-          // Box 1: Attendee Name & Pass Counter
+          // Box 1: Attendee / Pass Holder Name (Individual!)
           doc
             .roundedRect(leftColX, tableTop, colWidth, 54, 8)
             .fillAndStroke("#f8fafc", "#e2e8f0");
@@ -275,7 +293,7 @@ export async function POST(req: NextRequest) {
             .fillColor("#64748b")
             .fontSize(8)
             .font("Helvetica-Bold")
-            .text("ATTENDEE / BUYER", leftColX + 12, tableTop + 10);
+            .text("ATTENDEE / TICKET HOLDER", leftColX + 12, tableTop + 9);
 
           doc
             .fillColor("#0f172a")
@@ -286,7 +304,7 @@ export async function POST(req: NextRequest) {
               ellipsis: true,
             });
 
-          // Box 2: Pass Count (e.g. Pass 1 of 3)
+          // Box 2: Pass Count
           doc
             .roundedRect(rightColX, tableTop, colWidth, 54, 8)
             .fillAndStroke("#f8fafc", "#e2e8f0");
@@ -295,11 +313,11 @@ export async function POST(req: NextRequest) {
             .fillColor("#64748b")
             .fontSize(8)
             .font("Helvetica-Bold")
-            .text("PASS NUMBER", rightColX + 12, tableTop + 10);
+            .text("PASS NUMBER", rightColX + 12, tableTop + 9);
 
           doc
-            .fillColor("#6366f1")
-            .fontSize(13)
+            .fillColor("#4338ca")
+            .fontSize(12)
             .font("Helvetica-Bold")
             .text(
               `Pass ${currentTicket.ticketIndex} of ${currentTicket.totalTickets}`,
@@ -307,8 +325,8 @@ export async function POST(req: NextRequest) {
               tableTop + 24
             );
 
-          // Box 3: Date & Time
-          const row2Top = tableTop + 64;
+          // Box 3: Event Date & Time
+          const row2Top = tableTop + 62;
           doc
             .roundedRect(leftColX, row2Top, colWidth, 54, 8)
             .fillAndStroke("#f8fafc", "#e2e8f0");
@@ -317,11 +335,11 @@ export async function POST(req: NextRequest) {
             .fillColor("#64748b")
             .fontSize(8)
             .font("Helvetica-Bold")
-            .text("EVENT DATE & TIME", leftColX + 12, row2Top + 10);
+            .text("EVENT DATE & TIME", leftColX + 12, row2Top + 9);
 
           doc
             .fillColor("#0f172a")
-            .fontSize(10)
+            .fontSize(9.5)
             .font("Helvetica-Bold")
             .text(`${eventDate} • ${eventTime}`, leftColX + 12, row2Top + 24, {
               width: colWidth - 24,
@@ -336,42 +354,42 @@ export async function POST(req: NextRequest) {
             .fillColor("#64748b")
             .fontSize(8)
             .font("Helvetica-Bold")
-            .text("VENUE", rightColX + 12, row2Top + 10);
+            .text("VENUE", rightColX + 12, row2Top + 9);
 
           doc
             .fillColor("#0f172a")
-            .fontSize(10)
+            .fontSize(9.5)
             .font("Helvetica-Bold")
             .text(eventVenue, rightColX + 12, row2Top + 24, {
               width: colWidth - 24,
             });
 
-          // Box 5: Payment Ref & Verification
-          const row3Top = row2Top + 64;
+          // Box 5: Booker Name & Payment ID
+          const row3Top = row2Top + 62;
           doc
-            .roundedRect(leftColX, row3Top, 595.28 - 130, 46, 8)
+            .roundedRect(leftColX, row3Top, 595.28 - 120, 46, 8)
             .fillAndStroke("#f8fafc", "#e2e8f0");
 
           doc
             .fillColor("#64748b")
             .fontSize(8)
             .font("Helvetica-Bold")
-            .text("TRANSACTION REFERENCE & GATE STATUS", leftColX + 12, row3Top + 8);
+            .text("BOOKING & PAYMENT REFERENCE", leftColX + 12, row3Top + 8);
 
           doc
             .fillColor("#0f172a")
             .fontSize(9)
             .font("Courier")
             .text(
-              `Payment ID: ${paymentId}   |   Status: VALID PASS   |   Issued: ${new Date().toLocaleDateString("en-IN")}`,
+              `Booked by: ${currentTicket.buyerName}   |   Payment ID: ${paymentId}   |   Status: VALID PASS`,
               leftColX + 12,
               row3Top + 22
             );
 
           // Terms & Entry Conditions (Bottom Box)
-          const footerTop = 712;
+          const footerTop = row3Top + 54;
           doc
-            .roundedRect(leftColX, footerTop, 595.28 - 130, 68, 8)
+            .roundedRect(leftColX, footerTop, 595.28 - 120, 64, 8)
             .lineWidth(0.5)
             .strokeColor("#cbd5e1")
             .fillAndStroke("#ffffff", "#cbd5e1");
@@ -392,7 +410,7 @@ export async function POST(req: NextRequest) {
                 "3. Admission passes are non-transferable once scanned by gate marshals.",
               leftColX + 10,
               footerTop + 20,
-              { width: 595.28 - 150, lineGap: 1.5 }
+              { width: 595.28 - 140, lineGap: 1.5 }
             );
 
           doc
@@ -402,8 +420,8 @@ export async function POST(req: NextRequest) {
             .text(
               `Developer Credits: ${EVENT_CONFIG.developer}  |  Organized by ${organizer}`,
               leftColX + 10,
-              footerTop + 54,
-              { align: "center", width: 595.28 - 150 }
+              footerTop + 50,
+              { align: "center", width: 595.28 - 140 }
             );
 
           // Add a new page if this is not the last ticket in the loop
@@ -412,20 +430,17 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Complete the PDF document
         doc.end();
       } catch (pdfErr) {
         reject(pdfErr);
       }
     });
 
-    // =========================================================================
-    // 4. Direct Response (File Download)
-    // =========================================================================
+    // Return direct PDF download response
     const filename =
       ticketQuantity > 1
-        ? `JHOOM26-Tickets-${ticketQuantity}-Passes.pdf`
-        : `JHOOM26-Ticket-${tickets[0].ticketId.slice(0, 8)}.pdf`;
+        ? `JHOOM26-${ticketQuantity}-Passes-WhiteSheet.pdf`
+        : `JHOOM26-Ticket-${tickets[0].name.replace(/\s+/g, "_")}.pdf`;
 
     return new NextResponse(pdfBuffer as any, {
       status: 200,

@@ -137,6 +137,17 @@ function SuccessContent() {
     loadTicket();
   }, [directTicketId, paramOrderId, paramPaymentId, paramName, paramEmail, paramPhone]);
 
+  // Parse individual attendees if passed from registration
+  const attendeesParam = searchParams.get("attendees");
+  let parsedAttendees: Array<{ name: string; email?: string; phone?: string }> = [];
+  try {
+    if (attendeesParam) {
+      parsedAttendees = JSON.parse(attendeesParam);
+    }
+  } catch (e) {
+    console.warn("Could not parse attendees param:", e);
+  }
+
   // Extract all distinct ticket IDs
   const rawTicketIds = ticketIdsParam
     ? ticketIdsParam.split(",").map((s) => s.trim()).filter(Boolean)
@@ -151,17 +162,28 @@ function SuccessContent() {
     );
   }
 
-  const allTickets = allTicketIds.map((tId, idx) => ({
-    ticketId: tId,
-    ticketIndex: idx + 1,
-    totalTickets: allTicketIds.length,
-    name: ticketData?.name || paramName || "Valued Attendee",
-    email: ticketData?.email || paramEmail || "",
-    phone: ticketData?.phone || paramPhone || "",
-    paymentId: ticketData?.paymentId || paramPaymentId || "",
-    orderId: ticketData?.orderId || paramOrderId || "",
-    status: ticketData?.status || "Valid",
-  }));
+  const allTickets = allTicketIds.map((tId, idx) => {
+    const attendeeInfo = parsedAttendees[idx] || {};
+    const individualName =
+      attendeeInfo.name?.trim() ||
+      (idx === 0
+        ? ticketData?.name || paramName || "Valued Attendee"
+        : `Guest ${idx + 1} (${paramName || "Main Booker"})`);
+    const individualEmail = attendeeInfo.email?.trim() || paramEmail || "";
+    const individualPhone = attendeeInfo.phone?.trim() || paramPhone || "";
+
+    return {
+      ticketId: tId,
+      ticketIndex: idx + 1,
+      totalTickets: allTicketIds.length,
+      name: individualName,
+      email: individualEmail,
+      phone: individualPhone,
+      paymentId: ticketData?.paymentId || paramPaymentId || "",
+      orderId: ticketData?.orderId || paramOrderId || "",
+      status: ticketData?.status || "Valid",
+    };
+  });
 
   const handleDownloadPdf = async () => {
     try {
@@ -170,7 +192,7 @@ function SuccessContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          buyerName: ticketData?.name || paramName || "Valued Attendee",
+          buyerName: paramName || ticketData?.name || "Valued Attendee",
           eventDetails: {
             name: EVENT_CONFIG.name,
             date: EVENT_CONFIG.date,
@@ -183,6 +205,11 @@ function SuccessContent() {
           quantity: quantity,
           email: ticketData?.email || paramEmail || "",
           phone: ticketData?.phone || paramPhone || "",
+          attendees: allTickets.map((t) => ({
+            name: t.name,
+            email: t.email,
+            phone: t.phone,
+          })),
         }),
       });
 

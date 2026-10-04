@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
       email,
       phone,
       quantity = 1,
+      attendees = [],
     } = body;
 
     if (!razorpay_order_id || !razorpay_payment_id) {
@@ -91,13 +92,19 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < ticketQuantity; i++) {
       const ticketId = crypto.randomUUID();
       generatedTicketIds.push(ticketId);
+
+      const attendeeInfo = (Array.isArray(attendees) && attendees[i]) || {};
+      const attendeeName = attendeeInfo.name?.trim() || (i === 0 ? name : `Attendee ${i + 1} of ${name}`);
+      const attendeeEmail = attendeeInfo.email?.trim() || email || "";
+      const attendeePhone = attendeeInfo.phone?.trim() || phone || "";
+
       generatedTickets.push({
         ticketId,
         ticketIndex: i + 1,
         totalTickets: ticketQuantity,
-        name: name || "Valued Attendee",
-        email: email || "",
-        phone: phone || "",
+        name: attendeeName,
+        email: attendeeEmail,
+        phone: attendeePhone,
         paymentId: razorpay_payment_id,
         orderId: razorpay_order_id,
         amount: Math.round(EVENT_CONFIG.priceInINR),

@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Sparkles,
   AlertCircle,
+  Users,
 } from "lucide-react";
 import { EVENT_CONFIG } from "@/lib/constants";
 
@@ -31,6 +32,10 @@ export default function RegistrationForm() {
     quantity: 1,
   });
 
+  const [extraAttendees, setExtraAttendees] = useState<
+    Array<{ name: string; email: string; phone: string }>
+  >([]);
+
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [demoNotice, setDemoNotice] = useState<string | null>(null);
@@ -38,30 +43,40 @@ export default function RegistrationForm() {
   const pricePerTicket = EVENT_CONFIG.priceInINR;
   const totalAmount = pricePerTicket * formData.quantity;
 
-  const loadRazorpayScript = (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (typeof window === "undefined") return resolve(false);
-      if (window.Razorpay) {
-        return resolve(true);
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "quantity" ? Math.max(1, Number(value)) : value,
-    }));
+    if (name === "quantity") {
+      const newQty = Math.max(1, Number(value));
+      setFormData((prev) => ({ ...prev, quantity: newQty }));
+      const neededExtra = Math.max(0, newQty - 1);
+      setExtraAttendees((prev) => {
+        const next = [...prev];
+        while (next.length < neededExtra) {
+          next.push({ name: "", email: "", phone: "" });
+        }
+        return next.slice(0, neededExtra);
+      });
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+    setErrorMessage("");
+  };
+
+  const handleExtraAttendeeChange = (
+    index: number,
+    field: "name" | "email" | "phone",
+    val: string
+  ) => {
+    setExtraAttendees((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: val };
+      return next;
+    });
     setErrorMessage("");
   };
 
@@ -70,13 +85,13 @@ export default function RegistrationForm() {
     setErrorMessage("");
     setDemoNotice(null);
 
-    // Basic Validation
+    // Primary Attendee Validation
     if (!formData.name.trim()) {
-      setErrorMessage("Please enter your full legal name.");
+      setErrorMessage("Please enter the primary attendee's full name.");
       return;
     }
     if (!formData.email.trim() || !formData.email.includes("@")) {
-      setErrorMessage("Please enter a valid email address to receive your ticket.");
+      setErrorMessage("Please enter a valid primary email address.");
       return;
     }
     if (!formData.phone.trim() || formData.phone.length < 8) {
@@ -84,13 +99,36 @@ export default function RegistrationForm() {
       return;
     }
 
+    // Additional Attendees Validation
+    for (let i = 0; i < extraAttendees.length; i++) {
+      if (!extraAttendees[i].name.trim()) {
+        setErrorMessage(
+          `Please enter the full legal name for Attendee ${i + 2}.`
+        );
+        return;
+      }
+    }
+
+    const fullAttendees = [
+      {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+      },
+      ...extraAttendees.map((a, i) => ({
+        name: a.name.trim() || `Guest ${i + 2}`,
+        email: a.email.trim() || formData.email.trim(),
+        phone: a.phone.trim() || formData.phone.trim(),
+      })),
+    ];
+
     setLoading(true);
 
     try {
       const mockPaymentId = `pay_${Date.now().toString().slice(-8)}`;
       const mockOrderId = `order_${Date.now().toString().slice(-8)}`;
 
-      // Automatically store verified ticket in Supabase
+      // Store verified tickets in Supabase with individual attendee names
       const verifyRes = await fetch("/api/verify-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -102,6 +140,7 @@ export default function RegistrationForm() {
           email: formData.email.trim(),
           phone: formData.phone.trim(),
           quantity: formData.quantity,
+          attendees: fullAttendees,
         }),
       });
 
@@ -130,7 +169,9 @@ export default function RegistrationForm() {
           formData.email.trim()
         )}&phone=${encodeURIComponent(
           formData.phone.trim()
-        )}&quantity=${formData.quantity}`
+        )}&quantity=${formData.quantity}&attendees=${encodeURIComponent(
+          JSON.stringify(fullAttendees)
+        )}`
       );
     } catch (err: any) {
       console.error("Payment processing error:", err);
@@ -141,7 +182,9 @@ export default function RegistrationForm() {
           formData.name.trim()
         )}&email=${encodeURIComponent(
           formData.email.trim()
-        )}&phone=${encodeURIComponent(formData.phone.trim())}&quantity=${formData.quantity}`
+        )}&phone=${encodeURIComponent(formData.phone.trim())}&quantity=${formData.quantity}&attendees=${encodeURIComponent(
+          JSON.stringify(fullAttendees)
+        )}`
       );
     }
   };
@@ -203,14 +246,57 @@ export default function RegistrationForm() {
             )}
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {/* Full Name */}
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <User className="w-4 h-4 text-indigo-400" />
-                    Full Name <span className="text-pink-500">*</span>
+              {/* Pass Quantity Selector First */}
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+                    <Ticket className="w-4 h-4 text-emerald-400" />
+                    Number of Passes to Book
                   </label>
-                  <div className="relative">
+                  <p className="text-xs text-slate-400">
+                    Each pass generates a separate single-entry QR code for each individual.
+                  </p>
+                </div>
+
+                <div className="sm:w-60">
+                  <select
+                    name="quantity"
+                    value={formData.quantity}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all cursor-pointer"
+                  >
+                    {[1, 2, 3, 4, 5].map((num) => (
+                      <option key={num} value={num}>
+                        {num} {num === 1 ? "Person (Pass)" : "Persons (Passes)"} — ₹{pricePerTicket * num}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Attendee 1 (Primary Booker) Card */}
+              <div className="p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 font-bold text-xs flex items-center justify-center border border-indigo-500/30">
+                      1
+                    </span>
+                    <span className="text-sm font-bold text-white">
+                      Attendee 1 {formData.quantity > 1 ? "(Primary Booker)" : ""}
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                    Main Contact
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {/* Full Name */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-indigo-400" />
+                      Full Legal Name <span className="text-pink-500">*</span>
+                    </label>
                     <input
                       type="text"
                       name="name"
@@ -218,18 +304,16 @@ export default function RegistrationForm() {
                       placeholder="e.g. Priya Sharma"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3.5 rounded-xl bg-slate-950/70 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                     />
                   </div>
-                </div>
 
-                {/* Email Address */}
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <Mail className="w-4 h-4 text-purple-400" />
-                    Email Address <span className="text-pink-500">*</span>
-                  </label>
-                  <div className="relative">
+                  {/* Email Address */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-purple-400" />
+                      Email Address <span className="text-pink-500">*</span>
+                    </label>
                     <input
                       type="email"
                       name="email"
@@ -237,55 +321,103 @@ export default function RegistrationForm() {
                       placeholder="e.g. priya.sharma@gmail.com"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3.5 rounded-xl bg-slate-950/70 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
                     />
                   </div>
-                  <p className="text-[11px] text-slate-500">Required for attendee registration & entry verification.</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {/* Phone Number */}
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <Phone className="w-4 h-4 text-pink-400" />
-                    Phone / WhatsApp <span className="text-pink-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="tel"
-                      name="phone"
-                      required
-                      placeholder="e.g. +91 9876543210"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3.5 rounded-xl bg-slate-950/70 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
-                    />
-                  </div>
-                  <p className="text-[11px] text-slate-500">For SMS entry backup & updates.</p>
                 </div>
 
-                {/* Ticket Quantity */}
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <Ticket className="w-4 h-4 text-emerald-400" />
-                    Pass Quantity
+                    <Phone className="w-3.5 h-3.5 text-pink-400" />
+                    Mobile / WhatsApp Number <span className="text-pink-500">*</span>
                   </label>
-                  <select
-                    name="quantity"
-                    value={formData.quantity}
+                  <input
+                    type="tel"
+                    name="phone"
+                    required
+                    placeholder="e.g. +91 9876543210"
+                    value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3.5 rounded-xl bg-slate-950/70 border border-slate-700/80 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                  >
-                    {[1, 2, 3, 4, 5].map((num) => (
-                      <option key={num} value={num}>
-                        {num} {num === 1 ? "Pass" : "Passes"} — ₹{pricePerTicket * num}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-[11px] text-slate-500">Max 5 passes per booking.</p>
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all"
+                  />
+                  <p className="text-[11px] text-slate-500">
+                    Used for entry verification &amp; festival notifications.
+                  </p>
                 </div>
               </div>
+
+              {/* Additional Attendees Fields (when quantity > 1) */}
+              {formData.quantity > 1 && (
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+                    <Users className="w-4 h-4" />
+                    <span>
+                      Additional Attendee Details ({formData.quantity - 1} more {formData.quantity === 2 ? "person" : "people"})
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 -mt-2">
+                    Enter the names of accompanying guests so each person gets their own pass with their name printed.
+                  </p>
+
+                  <div className="space-y-4">
+                    {extraAttendees.map((att, idx) => (
+                      <div
+                        key={idx}
+                        className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4 animate-in fade-in duration-200"
+                      >
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
+                          <div className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xs flex items-center justify-center border border-purple-500/30">
+                              {idx + 2}
+                            </span>
+                            <span className="text-sm font-bold text-white">
+                              Attendee {idx + 2} Pass
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-purple-300 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20 font-medium">
+                            Individual QR Pass
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1">
+                              <User className="w-3 h-3 text-indigo-400" />
+                              Full Name <span className="text-pink-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              placeholder={`e.g. Guest ${idx + 2} Full Name`}
+                              value={att.name}
+                              onChange={(e) =>
+                                handleExtraAttendeeChange(idx, "name", e.target.value)
+                              }
+                              className="w-full px-3.5 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1">
+                              <Phone className="w-3 h-3 text-pink-400" />
+                              Phone Number <span className="text-slate-500 text-[10px]">(Optional)</span>
+                            </label>
+                            <input
+                              type="tel"
+                              placeholder="e.g. +91 9876543210"
+                              value={att.phone}
+                              onChange={(e) =>
+                                handleExtraAttendeeChange(idx, "phone", e.target.value)
+                              }
+                              className="w-full px-3.5 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Order Summary Box */}
               <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
@@ -294,7 +426,7 @@ export default function RegistrationForm() {
                   <p className="text-xl sm:text-2xl font-black text-white">
                     ₹{totalAmount}
                     <span className="text-xs font-normal text-slate-500 ml-1.5">
-                      (Inclusive of taxes)
+                      ({formData.quantity} {formData.quantity === 1 ? "Pass" : "Passes"}, Incl. taxes)
                     </span>
                   </p>
                 </div>
@@ -313,12 +445,12 @@ export default function RegistrationForm() {
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Processing Payment &amp; Generating Pass...</span>
+                    <span>Processing Payment &amp; Generating {formData.quantity} Passes...</span>
                   </>
                 ) : (
                   <>
                     <CreditCard className="w-5 h-5" />
-                    <span>Pay ₹{totalAmount} & Get JHOOM &apos;26 Pass</span>
+                    <span>Pay ₹{totalAmount} &amp; Get {formData.quantity > 1 ? `${formData.quantity} Passes` : "Pass"}</span>
                   </>
                 )}
               </button>
