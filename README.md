@@ -67,22 +67,66 @@ A production-ready, full-stack event ticketing and rapid entry management web ap
 
 ---
 
-## 🗄️ Supabase Database Schema
+## 🗄️ Supabase Database Setup & Schema
 
-Table: **`tickets`**
+To create the table in Supabase:
+1. Open your **Supabase Dashboard** ([supabase.com/dashboard](https://supabase.com/dashboard)).
+2. Select your project and navigate to **SQL Editor** (left sidebar).
+3. Click **New Query**, paste the SQL script below (or copy from [`supabase/schema.sql`](file:///d:/taalsya/supabase/schema.sql)), and click **Run**.
 
-| Field | Type | Description |
+```sql
+-- 1. Create the tickets table
+CREATE TABLE IF NOT EXISTS public.tickets (
+  "ticketId" TEXT PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "email" TEXT,
+  "phone" TEXT,
+  "paymentId" TEXT,
+  "orderId" TEXT,
+  "amount" NUMERIC DEFAULT 299,
+  "status" TEXT NOT NULL DEFAULT 'Valid',
+  "eventName" TEXT DEFAULT 'JHOOM ''26 — Dance Fest cum Dandiya Night',
+  "createdAt" TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
+  "usedAt" TIMESTAMPTZ
+);
+
+-- 2. Performance Indexes
+CREATE INDEX IF NOT EXISTS idx_tickets_ticket_id ON public.tickets ("ticketId");
+CREATE INDEX IF NOT EXISTS idx_tickets_payment_id ON public.tickets ("paymentId");
+CREATE INDEX IF NOT EXISTS idx_tickets_order_id ON public.tickets ("orderId");
+CREATE INDEX IF NOT EXISTS idx_tickets_status ON public.tickets ("status");
+
+-- 3. Row Level Security (RLS) & Policies
+ALTER TABLE public.tickets ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow service role full access"
+ON public.tickets FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow public read tickets"
+ON public.tickets FOR SELECT TO anon, authenticated USING (true);
+
+CREATE POLICY "Allow public insert tickets"
+ON public.tickets FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+CREATE POLICY "Allow public update ticket status"
+ON public.tickets FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+```
+
+### Table Column Details: **`tickets`**
+
+| Column | Type | Description |
 |---|---|---|
-| `ticketId` | `text` (UUID v4 / PRIMARY KEY) | Unique ticket identifier encoded in QR |
-| `name` | `text` | Attendee's full name |
-| `email` | `text` | Attendee's email address |
-| `phone` | `text` | Attendee's mobile/WhatsApp contact |
-| `paymentId` | `text` | Razorpay payment identifier (`pay_...`) |
-| `orderId` | `text` | Razorpay order identifier (`order_...`) |
-| `amount` | `integer` | Total paid in INR |
-| `status` | `text` | Default: `'Valid'`, updates to `'Used'` upon scan |
-| `createdAt` | `timestamp with time zone` | Date and time payment was confirmed |
-| `usedAt` | `timestamp with time zone` | (Optional) Date and time ticket was scanned at gate |
+| `"ticketId"` | `text` (PRIMARY KEY) | Short unique code (e.g. `JHM-7K2M`) or UUID encoded in QR |
+| `"name"` | `text NOT NULL` | Individual attendee full name |
+| `"email"` | `text` | Attendee email address |
+| `"phone"` | `text` | Attendee mobile / WhatsApp number |
+| `"paymentId"` | `text` | Razorpay payment identifier (`pay_...`) |
+| `"orderId"` | `text` | Razorpay order identifier (`order_...`) |
+| `"amount"` | `numeric` | Total paid in INR (default: 299) |
+| `"status"` | `text` | Default: `'Valid'`, updates to `'Used'` upon gate scan |
+| `"eventName"` | `text` | Event name |
+| `"createdAt"` | `timestamptz` | Ticket generation timestamp |
+| `"usedAt"` | `timestamptz` | Gate redemption timestamp |
 
 ---
 
