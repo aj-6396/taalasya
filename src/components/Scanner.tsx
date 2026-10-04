@@ -58,6 +58,7 @@ export default function Scanner() {
   });
 
   const scannerRef = useRef<any>(null);
+  const scanLockRef = useRef(false);
   const scannerContainerId = "qr-reader-container";
 
   // Check Gate PIN from localStorage
@@ -160,9 +161,21 @@ export default function Scanner() {
 
   // Handle scanned ticket verification
   const handleScanSuccess = async (rawCode: string) => {
-    if (isProcessing) return;
+    // If locked or already showing a result modal, ignore all subsequent video frames
+    if (scanLockRef.current) return;
+    scanLockRef.current = true;
+    setIsProcessing(true);
 
-    // Check if rawCode contains URL like https://.../?data=...
+    // Immediately pause camera decoding to stop continuous scanning
+    try {
+      if (scannerRef.current && typeof scannerRef.current.pause === "function") {
+        scannerRef.current.pause(true);
+      }
+    } catch (pauseErr) {
+      console.warn("Could not pause camera decoding:", pauseErr);
+    }
+
+    // Extract ticket identifier
     let ticketId = rawCode.trim();
     if (ticketId.includes("data=")) {
       const match = ticketId.match(/data=([^&]+)/);
@@ -174,7 +187,7 @@ export default function Scanner() {
       ticketId = parts[parts.length - 1];
     }
 
-    verifyTicketId(ticketId);
+    await verifyTicketId(ticketId);
   };
 
   const verifyTicketId = async (ticketId: string) => {
@@ -228,15 +241,31 @@ export default function Scanner() {
       setScanResult({
         status: "Error",
         message: err.message || "Network error communicating with gate server.",
+        timestamp: new Date().toLocaleTimeString(),
       });
     } finally {
-      // Keep result displayed for viewing
+      setIsProcessing(false);
     }
   };
 
   const resumeScanning = () => {
+    // Clear previous modal
     setScanResult({ status: null, message: "" });
     setIsProcessing(false);
+
+    // Resume camera scanning
+    try {
+      if (scannerRef.current && typeof scannerRef.current.resume === "function") {
+        scannerRef.current.resume();
+      }
+    } catch (resumeErr) {
+      console.warn("Could not resume camera scanning:", resumeErr);
+    }
+
+    // Safety cooldown so pulling the phone away doesn't immediately re-scan
+    setTimeout(() => {
+      scanLockRef.current = false;
+    }, 700);
   };
 
   const toggleCameraFacing = async () => {
@@ -521,10 +550,14 @@ export default function Scanner() {
           </div>
         )}
 
-        {/* FULLSCREEN POPUP: STATUS == 'Invalid' */}
-        {scanResult.status === "Invalid" && (
+        {/* FULLSCREEN POPUP: STATUS == 'Invalid' or 'Error' */}
+        {(scanResult.status === "Invalid" || scanResult.status === "Error") && (
           <div className="absolute inset-0 bg-red-950/95 backdrop-blur-md z-30 p-6 flex flex-col items-center justify-between text-center animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-full" />
+            <div className="w-full flex justify-end">
+              <span className="text-[10px] font-mono text-red-400 bg-red-900/60 px-2 py-0.5 rounded">
+                {scanResult.timestamp || "Alert"}
+              </span>
+            </div>
 
             <div className="space-y-4">
               <div className="w-20 h-20 rounded-full bg-red-600 text-white mx-auto flex items-center justify-center shadow-xl">
@@ -533,9 +566,9 @@ export default function Scanner() {
 
               <div>
                 <h3 className="text-2xl font-black text-white tracking-tight">
-                  INVALID TICKET
+                  {scanResult.status === "Error" ? "SYSTEM NOTICE" : "INVALID TICKET"}
                 </h3>
-                <p className="text-xs text-red-300 mt-2 max-w-xs mx-auto">
+                <p className="text-xs text-red-300 mt-2 max-w-xs mx-auto leading-relaxed">
                   {scanResult.message || "This QR code is not recognized in the event registration database."}
                 </p>
               </div>
@@ -544,9 +577,9 @@ export default function Scanner() {
             <button
               onClick={resumeScanning}
               autoFocus
-              className="w-full py-3.5 px-6 rounded-2xl font-bold text-sm text-white bg-red-800 hover:bg-red-700 active:scale-95 shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-4 px-6 rounded-2xl font-bold text-sm text-white bg-red-800 hover:bg-red-700 active:scale-95 shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>Scan Again</span>
+              <span>Scan Next Pass</span>
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>

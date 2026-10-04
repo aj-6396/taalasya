@@ -27,11 +27,58 @@ export async function POST(req: NextRequest) {
 
     try {
       const supabase = getAdminSupabase();
-      const { data: ticketData, error: fetchErr } = await supabase
+
+      // Flexible query handling: check "ticketId", "ticket_id", or "ticketid"
+      let ticketData: any = null;
+      let fetchErr: any = null;
+
+      // 1. Try standard camelCase "ticketId"
+      const res1 = await supabase
         .from("tickets")
         .select("*")
         .in("ticketId", candidateIds)
         .maybeSingle();
+
+      if (res1.data) {
+        ticketData = res1.data;
+      } else if (res1.error) {
+        fetchErr = res1.error;
+        console.warn("[verify-ticket] camelCase ticketId query note:", res1.error.message);
+
+        // 2. Try snake_case "ticket_id"
+        const res2 = await supabase
+          .from("tickets")
+          .select("*")
+          .in("ticket_id", candidateIds)
+          .maybeSingle();
+
+        if (res2.data) {
+          ticketData = {
+            ...res2.data,
+            ticketId: res2.data.ticket_id || res2.data.ticketId,
+            usedAt: res2.data.used_at ?? res2.data.usedAt,
+            paymentId: res2.data.payment_id ?? res2.data.paymentId,
+            orderId: res2.data.order_id ?? res2.data.orderId,
+          };
+          fetchErr = null;
+        } else if (res2.error) {
+          // 3. Try lowercase "ticketid"
+          const res3 = await supabase
+            .from("tickets")
+            .select("*")
+            .in("ticketid", candidateIds)
+            .maybeSingle();
+
+          if (res3.data) {
+            ticketData = {
+              ...res3.data,
+              ticketId: res3.data.ticketid || res3.data.ticketId,
+              usedAt: res3.data.usedat ?? res3.data.usedAt,
+            };
+            fetchErr = null;
+          }
+        }
+      }
 
       if (fetchErr || !ticketData) {
         // In local demo / test environment before Supabase credentials are provided:
@@ -52,53 +99,84 @@ export async function POST(req: NextRequest) {
           });
         }
 
+        const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const isDbUnconfigured = !supabaseUrl || supabaseUrl.includes("placeholder");
+
         return NextResponse.json(
           {
             success: false,
             status: "Invalid",
-            message: "Ticket not found in database. Entry denied.",
+            message: isDbUnconfigured
+              ? "Supabase not connected. Please add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to .env.local"
+              : `Ticket '${cleanTicketId}' not found in database. Entry denied.`,
           },
           { status: 404 }
         );
       }
 
-      if (ticketData.status === "Used") {
+      // Read current values gracefully across column naming conventions
+      const currentUsedAt = ticketData.usedAt ?? ticketData.used_at ?? ticketData.usedat ?? null;
+      const currentStatus = String(ticketData.status || "").trim().toLowerCase();
+
+      // Check if ticket is already redeemed:
+      // It is only 'Used' IF it has a recorded usedAt timestamp AND its status is 'used'.
+      // If the admin manually set usedAt to NULL (or reset status to 'valid') in Supabase,
+      // the ticket is treated as FRESH and VALID for admission!
+      const isAlreadyUsed = Boolean(currentUsedAt) && currentStatus === "used";
+
+      if (isAlreadyUsed) {
+        const timeFormatted = new Date(currentUsedAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
         return NextResponse.json(
           {
             success: false,
             status: "Used",
-            message: "Already Scanned! This ticket was already redeemed.",
-            ticket: ticketData,
+            message: `Already Scanned! This pass was redeemed${timeFormatted !== "Invalid Date" ? ` at ${timeFormatted}` : ""}.`,
+            ticket: {
+              ...ticketData,
+              status: "Used",
+              usedAt: currentUsedAt,
+            },
           },
           { status: 200 }
         );
       }
 
-      if (ticketData.status === "Valid") {
-        // Update status to 'Used'
-        const usedAt = new Date().toISOString();
+      // If not already used, approve entry and update database to 'Used'
+      const nowIso = new Date().toISOString();
+      const primaryKeyCol = ticketData.ticket_id ? "ticket_id" : (ticketData.ticketid ? "ticketid" : "ticketId");
+      const targetId = ticketData.ticket_id || ticketData.ticketid || ticketData.ticketId;
+
+      const updatePayload: Record<string, any> = {
+        status: "Used",
+        usedAt: nowIso,
+      };
+      if ("used_at" in ticketData || ticketData.ticket_id) {
+        updatePayload.used_at = nowIso;
+      }
+
+      try {
         await supabase
           .from("tickets")
-          .update({ status: "Used", usedAt })
-          .eq("ticketId", ticketData.ticketId);
-
-        return NextResponse.json(
-          {
-            success: true,
-            status: "Valid",
-            message: "Access Granted! Welcome to the event.",
-            ticket: { ...ticketData, status: "Used", usedAt },
-          },
-          { status: 200 }
-        );
+          .update(updatePayload)
+          .eq(primaryKeyCol, targetId);
+      } catch (updateErr) {
+        console.warn("[verify-ticket] Status update warning:", updateErr);
       }
 
       return NextResponse.json(
         {
-          success: false,
-          status: ticketData.status || "Invalid",
-          message: `Ticket is in '${ticketData.status}' status.`,
-          ticket: ticketData,
+          success: true,
+          status: "Valid",
+          message: "Entry Approved! Ticket is valid.",
+          ticket: {
+            ...ticketData,
+            status: "Used",
+            usedAt: nowIso,
+          },
         },
         { status: 200 }
       );
