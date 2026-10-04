@@ -14,6 +14,7 @@ import {
   FileText,
   AlertTriangle,
   X,
+  Loader2,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -133,9 +134,55 @@ function SuccessContent() {
     loadTicket();
   }, [directTicketId, paramOrderId, paramPaymentId, paramName, paramEmail, paramPhone]);
 
-  const handleSavePdf = () => {
-    if (typeof window !== "undefined") {
-      window.print();
+  const quantity = Math.max(1, Number(searchParams.get("quantity")) || 1);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloadingPdf(true);
+      const res = await fetch("/api/download-tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          buyerName: ticketData?.name || paramName || "Valued Attendee",
+          eventDetails: {
+            name: EVENT_CONFIG.name,
+            date: EVENT_CONFIG.date,
+            time: EVENT_CONFIG.time,
+            venue: EVENT_CONFIG.venue,
+            organizer: EVENT_CONFIG.organizer,
+          },
+          paymentId: ticketData?.paymentId || paramPaymentId || "pay_verified",
+          orderId: ticketData?.orderId || paramOrderId || "",
+          quantity: quantity,
+          email: ticketData?.email || paramEmail || "",
+          phone: ticketData?.phone || paramPhone || "",
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Server PDF generation failed");
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =
+        quantity > 1
+          ? `JHOOM26-${quantity}-Passes.pdf`
+          : `JHOOM26-Ticket-${(ticketData?.ticketId || "pass").slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err) {
+      console.error("PDF download error, falling back to print:", err);
+      if (typeof window !== "undefined") {
+        window.print();
+      }
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
@@ -207,12 +254,21 @@ function SuccessContent() {
               <button
                 onClick={() => {
                   setShowPdfPrompt(false);
-                  handleSavePdf();
+                  handleDownloadPdf();
                 }}
-                className="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-bold text-xs shadow-lg shadow-purple-600/30 cursor-pointer flex items-center justify-center gap-2 transition-transform active:scale-95"
+                disabled={downloadingPdf}
+                className="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-bold text-xs shadow-lg shadow-purple-600/30 cursor-pointer flex items-center justify-center gap-2 transition-transform active:scale-95 disabled:opacity-60"
               >
-                <Download className="w-4 h-4" />
-                <span>Save Ticket as PDF Now</span>
+                {downloadingPdf ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                <span>
+                  {downloadingPdf
+                    ? "Generating White Sheet PDF..."
+                    : `Download ${quantity > 1 ? `${quantity} Tickets` : "Ticket"} (Pure White PDF)`}
+                </span>
               </button>
 
               <button
@@ -274,22 +330,48 @@ function SuccessContent() {
         </div>
 
         <button
-          onClick={handleSavePdf}
-          className="w-full sm:w-auto shrink-0 px-6 py-3.5 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-black shadow-xl shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
+          onClick={handleDownloadPdf}
+          disabled={downloadingPdf}
+          className="w-full sm:w-auto shrink-0 px-6 py-3.5 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-black shadow-xl shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer disabled:opacity-60"
         >
-          <Download className="w-4 h-4" />
-          <span>Save as PDF / Print</span>
+          {downloadingPdf ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4" />
+          )}
+          <span>
+            {downloadingPdf
+              ? "Generating White Sheet PDF..."
+              : `Download ${quantity > 1 ? `${quantity} Tickets` : "Ticket"} (Pure White PDF)`}
+          </span>
         </button>
       </div>
+
+      {/* Multi-Ticket Notice if booking 2 or more passes */}
+      {quantity > 1 && (
+        <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/40 flex items-start gap-3.5 text-xs text-purple-200">
+          <Sparkles className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-bold text-white text-sm">
+              {quantity} Separate Entry Passes Booked (1 QR Code = 1 Entry)
+            </p>
+            <p className="leading-relaxed">
+              As per security guidelines, each attendee requires their own distinct single-use QR pass. Your downloaded PDF will contain <strong>{quantity} separate pages on pure white sheets</strong>, with a unique QR code generated for each person.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Live Digital Pass Preview with QR Code */}
       <div className="space-y-4">
         <div className="text-center space-y-1">
           <h2 className="text-xs uppercase font-extrabold tracking-widest text-indigo-400">
-            Official Gate Entry QR Pass
+            {quantity > 1 ? `Pass 1 of ${quantity} Preview` : "Official Gate Entry QR Pass"}
           </h2>
           <p className="text-xs text-slate-400">
-            Present the QR code below at turnstile scanners or save it to your device
+            {quantity > 1
+              ? `Previewing Pass 1. Download the full PDF above to access all ${quantity} individual QR passes.`
+              : "Present the QR code below at turnstile scanners or save it to your device"}
           </p>
         </div>
 

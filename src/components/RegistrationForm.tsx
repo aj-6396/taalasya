@@ -123,7 +123,7 @@ export default function RegistrationForm() {
           formData.email.trim()
         )}&phone=${encodeURIComponent(
           formData.phone.trim()
-        )}`
+        )}&quantity=${formData.quantity}`
       );
     } catch (err: any) {
       console.error("Payment processing error:", err);
@@ -134,7 +134,7 @@ export default function RegistrationForm() {
           formData.name.trim()
         )}&email=${encodeURIComponent(
           formData.email.trim()
-        )}&phone=${encodeURIComponent(formData.phone.trim())}`
+        )}&phone=${encodeURIComponent(formData.phone.trim())}&quantity=${formData.quantity}`
       );
     }
   };
