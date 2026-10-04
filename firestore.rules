@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Strict Zero-Cost Security Rules for 'tickets' collection
+    match /tickets/{ticketId} {
+      // Allow read access for ticket holder verification & scanner verification
+      allow read: if true;
+      
+      // ONLY backend Admin SDK can create or update tickets (enforced by default)
+      // Client SDK cannot arbitrarily forge or edit tickets
+      allow create, update, delete: if false;
+    }
+  }
+}
