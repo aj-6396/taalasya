@@ -191,94 +191,123 @@ export default function RegistrationForm() {
     }
   };
 
-  return (
-    <section id="register" className="py-12 sm:py-16 scroll-mt-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="relative rounded-3xl bg-slate-900/90 border border-slate-800 shadow-2xl overflow-hidden backdrop-blur-xl">
-          {/* Subtle gradient bar at top */}
-          <div className="h-2 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+  const handleQuantitySelect = (newQty: number) => {
+    setFormData((prev) => ({ ...prev, quantity: newQty }));
+    const neededExtra = Math.max(0, newQty - 1);
+    setExtraAttendees((prev) => {
+      const next = [...prev];
+      while (next.length < neededExtra) {
+        next.push({ name: "", email: "", phone: "" });
+      }
+      return next.slice(0, neededExtra);
+    });
+    setErrorMessage("");
+  };
 
-          <div className="p-6 sm:p-10">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-slate-800">
+  return (
+    <section id="register" className="py-8 sm:py-16 scroll-mt-16">
+      <div className="max-w-3xl mx-auto px-3.5 sm:px-6">
+        <div className="relative rounded-3xl bg-[#0b101b]/95 border border-white/[0.08] shadow-2xl overflow-hidden backdrop-blur-2xl">
+          {/* Subtle gradient bar at top */}
+          <div className="h-1.5 w-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500" />
+
+          <div className="p-4 sm:p-8 md:p-10">
+            {/* Header section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.07]">
               <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/10 text-pink-400 text-xs font-semibold mb-2">
-                  <Sparkles className="w-3.5 h-3.5" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/10 text-pink-400 text-[11px] font-bold mb-2 border border-pink-500/20">
+                  <Sparkles className="w-3 h-3" />
                   JHOOM &apos;26 • Dance Fest cum Dandiya Night
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight">
                   Book Your Fest &amp; Dandiya Pass
                 </h2>
-                <p className="text-sm text-slate-400 mt-1">
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">
                   Starting at ₹{pricePerTicket} only. Hosted by Taalasya Dance Society at Swatantrata Bhawan, BHU.
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-right min-w-[150px]">
-                <p className="text-xs text-slate-400 uppercase tracking-wider font-medium">
-                  Starting Price
-                </p>
-                <p className="text-2xl sm:text-3xl font-black text-white">
-                  ₹{pricePerTicket}
-                  <span className="text-xs font-normal text-slate-400 ml-1">/ person</span>
-                </p>
-                <p className="text-[11px] text-emerald-400 font-semibold mt-0.5">
-                  ✓ 0% Platform Convenience Fee
-                </p>
+              <div className="p-3 sm:p-4 rounded-2xl bg-[#070b13] border border-white/[0.06] text-left sm:text-right min-w-[140px] flex sm:flex-col items-center sm:items-end justify-between sm:justify-center">
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+                    Starting Price
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-black text-white leading-tight">
+                    ₹{pricePerTicket}
+                    <span className="text-xs font-normal text-slate-400 ml-1">/ person</span>
+                  </p>
+                </div>
+                <span className="inline-block sm:block text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 mt-0.5">
+                  ✓ 0% Platform Fee
+                </span>
               </div>
             </div>
 
             {errorMessage && (
-              <div className="mt-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-3 text-rose-300 text-sm">
+              <div className="mt-5 p-3.5 sm:p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-3 text-rose-300 text-xs sm:text-sm animate-in fade-in duration-200">
                 <AlertCircle className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
                 <div>
-                  <p className="font-semibold">Unable to proceed</p>
-                  <p className="text-xs text-rose-400/90 mt-0.5">{errorMessage}</p>
+                  <p className="font-bold">Unable to proceed</p>
+                  <p className="text-rose-400/90 mt-0.5">{errorMessage}</p>
                 </div>
               </div>
             )}
 
             {demoNotice && (
-              <div className="mt-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 text-amber-300 text-sm">
+              <div className="mt-5 p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 text-amber-300 text-xs sm:text-sm animate-in fade-in duration-200">
                 <Loader2 className="w-5 h-5 shrink-0 text-amber-400 animate-spin mt-0.5" />
                 <div>
-                  <p className="font-semibold">Simulating Checkout</p>
-                  <p className="text-xs text-amber-400/90 mt-0.5">{demoNotice}</p>
+                  <p className="font-bold">Simulating Checkout</p>
+                  <p className="text-amber-400/90 mt-0.5">{demoNotice}</p>
                 </div>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-              {/* Pass Quantity Selector First */}
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1">
+            <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+              {/* Pass Quantity Segmented Control */}
+              <div className="p-4 rounded-2xl bg-[#070b13] border border-white/[0.06] space-y-3">
+                <div className="flex items-center justify-between">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
                     <Ticket className="w-4 h-4 text-emerald-400" />
-                    Number of Passes to Book
+                    <span>Select Number of Passes</span>
                   </label>
-                  <p className="text-xs text-slate-400">
-                    Each pass generates a separate single-entry QR code for each individual.
-                  </p>
+                  <span className="text-xs font-bold text-pink-400">
+                    {formData.quantity} {formData.quantity === 1 ? "Pass" : "Passes"} = ₹{totalAmount}
+                  </span>
                 </div>
 
-                <div className="sm:w-60">
-                  <select
-                    name="quantity"
-                    value={formData.quantity}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all cursor-pointer"
-                  >
-                    {[1, 2, 3, 4, 5].map((num) => (
-                      <option key={num} value={num}>
-                        {num} {num === 1 ? "Person (Pass)" : "Persons (Passes)"} — ₹{pricePerTicket * num}
-                      </option>
-                    ))}
-                  </select>
+                {/* Mobile Thumb-Friendly Segmented Buttons */}
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-2 p-1 rounded-2xl bg-slate-900/90 border border-slate-800">
+                  {[1, 2, 3, 4, 5].map((num) => {
+                    const isSelected = formData.quantity === num;
+                    return (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => handleQuantitySelect(num)}
+                        className={`py-2.5 sm:py-3 rounded-xl font-black text-sm transition-all cursor-pointer flex flex-col items-center justify-center ${
+                          isSelected
+                            ? "bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]"
+                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                        }`}
+                      >
+                        <span className="text-sm sm:text-base leading-none">{num}</span>
+                        <span className="text-[9px] font-semibold opacity-75 uppercase tracking-tighter mt-0.5">
+                          {num === 1 ? "Pass" : "Passes"}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
+
+                <p className="text-[11px] text-slate-400">
+                  Each pass generates a separate single-entry QR code for each individual.
+                </p>
               </div>
 
               {/* Attendee 1 (Primary Booker) Card */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-5">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
+              <div className="p-4 sm:p-6 rounded-2xl bg-[#070b13] border border-white/[0.06] space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                   <div className="flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 font-bold text-xs flex items-center justify-center border border-indigo-500/30">
                       1
@@ -287,15 +316,15 @@ export default function RegistrationForm() {
                       Attendee 1 {formData.quantity > 1 ? "(Primary Booker)" : ""}
                     </span>
                   </div>
-                  <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                     Main Contact
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Full Name */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5 text-indigo-400" />
                       Full Legal Name <span className="text-pink-500">*</span>
                     </label>
@@ -303,16 +332,17 @@ export default function RegistrationForm() {
                       type="text"
                       name="name"
                       required
+                      autoComplete="name"
                       placeholder="e.g. Priya Sharma"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                      className="w-full px-3.5 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                     />
                   </div>
 
                   {/* Email Address */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                       <Mail className="w-3.5 h-3.5 text-purple-400" />
                       Email Address <span className="text-pink-500">*</span>
                     </label>
@@ -320,16 +350,18 @@ export default function RegistrationForm() {
                       type="email"
                       name="email"
                       required
+                      autoComplete="email"
+                      inputMode="email"
                       placeholder="e.g. priya.sharma@gmail.com"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                      className="w-full px-3.5 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                     <Phone className="w-3.5 h-3.5 text-pink-400" />
                     Mobile / WhatsApp Number <span className="text-pink-500">*</span>
                   </label>
@@ -337,12 +369,14 @@ export default function RegistrationForm() {
                     type="tel"
                     name="phone"
                     required
-                    placeholder="e.g. +91 9876543210"
+                    autoComplete="tel"
+                    inputMode="tel"
+                    placeholder="e.g. 9876543210"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all"
+                    className="w-full px-3.5 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all"
                   />
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[10px] text-slate-400">
                     Used for entry verification &amp; festival notifications.
                   </p>
                 </div>
@@ -350,40 +384,40 @@ export default function RegistrationForm() {
 
               {/* Additional Attendees Fields (when quantity > 1) */}
               {formData.quantity > 1 && (
-                <div className="space-y-4 pt-2">
+                <div className="space-y-3 pt-1">
                   <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
                     <Users className="w-4 h-4" />
                     <span>
                       Additional Attendee Details ({formData.quantity - 1} more {formData.quantity === 2 ? "person" : "people"})
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 -mt-2">
+                  <p className="text-xs text-slate-400 -mt-1">
                     Enter the names of accompanying guests so each person gets their own pass with their name printed.
                   </p>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {extraAttendees.map((att, idx) => (
                       <div
                         key={idx}
-                        className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4 animate-in fade-in duration-200"
+                        className="p-4 sm:p-5 rounded-2xl bg-[#070b13] border border-white/[0.06] space-y-3 animate-in fade-in duration-200"
                       >
-                        <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
                           <div className="flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xs flex items-center justify-center border border-purple-500/30">
+                            <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 font-bold text-xs flex items-center justify-center border border-purple-500/30">
                               {idx + 2}
                             </span>
-                            <span className="text-sm font-bold text-white">
+                            <span className="text-xs sm:text-sm font-bold text-white">
                               Attendee {idx + 2} Pass
                             </span>
                           </div>
-                          <span className="text-[11px] text-purple-300 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20 font-medium">
+                          <span className="text-[10px] text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20 font-semibold">
                             Individual QR Pass
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1">
                               <User className="w-3 h-3 text-indigo-400" />
                               Full Name <span className="text-pink-500">*</span>
                             </label>
@@ -395,23 +429,24 @@ export default function RegistrationForm() {
                               onChange={(e) =>
                                 handleExtraAttendeeChange(idx, "name", e.target.value)
                               }
-                              className="w-full px-3.5 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             />
                           </div>
 
-                          <div className="space-y-1.5">
-                            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1">
                               <Phone className="w-3 h-3 text-pink-400" />
                               Phone Number <span className="text-slate-500 text-[10px]">(Optional)</span>
                             </label>
                             <input
                               type="tel"
-                              placeholder="e.g. +91 9876543210"
+                              inputMode="tel"
+                              placeholder="e.g. 9876543210"
                               value={att.phone}
                               onChange={(e) =>
                                 handleExtraAttendeeChange(idx, "phone", e.target.value)
                               }
-                              className="w-full px-3.5 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-pink-500"
+                              className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-pink-500"
                             />
                           </div>
                         </div>
@@ -421,33 +456,45 @@ export default function RegistrationForm() {
                 </div>
               )}
 
-              {/* Order Summary Box */}
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-slate-400">Total Payable</p>
-                  <p className="text-xl sm:text-2xl font-black text-white">
-                    ₹{totalAmount}
-                    <span className="text-xs font-normal text-slate-500 ml-1.5">
-                      ({formData.quantity} {formData.quantity === 1 ? "Pass" : "Passes"}, Incl. taxes)
-                    </span>
-                  </p>
+              {/* Order Summary Receipt Box */}
+              <div className="p-4 rounded-2xl bg-[#070b13] border border-white/[0.08] space-y-2">
+                <div className="flex justify-between items-center text-xs text-slate-400 pb-2 border-b border-dashed border-slate-800">
+                  <span>Passes ({formData.quantity} × ₹{pricePerTicket})</span>
+                  <span className="font-semibold text-white">₹{totalAmount}</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>256-Bit SSL Encrypted</span>
+                <div className="flex justify-between items-center text-xs text-slate-400 pb-2 border-b border-dashed border-slate-800">
+                  <span className="flex items-center gap-1 text-emerald-400">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Platform Convenience Fee
+                  </span>
+                  <span className="font-bold text-emerald-400 uppercase text-[11px]">Free (₹0)</span>
+                </div>
+                <div className="flex justify-between items-center pt-1">
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                      Total Payable
+                    </p>
+                    <p className="text-xl sm:text-2xl font-black text-white">
+                      ₹{totalAmount}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-400 bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-800">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>256-Bit SSL</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Submit Button */}
+              {/* Submit CTA Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 px-6 rounded-2xl font-bold text-base text-white bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 hover:from-indigo-600 hover:via-purple-700 hover:to-pink-600 shadow-xl shadow-purple-600/30 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 cursor-pointer"
+                className="w-full py-4 px-6 rounded-2xl font-black text-sm sm:text-base text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 shadow-xl shadow-pink-500/25 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 cursor-pointer"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Processing Payment &amp; Generating {formData.quantity} Passes...</span>
+                    <span>Processing &amp; Generating {formData.quantity} Passes...</span>
                   </>
                 ) : (
                   <>
@@ -457,14 +504,14 @@ export default function RegistrationForm() {
                 )}
               </button>
 
-              <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-slate-500 pt-2">
+              <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] text-slate-400 pt-1">
                 <span className="flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                  UPI, Cards, NetBanking Supported
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  UPI, Cards &amp; NetBanking
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                   Zero Platform Fees
                 </span>
               </div>
