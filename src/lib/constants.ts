@@ -9,10 +9,13 @@ export const EVENT_CONFIG = {
   tagline:
     "Get ready for JHOOM '26: Dance Fest cum Dandiya Night! Experience electrifying dance face-offs, live dhol beats, and an unforgettable Dandiya Raas celebration! 🪩✨",
   date: "Tuesday, October 13, 2026",
+  displayDate: "13 Oct 2026",
+  dayOfWeek: "Tuesday",
   eventDateISO: "2026-10-13T17:00:00+05:30",
   time: "05:00 PM - 10:30 PM IST",
   gateCloseTime: "04:30 PM",
   venue: "Swatantrata Bhawan, Banaras Hindu University (BHU), Varanasi",
+  shortVenue: "Swatantrata Bhawan",
   city: "Varanasi, Uttar Pradesh",
   originalPriceInINR: 399,
   priceInINR: Number(process.env.NEXT_PUBLIC_EVENT_PRICE) || 299,
@@ -35,7 +38,7 @@ export const PASS_TIERS = [
     price: 299,
     originalPrice: 399,
     savings: 100,
-    tag: "Early Bird Offer",
+    tag: "Early Bird",
   },
   {
     quantity: 2,
@@ -51,7 +54,7 @@ export const PASS_TIERS = [
     price: 1399,
     originalPrice: 1995,
     savings: 596,
-    tag: "Best Value • Save ₹596",
+    tag: "Save ₹596",
   },
 ] as const;
 

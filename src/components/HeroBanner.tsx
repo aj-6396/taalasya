@@ -71,28 +71,31 @@ export default function HeroBanner() {
 
           {/* Mobile-first compact key event fact chips */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3 max-w-xl mx-auto pt-1">
-            <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-pink-500/10 text-pink-400 flex items-center justify-center mx-auto mb-1">
+            <div className="p-2 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center flex flex-col items-center justify-center min-h-[96px] sm:min-h-[105px]">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-pink-500/10 text-pink-400 flex items-center justify-center mx-auto mb-1 shrink-0">
                 <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Date</p>
-              <p className="text-[11px] sm:text-xs font-bold text-white truncate">{EVENT_CONFIG.date}</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Date</p>
+              <p className="text-xs sm:text-sm font-black text-white leading-tight mt-0.5">{EVENT_CONFIG.displayDate || "13 Oct 2026"}</p>
+              <p className="text-[9px] sm:text-[10px] text-pink-400 font-semibold">{EVENT_CONFIG.dayOfWeek || "Tuesday"}</p>
             </div>
 
-            <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mx-auto mb-1">
+            <div className="p-2 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center flex flex-col items-center justify-center min-h-[96px] sm:min-h-[105px]">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mx-auto mb-1 shrink-0">
                 <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Gates Close</p>
-              <p className="text-[11px] sm:text-xs font-bold text-white truncate">{EVENT_CONFIG.gateCloseTime || "04:30 PM"}</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gates Close</p>
+              <p className="text-xs sm:text-sm font-black text-white leading-tight mt-0.5">{EVENT_CONFIG.gateCloseTime || "04:30 PM"}</p>
+              <p className="text-[9px] sm:text-[10px] text-purple-400 font-semibold">Sharp Entry</p>
             </div>
 
-            <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mx-auto mb-1">
+            <div className="p-2 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center flex flex-col items-center justify-center min-h-[96px] sm:min-h-[105px]">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mx-auto mb-1 shrink-0">
                 <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Venue</p>
-              <p className="text-[11px] sm:text-xs font-bold text-white truncate">Swatantrata Bhawan</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Venue</p>
+              <p className="text-xs sm:text-sm font-black text-white leading-tight mt-0.5">Swatantrata</p>
+              <p className="text-[9px] sm:text-[10px] text-indigo-400 font-semibold">Bhawan, BHU</p>
             </div>
           </div>
 

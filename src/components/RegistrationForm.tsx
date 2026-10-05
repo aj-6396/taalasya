@@ -377,7 +377,7 @@ export default function RegistrationForm() {
                 </div>
 
                 {/* 3 Tier Options: 1, 2, 5 */}
-                <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-1">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-3">
                   {PASS_TIERS.map((tier) => {
                     const isSelected = formData.quantity === tier.quantity;
                     return (
@@ -385,22 +385,22 @@ export default function RegistrationForm() {
                         key={tier.quantity}
                         type="button"
                         onClick={() => handleQuantitySelect(tier.quantity)}
-                        className={`relative p-3 sm:p-4 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between ${
+                        className={`relative pt-5 sm:pt-6 pb-2.5 sm:pb-3 px-1 sm:px-2 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between min-h-[110px] sm:min-h-[125px] ${
                           isSelected
                             ? "bg-gradient-to-b from-pink-500/20 via-purple-600/20 to-indigo-600/30 border-pink-500 text-white shadow-lg shadow-pink-500/20 scale-[1.02]"
                             : "bg-slate-900/70 border-white/[0.08] hover:border-slate-700 text-slate-300"
                         }`}
                       >
                         {tier.savings > 0 && (
-                          <span className="absolute -top-2.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-400 text-black shadow-sm">
+                          <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-400 text-black shadow-md whitespace-nowrap z-10 pointer-events-none">
                             {tier.tag}
                           </span>
                         )}
-                        <span className="text-xs sm:text-sm font-bold leading-tight mt-0.5">
+                        <span className="text-[11px] sm:text-sm font-bold leading-tight">
                           {tier.name}
                         </span>
-                        <div className="my-1.5">
-                          <span className="text-lg sm:text-2xl font-black text-white">
+                        <div className="my-1 sm:my-1.5">
+                          <span className="text-base sm:text-2xl font-black text-white">
                             ₹{tier.price}
                           </span>
                           {tier.savings > 0 && (
@@ -409,7 +409,7 @@ export default function RegistrationForm() {
                             </span>
                           )}
                         </div>
-                        <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400">
+                        <span className="text-[9.5px] sm:text-[11px] font-semibold text-slate-400">
                           {tier.quantity} {tier.quantity === 1 ? "Person" : "Persons"}
                         </span>
                       </button>
