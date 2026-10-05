@@ -30,8 +30,7 @@ export async function POST(req: NextRequest) {
       razorpay_payment_id?.startsWith("pay_demo_") ||
       razorpay_payment_id?.startsWith("pay_sim_");
 
-    const keySecret =
-      process.env.RAZORPAY_KEY_SECRET || "24pPC2vfDzo51cOZhW0RUmA0";
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
     // Verify cryptographic signature if secret is configured and not in workflow demo mode
     if (keySecret && razorpay_signature && !isDemoMode) {

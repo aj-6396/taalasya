@@ -18,9 +18,14 @@ export async function POST(req: NextRequest) {
     const totalAmountInPaise = Math.round(getTierPrice(numQty) * 100);
 
     const keyId =
-      process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
-      process.env.RAZORPAY_KEY_ID ||
-      "rzp_live_TkCGITMdi4Rh3N";
+      process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
+
+    if (!keyId || !process.env.RAZORPAY_KEY_SECRET) {
+      return NextResponse.json(
+        { error: "Payment gateway credentials are not configured in environment variables." },
+        { status: 500 }
+      );
+    }
 
     const razorpay = getRazorpayClient();
 
