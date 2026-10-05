@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Ticket as TicketIcon,
   Calendar,
   Download,
   Shield,
@@ -57,11 +56,22 @@ export default function TicketCard({
         {/* Top Header of Ticket */}
         <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 text-white relative print:bg-none print:bg-slate-900 print:text-white">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <TicketIcon className="w-5 h-5 text-white" />
-              <span className="font-extrabold tracking-wider text-xs sm:text-sm uppercase">
-                JHOOM &apos;26 PASS
-              </span>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full p-0.5 bg-white shrink-0 shadow-sm">
+                <img
+                  src="/logo.png"
+                  alt="Taalasya Logo"
+                  className="w-full h-full rounded-full object-cover"
+                />
+              </div>
+              <div>
+                <span className="font-extrabold tracking-wider text-xs sm:text-sm uppercase block leading-tight">
+                  JHOOM &apos;26 PASS
+                </span>
+                <span className="text-[9px] text-pink-200 font-semibold block leading-tight">
+                  Taalasya Dance Society
+                </span>
+              </div>
             </div>
             <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/30 text-white tracking-wide">
               {passBadgeText}

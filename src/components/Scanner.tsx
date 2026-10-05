@@ -280,13 +280,22 @@ export default function Scanner() {
     return (
       <div className="max-w-md mx-auto px-4 py-16">
         <div className="rounded-3xl bg-slate-900 border border-slate-800 p-8 shadow-2xl text-center space-y-6">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-400 mx-auto flex items-center justify-center">
-            <Lock className="w-8 h-8" />
+          <div className="relative w-20 h-20 mx-auto">
+            <div className="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 shadow-xl shadow-indigo-500/20">
+              <img
+                src="/logo.png"
+                alt="Taalasya"
+                className="w-full h-full rounded-full object-cover bg-white"
+              />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center border-2 border-slate-900 shadow">
+              <Lock className="w-3.5 h-3.5" />
+            </div>
           </div>
           <div>
             <h2 className="text-2xl font-black text-white">Entry Gate Terminal</h2>
             <p className="text-xs text-slate-400 mt-1">
-              Authorized gate marshal access only. Enter staff PIN to activate camera.
+              Taalasya Gate Marshal Access. Enter staff PIN to activate camera.
             </p>
           </div>
 
@@ -333,17 +342,26 @@ export default function Scanner() {
     <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
       {/* Top Header & Live Counter Bar */}
       <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-900 border border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
-              Gate Checkpoint Live
-            </span>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-pink-500 to-indigo-500 shrink-0 shadow-sm">
+            <img
+              src="/logo.png"
+              alt="Taalasya Logo"
+              className="w-full h-full rounded-full object-cover bg-white"
+            />
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">High-speed QR entry verification</p>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                Gate Checkpoint Live
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-0.5">Taalasya Gate Marshal Terminal</p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

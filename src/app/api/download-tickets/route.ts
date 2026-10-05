@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import path from "path";
+import fs from "fs";
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 import { getAdminSupabase } from "@/lib/supabase/admin";
@@ -26,6 +28,17 @@ export async function POST(req: NextRequest) {
     const eventTime = eventDetails.time || EVENT_CONFIG.time;
     const eventVenue = eventDetails.venue || EVENT_CONFIG.venue;
     const organizer = eventDetails.organizer || EVENT_CONFIG.organizer;
+
+    // Load official Taalasya logo if available on disk
+    const logoPath = path.join(process.cwd(), "public", "logo.png");
+    let logoBuffer: Buffer | null = null;
+    try {
+      if (fs.existsSync(logoPath)) {
+        logoBuffer = fs.readFileSync(logoPath);
+      }
+    } catch (logoErr) {
+      console.warn("[download-tickets] Could not load logo image for PDF:", logoErr);
+    }
 
     // =========================================================================
     // 1. Multi-Ticket Setup: Each attendee gets their own name & ticket ID
@@ -150,41 +163,79 @@ export async function POST(req: NextRequest) {
             .roundedRect(44, headerBoxY, 507.28, headerBoxHeight, 10)
             .fillAndStroke("#0f172a", "#0f172a");
 
-          // 1. Badge Top inside Header
+          // 1. Badge, Event Title & Organizer inside Header
           const badgeText =
             currentTicket.totalTickets > 1
               ? `★ OFFICIAL ADMISSION PASS • PASS ${currentTicket.ticketIndex} OF ${currentTicket.totalTickets} ★`
               : "★ OFFICIAL ADMISSION PASS ★";
 
-          doc
-            .fillColor("#ec4899")
-            .fontSize(9)
-            .font("Helvetica-Bold")
-            .text(badgeText, 54, headerBoxY + 12, {
-              align: "center",
-              width: 487.28,
-            });
+          if (logoBuffer) {
+            // Draw Official Taalasya Circular Crest in Header Box
+            try {
+              doc.image(logoBuffer, 56, headerBoxY + 16, {
+                width: 82,
+                height: 82,
+              });
+            } catch (drawErr) {
+              console.warn("Could not draw logo image:", drawErr);
+            }
 
-          // 2. Event Title (Carefully sized to avoid multi-line overflow)
-          doc
-            .fillColor("#FFFFFF")
-            .fontSize(17)
-            .font("Helvetica-Bold")
-            .text(eventName, 54, headerBoxY + 30, {
-              align: "center",
-              width: 487.28,
-              lineGap: 2,
-            });
+            doc
+              .fillColor("#ec4899")
+              .fontSize(8.5)
+              .font("Helvetica-Bold")
+              .text(badgeText, 150, headerBoxY + 14, {
+                align: "left",
+                width: 385,
+              });
 
-          // 3. Organizer (Positioned safely near the bottom of header box)
-          doc
-            .fillColor("#cbd5e1")
-            .fontSize(9)
-            .font("Helvetica")
-            .text(organizer, 54, headerBoxY + 86, {
-              align: "center",
-              width: 487.28,
-            });
+            doc
+              .fillColor("#FFFFFF")
+              .fontSize(16)
+              .font("Helvetica-Bold")
+              .text(eventName, 150, headerBoxY + 30, {
+                align: "left",
+                width: 385,
+                lineGap: 2,
+              });
+
+            doc
+              .fillColor("#cbd5e1")
+              .fontSize(9)
+              .font("Helvetica")
+              .text(organizer, 150, headerBoxY + 86, {
+                align: "left",
+                width: 385,
+              });
+          } else {
+            doc
+              .fillColor("#ec4899")
+              .fontSize(9)
+              .font("Helvetica-Bold")
+              .text(badgeText, 54, headerBoxY + 12, {
+                align: "center",
+                width: 487.28,
+              });
+
+            doc
+              .fillColor("#FFFFFF")
+              .fontSize(17)
+              .font("Helvetica-Bold")
+              .text(eventName, 54, headerBoxY + 30, {
+                align: "center",
+                width: 487.28,
+                lineGap: 2,
+              });
+
+            doc
+              .fillColor("#cbd5e1")
+              .fontSize(9)
+              .font("Helvetica")
+              .text(organizer, 54, headerBoxY + 86, {
+                align: "center",
+                width: 487.28,
+              });
+          }
 
           // Yellow Badge: "1 QR CODE = 1 ENTRY ONLY"
           const pillY = 168;

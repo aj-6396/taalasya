@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { QrCode, Ticket, Sparkles } from "lucide-react";
+import Image from "next/image";
+import { QrCode, Sparkles } from "lucide-react";
 import { EVENT_CONFIG } from "@/lib/constants";
 
 export default function Navbar() {
@@ -8,10 +9,15 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 p-0.5 shadow-md shadow-pink-500/20 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-[#090d16] rounded-[10px] flex items-center justify-center">
-                <Ticket className="w-4 h-4 text-pink-400 group-hover:text-purple-400 transition-colors" />
-              </div>
+            <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full p-0.5 bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 shadow-md shadow-pink-500/20 group-hover:scale-105 transition-transform shrink-0">
+              <Image
+                src="/logo.png"
+                alt="Taalasya BHU Logo"
+                width={36}
+                height={36}
+                className="w-full h-full rounded-full object-cover bg-white"
+                priority
+              />
             </div>
             <div>
               <div className="flex items-center gap-1.5">

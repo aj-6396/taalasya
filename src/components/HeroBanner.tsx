@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Calendar, MapPin, Clock, ShieldCheck, Zap, ArrowRight, Sparkles } from "lucide-react";
 import { EVENT_CONFIG } from "@/lib/constants";
 
@@ -39,15 +40,27 @@ export default function HeroBanner() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <div className="text-center space-y-4 sm:space-y-6">
-          {/* Status badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-purple-500/30 shadow-sm backdrop-blur-md">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
-            </span>
-            <span className="text-[11px] sm:text-xs font-semibold text-purple-200 tracking-wide uppercase">
-              Taalasya Dance Society • BHU Presents
-            </span>
+          {/* Official Society Logo Crest & Status badge */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 shadow-xl shadow-pink-500/25 ring-4 ring-pink-500/10">
+              <Image
+                src="/logo.png"
+                alt="Taalasya Dance Society Official Logo"
+                width={80}
+                height={80}
+                className="w-full h-full rounded-full object-cover bg-white"
+                priority
+              />
+            </div>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900/90 border border-purple-500/30 shadow-sm backdrop-blur-md">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+              </span>
+              <span className="text-[11px] sm:text-xs font-semibold text-purple-200 tracking-wide uppercase">
+                Taalasya Dance Society • BHU Presents
+              </span>
+            </div>
           </div>
 
           {/* Main Title */}

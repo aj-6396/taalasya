@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Ticket, Heart, Shield, Code2, QrCode } from "lucide-react";
+import Image from "next/image";
+import { Heart, Shield, Code2, QrCode } from "lucide-react";
 import { EVENT_CONFIG } from "@/lib/constants";
 
 export default function Footer() {
@@ -9,10 +10,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           <div className="sm:col-span-2 space-y-3.5">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 to-indigo-500 p-0.5 shadow-md shadow-pink-500/10">
-                <div className="w-full h-full bg-[#090d16] rounded-[10px] flex items-center justify-center">
-                  <Ticket className="w-4 h-4 text-pink-400" />
-                </div>
+              <div className="relative w-9 h-9 rounded-full p-0.5 bg-gradient-to-tr from-pink-500 to-indigo-500 shadow-md shadow-pink-500/10 shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="Taalasya Dance Society Logo"
+                  width={36}
+                  height={36}
+                  className="w-full h-full rounded-full object-cover bg-white"
+                />
               </div>
               <div>
                 <span className="font-extrabold text-white text-base tracking-tight block">
