@@ -55,13 +55,16 @@ export default function HeroBanner() {
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white leading-none">
               JHOOM &apos;26
             </h1>
+            <p className="text-base sm:text-xl md:text-2xl font-bold text-pink-300 tracking-wide">
+              Cultural Evening
+            </p>
             <p className="text-lg sm:text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-pink-400 via-purple-300 to-indigo-300 bg-clip-text text-transparent">
               Dance Fest cum Dandiya Night! 🪩✨
             </p>
           </div>
 
           <p className="text-xs sm:text-base text-slate-300 leading-relaxed max-w-xl mx-auto">
-            Experience the ultimate fusion of high-energy stage performances, live dhol, and vibrant Dandiya Raas at Swatantrata Bhawan, BHU. Early bird passes starting at{" "}
+            Experience the ultimate fusion of high-energy stage performances, DJ and vibrant Dandiya Night at Swatantrata Bhawan, BHU. Early bird passes starting at{" "}
             <strong className="text-pink-400 font-bold">₹{EVENT_CONFIG.priceInINR} only</strong>!
           </p>
 
@@ -79,8 +82,8 @@ export default function HeroBanner() {
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mx-auto mb-1">
                 <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Gates Open</p>
-              <p className="text-[11px] sm:text-xs font-bold text-white truncate">{EVENT_CONFIG.time}</p>
+              <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Gates Close</p>
+              <p className="text-[11px] sm:text-xs font-bold text-white truncate">{EVENT_CONFIG.gateCloseTime || "04:30 PM"}</p>
             </div>
 
             <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center">

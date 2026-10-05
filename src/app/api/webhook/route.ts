@@ -95,9 +95,6 @@ export async function POST(req: NextRequest) {
     // Generate short human-friendly Ticket ID
     const ticketId = generateShortTicketId();
 
-    // Generate dynamic QR Code URL
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${ticketId}`;
-
     let savedToDatabase = false;
 
     // Write to Supabase tickets table

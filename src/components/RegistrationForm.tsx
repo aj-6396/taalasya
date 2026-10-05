@@ -15,13 +15,27 @@ import {
   AlertCircle,
   Users,
 } from "lucide-react";
-import { EVENT_CONFIG } from "@/lib/constants";
+import { EVENT_CONFIG, PASS_TIERS, getTierPrice } from "@/lib/constants";
 import { generateShortTicketId } from "@/lib/ticketId";
 
 declare global {
   interface Window {
     Razorpay: any;
   }
+}
+
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") return resolve(false);
+    if ((window as any).Razorpay) return resolve(true);
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
 }
 
 export default function RegistrationForm() {
@@ -41,8 +55,7 @@ export default function RegistrationForm() {
   const [errorMessage, setErrorMessage] = useState("");
   const [demoNotice, setDemoNotice] = useState<string | null>(null);
 
-  const pricePerTicket = EVENT_CONFIG.priceInINR;
-  const totalAmount = pricePerTicket * formData.quantity;
+  const totalAmount = getTierPrice(formData.quantity);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -126,68 +139,166 @@ export default function RegistrationForm() {
     setLoading(true);
 
     try {
-      const mockPaymentId = `pay_${Date.now().toString().slice(-8)}`;
-      const mockOrderId = `order_${Date.now().toString().slice(-8)}`;
-
-      // Store verified tickets in Supabase with individual attendee names
-      const verifyRes = await fetch("/api/verify-payment", {
+      // 1. Create Order on server
+      const orderRes = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          razorpay_order_id: mockOrderId,
-          razorpay_payment_id: mockPaymentId,
-          razorpay_signature: "simulated_signature",
           name: formData.name.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim(),
           quantity: formData.quantity,
-          attendees: fullAttendees,
         }),
       });
 
-      const verifyData = await verifyRes.json();
-      const generatedTicketId =
-        verifyData.ticketId || generateShortTicketId();
+      const orderData = await orderRes.json();
 
-      const ticketIdsList =
-        verifyData.ticketIds && verifyData.ticketIds.length > 0
-          ? verifyData.ticketIds.join(",")
-          : generatedTicketId;
+      if (!orderRes.ok || !orderData.orderId) {
+        throw new Error(orderData.error || "Failed to create payment order. Please try again.");
+      }
 
-      // Redirect immediately to payment success page
-      router.push(
-        `/success?ticket_id=${encodeURIComponent(
-          generatedTicketId
-        )}&ticket_ids=${encodeURIComponent(
-          ticketIdsList
-        )}&payment_id=${encodeURIComponent(
-          mockPaymentId
-        )}&order_id=${encodeURIComponent(
-          mockOrderId
-        )}&name=${encodeURIComponent(
-          formData.name.trim()
-        )}&email=${encodeURIComponent(
-          formData.email.trim()
-        )}&phone=${encodeURIComponent(
-          formData.phone.trim()
-        )}&quantity=${formData.quantity}&attendees=${encodeURIComponent(
-          JSON.stringify(fullAttendees)
-        )}`
-      );
+      // If server returned simulated fallback (e.g. keys missing):
+      if (orderData.isDemo) {
+        setDemoNotice("Running in instant demo mode. Redirecting to passes...");
+        const fallbackTicketId = generateShortTicketId();
+        router.push(
+          `/success?ticket_id=${fallbackTicketId}&payment_id=${orderData.orderId}&name=${encodeURIComponent(
+            formData.name.trim()
+          )}&email=${encodeURIComponent(
+            formData.email.trim()
+          )}&phone=${encodeURIComponent(formData.phone.trim())}&quantity=${formData.quantity}&attendees=${encodeURIComponent(
+            JSON.stringify(fullAttendees)
+          )}`
+        );
+        return;
+      }
+
+      // 2. Load Razorpay Checkout Script if not already loaded
+      const isScriptLoaded = await loadRazorpayScript();
+      if (!isScriptLoaded || typeof window.Razorpay === "undefined") {
+        throw new Error(
+          "Payment gateway checkout failed to load. Please check your network connection and retry."
+        );
+      }
+
+      // Format contact as +91XXXXXXXXXX so Razorpay skips contact collection
+      const rawDigits = formData.phone.replace(/\D/g, "");
+      const clean10Digits = rawDigits.slice(-10);
+      const formattedContact = clean10Digits ? `+91${clean10Digits}` : formData.phone.trim();
+
+      // 3. Configure Razorpay Checkout to open directly to payment methods
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency || "INR",
+        name: EVENT_CONFIG.shortName || "JHOOM '26",
+        description: `${formData.quantity}x Pass • ${EVENT_CONFIG.name}`,
+        order_id: orderData.orderId,
+        prefill: {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          contact: formattedContact,
+        },
+        readonly: {
+          contact: true,
+          email: true,
+          name: true,
+        },
+        send_sms_hash: false,
+        remember_customer: false,
+        notes: {
+          quantity: String(formData.quantity),
+          attendeeNames: fullAttendees.map((a) => a.name).join(", "),
+        },
+        theme: {
+          color: "#ec4899",
+        },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+          },
+        },
+        handler: async (response: any) => {
+          try {
+            setLoading(true);
+
+            // 4. Cryptographically verify payment on server & save tickets
+            const verifyRes = await fetch("/api/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                name: formData.name.trim(),
+                email: formData.email.trim(),
+                phone: formData.phone.trim(),
+                quantity: formData.quantity,
+                attendees: fullAttendees,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (!verifyRes.ok || !verifyData.success) {
+              throw new Error(verifyData.error || "Payment verification failed.");
+            }
+
+            const generatedTicketId =
+              verifyData.ticketId || generateShortTicketId();
+
+            const ticketIdsList =
+              verifyData.ticketIds && verifyData.ticketIds.length > 0
+                ? verifyData.ticketIds.join(",")
+                : generatedTicketId;
+
+            // 5. Route to success page for direct ticket display & PDF download
+            router.push(
+              `/success?ticket_id=${encodeURIComponent(
+                generatedTicketId
+              )}&ticket_ids=${encodeURIComponent(
+                ticketIdsList
+              )}&payment_id=${encodeURIComponent(
+                response.razorpay_payment_id
+              )}&order_id=${encodeURIComponent(
+                response.razorpay_order_id
+              )}&name=${encodeURIComponent(
+                formData.name.trim()
+              )}&email=${encodeURIComponent(
+                formData.email.trim()
+              )}&phone=${encodeURIComponent(
+                formData.phone.trim()
+              )}&quantity=${formData.quantity}&attendees=${encodeURIComponent(
+                JSON.stringify(fullAttendees)
+              )}`
+            );
+          } catch (verifyErr: any) {
+            console.error("Payment verification error:", verifyErr);
+            setErrorMessage(
+              verifyErr.message || "Payment verification failed. Please contact event support."
+            );
+            setLoading(false);
+          }
+        },
+      };
+
+      const razorpayInstance = new window.Razorpay(options);
+
+      razorpayInstance.on("payment.failed", (failRes: any) => {
+        console.error("Payment failed:", failRes);
+        setErrorMessage(
+          failRes?.error?.description || "Payment was cancelled or failed. Please try again."
+        );
+        setLoading(false);
+      });
+
+      razorpayInstance.open();
     } catch (err: any) {
-      console.error("Payment processing error:", err);
-      // Fallback redirect with generated pass
-      const mockPaymentId = `pay_${Date.now().toString().slice(-8)}`;
-      const fallbackTicketId = generateShortTicketId();
-      router.push(
-        `/success?ticket_id=${fallbackTicketId}&payment_id=${mockPaymentId}&name=${encodeURIComponent(
-          formData.name.trim()
-        )}&email=${encodeURIComponent(
-          formData.email.trim()
-        )}&phone=${encodeURIComponent(formData.phone.trim())}&quantity=${formData.quantity}&attendees=${encodeURIComponent(
-          JSON.stringify(fullAttendees)
-        )}`
+      console.error("Payment initialization error:", err);
+      setErrorMessage(
+        err.message || "Failed to initialize payment gateway. Please try again."
       );
+      setLoading(false);
     }
   };
 
@@ -223,17 +334,17 @@ export default function RegistrationForm() {
                   Book Your Fest &amp; Dandiya Pass
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                  Starting at ₹{pricePerTicket} only. Hosted by Taalasya Dance Society at Swatantrata Bhawan, BHU.
+                  Starting at ₹299 only. Passes available for 1, 2, and 5 attendees with special group savings!
                 </p>
               </div>
 
               <div className="p-3 sm:p-4 rounded-2xl bg-[#070b13] border border-white/[0.06] text-left sm:text-right min-w-[140px] flex sm:flex-col items-center sm:items-end justify-between sm:justify-center">
                 <div>
                   <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
-                    Starting Price
+                    Starting At
                   </p>
                   <p className="text-2xl sm:text-3xl font-black text-white leading-tight">
-                    ₹{pricePerTicket}
+                    ₹299
                     <span className="text-xs font-normal text-slate-400 ml-1">/ person</span>
                   </p>
                 </div>
@@ -264,36 +375,53 @@ export default function RegistrationForm() {
             )}
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-              {/* Pass Quantity Segmented Control */}
+              {/* Pass Tier Selection (1, 2, 5 Passes) */}
               <div className="p-4 rounded-2xl bg-[#070b13] border border-white/[0.06] space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
                     <Ticket className="w-4 h-4 text-emerald-400" />
-                    <span>Select Number of Passes</span>
+                    <span>Select Pass Package</span>
                   </label>
                   <span className="text-xs font-bold text-pink-400">
                     {formData.quantity} {formData.quantity === 1 ? "Pass" : "Passes"} = ₹{totalAmount}
                   </span>
                 </div>
 
-                {/* Mobile Thumb-Friendly Segmented Buttons */}
-                <div className="grid grid-cols-5 gap-1.5 sm:gap-2 p-1 rounded-2xl bg-slate-900/90 border border-slate-800">
-                  {[1, 2, 3, 4, 5].map((num) => {
-                    const isSelected = formData.quantity === num;
+                {/* 3 Tier Options: 1, 2, 5 */}
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-1">
+                  {PASS_TIERS.map((tier) => {
+                    const isSelected = formData.quantity === tier.quantity;
                     return (
                       <button
-                        key={num}
+                        key={tier.quantity}
                         type="button"
-                        onClick={() => handleQuantitySelect(num)}
-                        className={`py-2.5 sm:py-3 rounded-xl font-black text-sm transition-all cursor-pointer flex flex-col items-center justify-center ${
+                        onClick={() => handleQuantitySelect(tier.quantity)}
+                        className={`relative p-3 sm:p-4 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between ${
                           isSelected
-                            ? "bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 text-white shadow-md shadow-pink-500/25 scale-[1.02]"
-                            : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                            ? "bg-gradient-to-b from-pink-500/20 via-purple-600/20 to-indigo-600/30 border-pink-500 text-white shadow-lg shadow-pink-500/20 scale-[1.02]"
+                            : "bg-slate-900/70 border-white/[0.08] hover:border-slate-700 text-slate-300"
                         }`}
                       >
-                        <span className="text-sm sm:text-base leading-none">{num}</span>
-                        <span className="text-[9px] font-semibold opacity-75 uppercase tracking-tighter mt-0.5">
-                          {num === 1 ? "Pass" : "Passes"}
+                        {tier.savings > 0 && (
+                          <span className="absolute -top-2.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-400 text-black shadow-sm">
+                            {tier.tag}
+                          </span>
+                        )}
+                        <span className="text-xs sm:text-sm font-bold leading-tight mt-0.5">
+                          {tier.name}
+                        </span>
+                        <div className="my-1.5">
+                          <span className="text-lg sm:text-2xl font-black text-white">
+                            ₹{tier.price}
+                          </span>
+                          {tier.savings > 0 && (
+                            <span className="block text-[10px] text-slate-400 line-through">
+                              ₹{tier.originalPrice}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400">
+                          {tier.quantity} {tier.quantity === 1 ? "Person" : "Persons"}
                         </span>
                       </button>
                     );
@@ -459,7 +587,13 @@ export default function RegistrationForm() {
               {/* Order Summary Receipt Box */}
               <div className="p-4 rounded-2xl bg-[#070b13] border border-white/[0.08] space-y-2">
                 <div className="flex justify-between items-center text-xs text-slate-400 pb-2 border-b border-dashed border-slate-800">
-                  <span>Passes ({formData.quantity} × ₹{pricePerTicket})</span>
+                  <span>
+                    {formData.quantity === 1
+                      ? "Single Pass (1 Person)"
+                      : formData.quantity === 2
+                      ? "Duo Pass (2 Persons • Save ₹49)"
+                      : "Group Pass (5 Persons • Save ₹96)"}
+                  </span>
                   <span className="font-semibold text-white">₹{totalAmount}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs text-slate-400 pb-2 border-b border-dashed border-slate-800">

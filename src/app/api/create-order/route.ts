@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRazorpayClient } from "@/lib/razorpay";
-import { EVENT_CONFIG } from "@/lib/constants";
+import { EVENT_CONFIG, getTierPrice } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const price = EVENT_CONFIG.priceInINR;
-    const totalAmountInPaise = Math.round(price * quantity * 100);
+    const numQty = Number(quantity) || 1;
+    const totalAmountInPaise = Math.round(getTierPrice(numQty) * 100);
 
     const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
 

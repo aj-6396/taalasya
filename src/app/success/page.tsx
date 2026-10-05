@@ -7,7 +7,6 @@ import confetti from "canvas-confetti";
 import {
   CheckCircle2,
   Download,
-  Printer,
   ArrowLeft,
   Sparkles,
   ShieldCheck,

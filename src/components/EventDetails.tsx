@@ -21,13 +21,13 @@ export default function EventDetails() {
   const highlights = [
     {
       icon: Music,
-      title: "Dandiya Raas & Live Dhol",
-      desc: "Traditional Garba circles, pounding live dhol beats, vibrant festive attire, and non-stop Dandiya Raas under the stars.",
+      title: "Divine Feminine Energy Showcase",
+      desc: "Display of 9 forms of Maa Durga, Mahishasurmardan and folk dances celebrating victory.",
       color: "text-pink-400 bg-pink-500/10 border-pink-500/20",
     },
     {
       icon: Sparkles,
-      title: "Stage Dance Battles & Showcases",
+      title: "Puja and Maha Aarti",
       desc: "High-voltage choreography face-offs, urban street battles, and synchronized dance crew performances.",
       color: "text-purple-400 bg-purple-500/10 border-purple-500/20",
     },
@@ -126,7 +126,7 @@ export default function EventDetails() {
               <div className="pt-1 flex flex-wrap gap-3 text-xs text-slate-300">
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-pink-400" />
-                  <span>Gates open at 05:00 PM</span>
+                  <span>Gates close at 04:30 PM</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Compass className="w-3.5 h-3.5 text-purple-400" />

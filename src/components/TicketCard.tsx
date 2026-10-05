@@ -3,9 +3,7 @@
 import {
   Ticket as TicketIcon,
   Calendar,
-  CheckCircle2,
   Download,
-  Printer,
   Shield,
   Loader2,
   Sparkles,
@@ -158,7 +156,7 @@ export default function TicketCard({
           <div className="pt-1">
             <p className="text-[11px] text-slate-400 flex items-center justify-center gap-1.5 print:text-slate-600">
               <Shield className="w-3.5 h-3.5 text-emerald-400 print:text-emerald-700" />
-              Strictly single-person entry per QR code. Non-transferable once scanned.
+              Strictly single-person entry per QR code. Gates close at 4:30 PM.
             </p>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { getAdminSupabase } from "@/lib/supabase/admin";
-import { EVENT_CONFIG } from "@/lib/constants";
+import { EVENT_CONFIG, getTierPrice } from "@/lib/constants";
 import { generateShortTicketId } from "@/lib/ticketId";
 
 export async function POST(req: NextRequest) {
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
         phone: attendeePhone,
         paymentId: razorpay_payment_id,
         orderId: razorpay_order_id,
-        amount: Math.round(EVENT_CONFIG.priceInINR),
+        amount: Math.round(getTierPrice(ticketQuantity) / ticketQuantity),
         status: "Valid",
         eventName: EVENT_CONFIG.name,
         createdAt: new Date().toISOString(),

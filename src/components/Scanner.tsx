@@ -18,7 +18,6 @@ import {
   Clock,
   Lock,
   Unlock,
-  Sparkles,
 } from "lucide-react";
 import { playSuccessChime, playWarningBuzzer, playErrorBeep } from "@/lib/audio";
 import { Ticket } from "@/types";

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 import { getAdminSupabase } from "@/lib/supabase/admin";
-import { EVENT_CONFIG } from "@/lib/constants";
+import { EVENT_CONFIG, getTierPrice } from "@/lib/constants";
 import { generateShortTicketId } from "@/lib/ticketId";
 
 export async function POST(req: NextRequest) {
@@ -88,7 +87,7 @@ export async function POST(req: NextRequest) {
           phone: t.phone,
           paymentId: t.paymentId,
           orderId: t.orderId,
-          amount: Math.round(EVENT_CONFIG.priceInINR),
+          amount: Math.round(getTierPrice(ticketQuantity) / ticketQuantity),
           status: "Valid",
           eventName: t.eventName,
           createdAt: t.createdAt,
@@ -97,27 +96,6 @@ export async function POST(req: NextRequest) {
     } catch (sbErr) {
       console.warn("[download-tickets] Database insertion note:", sbErr);
     }
-
-    // --- Firebase Admin Code Snippet ---
-    // If you are using Firebase Admin SDK:
-    // const firebasePromises = tickets.map((t) =>
-    //   admin.firestore().collection("tickets").doc(t.ticketId).set({
-    //     ticketId: t.ticketId,
-    //     buyerName: t.buyerName,
-    //     attendeeName: t.name,
-    //     email: t.email,
-    //     phone: t.phone,
-    //     paymentId: t.paymentId,
-    //     orderId: t.orderId,
-    //     status: "Valid",
-    //     eventName: t.eventName,
-    //     venue: t.venue,
-    //     date: t.date,
-    //     createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    //   })
-    // );
-    // await Promise.all(firebasePromises);
-
     // =========================================================================
     // 2. Multi-Page PDF Generation (Server-Side with PDFKit & QRCode)
     // =========================================================================
@@ -407,7 +385,7 @@ export async function POST(req: NextRequest) {
             .font("Helvetica")
             .text(
               "1. Each QR code is single-use and valid for exactly ONE individual entry at Swatantrata Bhawan gates.\n" +
-                "2. Please present this printed sheet or keep this pass ready on your smartphone screen with high brightness.\n" +
+                "2. Gates close strictly at 04:30 PM. Please arrive on time with this printed sheet or smartphone pass.\n" +
                 "3. Admission passes are non-transferable once scanned by gate marshals.",
               leftColX + 10,
               footerTop + 20,
