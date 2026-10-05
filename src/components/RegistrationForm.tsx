@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Ticket,
@@ -54,6 +54,18 @@ export default function RegistrationForm() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [demoNotice, setDemoNotice] = useState<string | null>(null);
+  const [isTestModeActive, setIsTestModeActive] = useState(
+    process.env.NEXT_PUBLIC_TEST_MODE === "true"
+  );
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("test") === "true") {
+        setIsTestModeActive(true);
+      }
+    }
+  }, []);
 
   const totalAmount = getTierPrice(formData.quantity);
 
@@ -137,6 +149,75 @@ export default function RegistrationForm() {
     ];
 
     setLoading(true);
+
+    // =========================================================================
+    // DIRECT TEST MODE: Instantly generate real tickets without charging money
+    // =========================================================================
+    if (isTestModeActive) {
+      setDemoNotice("⚡ Test Mode Active: Generating admission passes and QR codes...");
+      try {
+        const simulatedOrderId = `order_test_${Date.now().toString().slice(-8)}`;
+        const simulatedPaymentId = `pay_test_${Date.now().toString().slice(-8)}`;
+
+        const verifyRes = await fetch("/api/verify-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            razorpay_order_id: simulatedOrderId,
+            razorpay_payment_id: simulatedPaymentId,
+            razorpay_signature: "simulated_signature",
+            name: formData.name.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
+            quantity: formData.quantity,
+            attendees: fullAttendees,
+          }),
+        });
+
+        const verifyData = await verifyRes.json();
+
+        if (!verifyRes.ok || !verifyData.success) {
+          throw new Error(verifyData.error || "Failed to generate test passes.");
+        }
+
+        const generatedTicketId =
+          verifyData.ticketId || generateShortTicketId();
+
+        const ticketIdsList =
+          verifyData.ticketIds && verifyData.ticketIds.length > 0
+            ? verifyData.ticketIds.join(",")
+            : generatedTicketId;
+
+        router.push(
+          `/success?ticket_id=${encodeURIComponent(
+            generatedTicketId
+          )}&ticket_ids=${encodeURIComponent(
+            ticketIdsList
+          )}&payment_id=${encodeURIComponent(
+            simulatedPaymentId
+          )}&order_id=${encodeURIComponent(
+            simulatedOrderId
+          )}&name=${encodeURIComponent(
+            formData.name.trim()
+          )}&email=${encodeURIComponent(
+            formData.email.trim()
+          )}&phone=${encodeURIComponent(
+            formData.phone.trim()
+          )}&quantity=${formData.quantity}&attendees=${encodeURIComponent(
+            JSON.stringify(fullAttendees)
+          )}&simulated=true`
+        );
+        return;
+      } catch (testErr: any) {
+        console.error("Test pass generation error:", testErr);
+        setErrorMessage(
+          testErr.message || "Failed to generate test passes."
+        );
+        setLoading(false);
+        setDemoNotice(null);
+        return;
+      }
+    }
 
     try {
       // 1. Create Order on server
@@ -608,6 +689,31 @@ export default function RegistrationForm() {
                 </div>
               </div>
 
+              {/* Test Mode Notification Banner */}
+              {isTestModeActive && (
+                <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between gap-3 animate-in fade-in">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                    </span>
+                    <div>
+                      <p className="font-bold">Test Mode Active (Payment Bypassed)</p>
+                      <p className="text-[11px] text-amber-300/80">
+                        Passes &amp; QR codes will generate immediately without charging any money.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsTestModeActive(false)}
+                    className="text-[10px] uppercase font-bold px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/30 shrink-0 cursor-pointer"
+                  >
+                    Switch to Live
+                  </button>
+                </div>
+              )}
+
               {/* Submit CTA Button */}
               <button
                 type="submit"
@@ -618,6 +724,11 @@ export default function RegistrationForm() {
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
                     <span>Processing &amp; Generating {formData.quantity} Passes...</span>
+                  </>
+                ) : isTestModeActive ? (
+                  <>
+                    <Sparkles className="w-5 h-5 text-amber-300" />
+                    <span>Generate {formData.quantity > 1 ? `${formData.quantity} Passes` : "Pass"} (Test Mode • Free)</span>
                   </>
                 ) : (
                   <>
