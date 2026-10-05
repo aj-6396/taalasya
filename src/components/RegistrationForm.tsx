@@ -318,22 +318,27 @@ export default function RegistrationForm() {
                   Book Your Fest &amp; Dandiya Pass
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                  Starting at ₹299 only. Passes available for 1, 2, and 5 attendees with special group savings!
+                  Early bird passes available for 1, 2, and 5 attendees with special group discounts!
                 </p>
               </div>
 
               <div className="p-3 sm:p-4 rounded-2xl bg-[#070b13] border border-white/[0.06] text-left sm:text-right min-w-[140px] flex sm:flex-col items-center sm:items-end justify-between sm:justify-center">
                 <div>
                   <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
-                    Starting At
+                    Early Bird Offer
                   </p>
-                  <p className="text-2xl sm:text-3xl font-black text-white leading-tight">
-                    ₹299
-                    <span className="text-xs font-normal text-slate-400 ml-1">/ person</span>
-                  </p>
+                  <div className="flex items-baseline gap-1.5 sm:justify-end">
+                    <span className="text-sm sm:text-base text-slate-500 line-through font-semibold">
+                      ₹399
+                    </span>
+                    <p className="text-2xl sm:text-3xl font-black text-white leading-tight">
+                      ₹299
+                      <span className="text-xs font-normal text-slate-400 ml-1">/ person</span>
+                    </p>
+                  </div>
                 </div>
                 <span className="inline-block sm:block text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 mt-0.5">
-                  ✓ 0% Platform Fee
+                  ⚡ Save ₹100 • 0% Fee
                 </span>
               </div>
             </div>

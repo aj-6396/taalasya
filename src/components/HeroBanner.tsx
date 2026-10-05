@@ -65,6 +65,7 @@ export default function HeroBanner() {
 
           <p className="text-xs sm:text-base text-slate-300 leading-relaxed max-w-xl mx-auto">
             Experience the ultimate fusion of high-energy stage performances, DJ and vibrant Dandiya Night at Swatantrata Bhawan, BHU. Early bird passes starting at{" "}
+            <span className="line-through text-slate-500 mr-1 font-semibold">₹399</span>
             <strong className="text-pink-400 font-bold">₹{EVENT_CONFIG.priceInINR} only</strong>!
           </p>
 
@@ -129,7 +130,7 @@ export default function HeroBanner() {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 shadow-lg shadow-pink-500/25 active:scale-95 transition-all cursor-pointer"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Get Dandiya Pass — ₹{EVENT_CONFIG.priceInINR} Only</span>
+              <span>Get Early Bird Pass — <span className="line-through opacity-75 font-normal mr-0.5">₹399</span> ₹{EVENT_CONFIG.priceInINR}</span>
               <ArrowRight className="w-4 h-4 ml-0.5" />
             </a>
             <a

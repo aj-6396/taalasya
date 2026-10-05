@@ -36,10 +36,11 @@ export default function StickyMobileBar() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-semibold text-slate-400">From</span>
+            <span className="text-xs font-semibold text-slate-400">Early Bird</span>
+            <span className="text-xs text-slate-500 line-through font-medium">₹399</span>
             <span className="text-base font-black text-white">₹299</span>
             <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
-              1, 2 or 5 Passes
+              Save ₹100
             </span>
           </div>
           <p className="text-[10px] text-slate-400 font-medium">
