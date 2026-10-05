@@ -54,14 +54,14 @@ export default function RegistrationForm() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [demoNotice, setDemoNotice] = useState<string | null>(null);
-  const [isTestModeActive, setIsTestModeActive] = useState(
-    process.env.NEXT_PUBLIC_TEST_MODE === "true"
-  );
+  const [isTestModeActive, setIsTestModeActive] = useState(true);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("test") === "true") {
+      if (params.get("live") === "true") {
+        setIsTestModeActive(false);
+      } else if (params.get("test") === "true") {
         setIsTestModeActive(true);
       }
     }
@@ -443,6 +443,43 @@ export default function RegistrationForm() {
                 </div>
               </div>
             )}
+
+            {/* Mode Switcher Banner (Live vs Direct Test Mode) */}
+            <div className="mt-5 p-3.5 sm:p-4 rounded-2xl bg-[#070b13] border border-white/[0.08] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className={`w-3.5 h-3.5 rounded-full shrink-0 ${isTestModeActive ? "bg-amber-400 animate-pulse" : "bg-emerald-400"}`} />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white">Mode:</span>
+                    <span className={`text-[10px] sm:text-xs font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
+                      isTestModeActive
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                        : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                    }`}>
+                      {isTestModeActive ? "⚡ Free Test Mode (Payment Bypassed)" : "💳 Live Razorpay Payment"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    {isTestModeActive
+                      ? "Form bharte hi direct verified tickets aur QR codes generate ho jayenge (No money deducted)."
+                      : "Form submit par live Razorpay payment gateway screen open hogi."}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsTestModeActive((prev) => !prev)}
+                className={`w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-bold transition-all border shrink-0 cursor-pointer shadow-sm active:scale-95 flex items-center justify-center gap-1.5 ${
+                  isTestModeActive
+                    ? "bg-purple-600 hover:bg-purple-500 text-white border-purple-500 shadow-purple-500/20"
+                    : "bg-amber-600 hover:bg-amber-500 text-white border-amber-500 shadow-amber-500/20"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>{isTestModeActive ? "Switch to Live Razorpay" : "Switch to Free Test Mode"}</span>
+              </button>
+            </div>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-5">
               {/* Pass Tier Selection (1, 2, 5 Passes) */}
