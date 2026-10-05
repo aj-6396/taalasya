@@ -157,22 +157,6 @@ export default function RegistrationForm() {
         throw new Error(orderData.error || "Failed to create payment order. Please try again.");
       }
 
-      // If server returned simulated fallback (e.g. keys missing):
-      if (orderData.isDemo) {
-        setDemoNotice("Running in instant demo mode. Redirecting to passes...");
-        const fallbackTicketId = generateShortTicketId();
-        router.push(
-          `/success?ticket_id=${fallbackTicketId}&payment_id=${orderData.orderId}&name=${encodeURIComponent(
-            formData.name.trim()
-          )}&email=${encodeURIComponent(
-            formData.email.trim()
-          )}&phone=${encodeURIComponent(formData.phone.trim())}&quantity=${formData.quantity}&attendees=${encodeURIComponent(
-            JSON.stringify(fullAttendees)
-          )}`
-        );
-        return;
-      }
-
       // 2. Load Razorpay Checkout Script if not already loaded
       const isScriptLoaded = await loadRazorpayScript();
       if (!isScriptLoaded || typeof window.Razorpay === "undefined") {

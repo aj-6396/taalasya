@@ -17,26 +17,10 @@ export async function POST(req: NextRequest) {
     const numQty = Number(quantity) || 1;
     const totalAmountInPaise = Math.round(getTierPrice(numQty) * 100);
 
-    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
-
-    // Check if live Razorpay keys are configured
-    if (!keyId || !process.env.RAZORPAY_KEY_SECRET) {
-      console.warn(
-        "[API create-order] Razorpay credentials not found in env. Returning simulated order for demo."
-      );
-      const mockOrderId = `order_demo_${Date.now()}`;
-      return NextResponse.json({
-        success: true,
-        orderId: mockOrderId,
-        amount: totalAmountInPaise,
-        currency: EVENT_CONFIG.currency,
-        keyId: keyId || "rzp_test_placeholder",
-        name,
-        email,
-        phone,
-        isDemo: true,
-      });
-    }
+    const keyId =
+      process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
+      process.env.RAZORPAY_KEY_ID ||
+      "rzp_live_TkCGITMdi4Rh3N";
 
     const razorpay = getRazorpayClient();
 
