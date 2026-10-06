@@ -12,7 +12,7 @@ export const EVENT_CONFIG = {
   displayDate: "13 Oct 2026",
   dayOfWeek: "Tuesday",
   eventDateISO: "2026-10-13T17:00:00+05:30",
-  time: "05:00 PM - 10:30 PM IST",
+  time: "03:00 PM - 08:00 PM IST",
   gateCloseTime: "04:30 PM",
   venue: "Swatantrata Bhawan, Banaras Hindu University (BHU), Varanasi",
   shortVenue: "Swatantrata Bhawan",

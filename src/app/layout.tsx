@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     template: "%s | Taalasya Dance Society — BHU",
   },
   description:
-    "Official portal for JHOOM '26: The Grand Dance Fest cum Dandiya Night in BHU Varanasi hosted by Taalasya Dance Society on 13th October 2026 at Swatantrata Bhawan, Banaras Hindu University. Live Dhol beats, Garba, DJ & Dance Face-offs. Book passes starting ₹299!",
+    "Official portal for JHOOM '26: The Grand Dance Fest cum Dandiya Night in BHU Varanasi hosted by Taalasya Dance Society on 13th October 2026 at Swatantrata Bhawan, Banaras Hindu University. Garba, DJ & Dance Face-offs. Book passes starting ₹299!",
   applicationName: "Taalasya Dance Society Event Portal",
   authors: [{ name: "AJ", url: "https://aj-7portfolio.vercel.app/" }],
   creator: "AJ",

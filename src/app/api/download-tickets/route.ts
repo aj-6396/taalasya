@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     // --- Database Writes: Supabase & Firebase Admin Snippet ---
     try {
       const supabase = getAdminSupabase();
-      await supabase.from("tickets").insert(
+      await supabase.from("tickets").upsert(
         tickets.map((t) => ({
           ticketId: t.ticketId,
           name: t.name,
@@ -104,7 +104,8 @@ export async function POST(req: NextRequest) {
           status: "Valid",
           eventName: t.eventName,
           createdAt: t.createdAt,
-        }))
+        })),
+        { onConflict: "ticketId" }
       );
     } catch (sbErr) {
       console.warn("[download-tickets] Database insertion note:", sbErr);
@@ -166,8 +167,8 @@ export async function POST(req: NextRequest) {
           // 1. Badge, Event Title & Organizer inside Header
           const badgeText =
             currentTicket.totalTickets > 1
-              ? `★ OFFICIAL ADMISSION PASS • PASS ${currentTicket.ticketIndex} OF ${currentTicket.totalTickets} ★`
-              : "★ OFFICIAL ADMISSION PASS ★";
+              ? `OFFICIAL ADMISSION PASS • PASS ${currentTicket.ticketIndex} OF ${currentTicket.totalTickets}`
+              : "OFFICIAL ADMISSION PASS";
 
           if (logoBuffer) {
             // Draw Official Taalasya Circular Crest in Header Box

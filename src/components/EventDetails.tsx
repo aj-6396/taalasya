@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Sparkles,
   Music,
-  Users,
   Award,
   HelpCircle,
   MapPin,
@@ -28,19 +27,13 @@ export default function EventDetails() {
     {
       icon: Sparkles,
       title: "Puja and Maha Aarti",
-      desc: "High-voltage choreography face-offs, urban street battles, and synchronized dance crew performances.",
+      desc: "Puja and Maha Aarti of Maa Durga before the commencement of the Dandiya Celebration and garba segment",
       color: "text-purple-400 bg-purple-500/10 border-purple-500/20",
-    },
-    {
-      icon: Users,
-      title: "Classical & Semi-Classical Fusion",
-      desc: "Spellbinding Kathak, Bharatanatyam, and folk expressions presented by the talented dancers of Taalasya BHU.",
-      color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
     },
     {
       icon: Award,
       title: "DJ Finale & Festive Dance Floor",
-      desc: "Cap off the night with an open DJ dance floor mixing Bollywood anthems, EDM, and high-energy Garba tracks.",
+      desc: "Cap off the night with an open DJ dance floor and high-energy Garba tracks.",
       color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
     },
   ];
@@ -48,11 +41,11 @@ export default function EventDetails() {
   const faqs = [
     {
       q: "What is JHOOM '26?",
-      a: "JHOOM '26 is the annual Dance Fest cum Dandiya Night organized by Taalasya Dance Society, the official dance club of Banaras Hindu University (BHU). Taking place on 13th October 2026 at Swatantrata Bhawan, it unites campus dance lovers for an unforgettable cultural evening.",
+      a: "JHOOM '26 is the First ever Dance Fest cum Dandiya Night organized by Taalasya Dance Society, the official dance club of Banaras Hindu University (BHU). Taking place on 13th October 2026 at Swatantrata Bhawan, it unites campus dance lovers for an unforgettable cultural evening.",
     },
     {
       q: "Are Dandiya sticks provided?",
-      a: "Yes! Festive Dandiya sticks will be available at designated event counters inside the venue, or you can bring your own pair. Traditional ethnic attire (Kurtas, Chaniya Cholis) is warmly encouraged!",
+      a: "Yes! Festive Dandiya sticks will be available at designated event counters which you can purchase inside the venue. Traditional ethnic attire (Kurtas, Chaniya Cholis) is warmly encouraged!",
     },
     {
       q: "How will I receive my entry pass?",
@@ -60,11 +53,7 @@ export default function EventDetails() {
     },
     {
       q: "Who can attend the event?",
-      a: "Students of Banaras Hindu University, faculty, alumni, and invited guests with a valid digital QR pass and a matching university/government photo ID are welcome.",
-    },
-    {
-      q: "Where is the Dandiya Night venue located in BHU Varanasi?",
-      a: "JHOOM '26 is hosted at the prestigious Swatantrata Bhawan Auditorium inside the Banaras Hindu University (BHU) campus, Varanasi. It is conveniently situated near VT (Vishwanath Temple) and easily accessible from BHU Lanka Gate and Hyderabad Gate.",
+      a: "Students of Banaras Hindu University with a valid digital QR pass and a matching university Photo ID are welcome.",
     },
   ];
 
@@ -86,7 +75,7 @@ export default function EventDetails() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
             {highlights.map((item, idx) => {
               const Icon = item.icon;
               return (
