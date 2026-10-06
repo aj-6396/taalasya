@@ -77,11 +77,10 @@ export default function TermsPage() {
           <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-1.5 backdrop-blur-sm">
             <div className="flex items-center gap-2 text-purple-400 font-bold text-xs">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>Single Entry Only</span>
+              <span>Entry: 02:30 PM - 04:30 PM</span>
             </div>
             <p className="text-[11.5px] text-slate-400 leading-normal">
-              Each unique QR code admits exactly one person once. Re-entry after
-              exit is strictly prohibited.
+              Gates strictly open 02:30 PM - 04:30 PM. Each QR code admits exactly one person once. No re-entry permitted.
             </p>
           </div>
 

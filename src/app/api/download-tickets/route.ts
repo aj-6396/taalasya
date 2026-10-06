@@ -437,7 +437,7 @@ export async function POST(req: NextRequest) {
             .font("Helvetica")
             .text(
               "1. Each QR code is single-use and valid for exactly ONE individual entry at Swatantrata Bhawan gates.\n" +
-                "2. Gates close strictly at 04:30 PM. Please arrive on time with this printed sheet or smartphone pass.\n" +
+                "2. Entry time is strictly 02:30 PM - 04:30 PM (Gates close at 04:30 PM). Please arrive on time with this pass.\n" +
                 "3. Admission passes are non-transferable once scanned by gate marshals.",
               leftColX + 10,
               footerTop + 20,

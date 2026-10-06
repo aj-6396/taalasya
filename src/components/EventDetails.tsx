@@ -119,7 +119,7 @@ export default function EventDetails() {
               <div className="pt-1 flex flex-wrap gap-3 text-xs text-slate-300">
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-pink-400" />
-                  <span>Gates close at 04:30 PM</span>
+                  <span>Entry: 02:30 PM - 04:30 PM (Gates close at 04:30 PM)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Compass className="w-3.5 h-3.5 text-purple-400" />

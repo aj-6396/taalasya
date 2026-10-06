@@ -97,9 +97,9 @@ export default function HeroBanner() {
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mx-auto mb-1 shrink-0">
                 <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gates Close</p>
-              <p className="text-xs sm:text-sm font-black text-white leading-tight mt-0.5">{EVENT_CONFIG.gateCloseTime || "04:30 PM"}</p>
-              <p className="text-[9px] sm:text-[10px] text-purple-400 font-semibold">Sharp Entry</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Entry Time</p>
+              <p className="text-[10px] sm:text-xs font-black text-white leading-tight mt-0.5 whitespace-nowrap">2:30 PM - 4:30 PM</p>
+              <p className="text-[8.5px] sm:text-[10px] text-purple-400 font-semibold">Gates Close 04:30 PM</p>
             </div>
 
             <div className="p-2 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center flex flex-col items-center justify-center min-h-[96px] sm:min-h-[105px]">
