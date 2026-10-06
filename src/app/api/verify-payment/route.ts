@@ -119,28 +119,47 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2.5 Optional: Upload ID Card images to Supabase Storage bucket 'id-cards' if available
+    // 2.5 Upload ID Card images to Supabase Storage bucket 'id-cards' if available
     try {
+      try {
+        await supabase.storage.createBucket("id-cards", { public: true });
+      } catch {
+        // Bucket may already exist or restricted; ignore
+      }
+
       for (const t of generatedTickets) {
         if (
           t.idCardUrl &&
           typeof t.idCardUrl === "string" &&
           (t.idCardUrl.startsWith("data:") || t.idCardUrl.length > 200)
         ) {
+          let trimmedUrl = t.idCardUrl.trim();
+          if (trimmedUrl.includes("%") || trimmedUrl.startsWith("data%3A")) {
+            try {
+              trimmedUrl = decodeURIComponent(trimmedUrl);
+            } catch {
+              trimmedUrl = trimmedUrl.replace(/%2B/gi, "+").replace(/%2F/gi, "/").replace(/%3D/gi, "=").replace(/%20/gi, "+");
+            }
+          }
+
           let mime = "image/jpeg";
-          let rawB64 = t.idCardUrl;
-          if (t.idCardUrl.startsWith("data:")) {
-            const commaIdx = t.idCardUrl.indexOf(",");
+          let rawB64 = trimmedUrl;
+          if (trimmedUrl.startsWith("data:")) {
+            const commaIdx = trimmedUrl.indexOf(",");
             if (commaIdx !== -1) {
-              const header = t.idCardUrl.slice(0, commaIdx);
-              rawB64 = t.idCardUrl.slice(commaIdx + 1);
+              const header = trimmedUrl.slice(0, commaIdx);
+              rawB64 = trimmedUrl.slice(commaIdx + 1);
               const m = header.match(/^data:([^;]+);base64/);
               if (m) mime = m[1];
             }
           }
-          const cleanB64 = rawB64.replace(/\s+/g, "+");
+          let cleanB64 = rawB64.replace(/\s+/g, "+").replace(/[^A-Za-z0-9+/=]/g, "");
+          while (cleanB64.length % 4 !== 0) {
+            cleanB64 += "=";
+          }
           const buffer = Buffer.from(cleanB64, "base64");
-          const fileName = `${t.ticketId}.jpg`;
+          const ext = mime.includes("png") ? "png" : "jpg";
+          const fileName = `${t.ticketId}.${ext}`;
 
           const { data: uploadData, error: uploadErr } = await supabase.storage
             .from("id-cards")
@@ -156,6 +175,8 @@ export async function POST(req: NextRequest) {
             if (publicData?.publicUrl) {
               t.idCardUrl = publicData.publicUrl;
             }
+          } else if (uploadErr) {
+            console.warn("[Verify Payment] Supabase storage upload notice:", uploadErr.message);
           }
         }
       }

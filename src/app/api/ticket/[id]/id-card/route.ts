@@ -94,14 +94,27 @@ export async function GET(
       return new NextResponse("No ID card attached for this ticket", { status: 404 });
     }
 
-    const trimmed = String(rawData).trim();
+    let trimmed = String(rawData).trim();
 
     // If it's already an HTTP / HTTPS URL, redirect directly
     if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
       return NextResponse.redirect(trimmed, 302);
     }
 
-    // Parse data URI or raw base64
+    // 1. If URL-encoded (e.g. data%3A or %2B or %2F), decode safely
+    if (trimmed.includes("%") || trimmed.startsWith("data%3A")) {
+      try {
+        trimmed = decodeURIComponent(trimmed);
+      } catch {
+        trimmed = trimmed
+          .replace(/%2B/gi, "+")
+          .replace(/%2F/gi, "/")
+          .replace(/%3D/gi, "=")
+          .replace(/%20/gi, "+");
+      }
+    }
+
+    // 2. Parse data URI header vs raw base64
     let mimeType = "image/jpeg";
     let base64Content = trimmed;
 
@@ -117,8 +130,17 @@ export async function GET(
       }
     }
 
-    // Clean whitespace, newlines, and fix URL-decoded spaces back to +
-    const cleanBase64 = base64Content.replace(/\s+/g, "+");
+    // 3. Clean and sanitize base64:
+    // Remove whitespace, fix spaces to +, and strip illegal characters that cause bit-shift image truncation
+    let cleanBase64 = base64Content
+      .replace(/\s+/g, "+")
+      .replace(/[^A-Za-z0-9+/=]/g, "");
+
+    // 4. Ensure correct 4-byte padding so decoder doesn't drop the bottom of the image
+    while (cleanBase64.length % 4 !== 0) {
+      cleanBase64 += "=";
+    }
+
     const buffer = Buffer.from(cleanBase64, "base64");
 
     if (!buffer || buffer.length === 0) {
