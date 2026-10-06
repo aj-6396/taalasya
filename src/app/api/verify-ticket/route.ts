@@ -83,18 +83,34 @@ export async function POST(req: NextRequest) {
       }
 
       if (ticketData) {
-        ticketData.idCardUrl =
+        const rawIdCard =
           ticketData.idCardUrl ||
           ticketData.id_card_url ||
           ticketData.idcardurl ||
           undefined;
 
+        const resolvedTicketId =
+          ticketData.ticketId || ticketData.ticket_id || ticketData.ticketid || cleanTicketId;
+
         if (
-          ticketData.idCardUrl === "null" ||
-          ticketData.idCardUrl === "undefined" ||
-          ticketData.idCardUrl === ""
+          !rawIdCard ||
+          rawIdCard === "null" ||
+          rawIdCard === "undefined" ||
+          rawIdCard === ""
         ) {
           ticketData.idCardUrl = undefined;
+          ticketData.id_card_url = undefined;
+          ticketData.idcardurl = undefined;
+        } else if (rawIdCard.startsWith("http://") || rawIdCard.startsWith("https://")) {
+          ticketData.idCardUrl = rawIdCard;
+          ticketData.id_card_url = rawIdCard;
+          ticketData.idcardurl = rawIdCard;
+        } else {
+          // Provide clean real HTTP URL for this ticket's ID!
+          const cleanHttpUrl = `/api/ticket/${encodeURIComponent(resolvedTicketId)}/id-card`;
+          ticketData.idCardUrl = cleanHttpUrl;
+          ticketData.id_card_url = cleanHttpUrl;
+          ticketData.idcardurl = cleanHttpUrl;
         }
       }
 
@@ -110,6 +126,7 @@ export async function POST(req: NextRequest) {
               name: "Demo Attendee",
               email: "attendee@example.com",
               phone: "+91 98765 43210",
+              idCardUrl: `/api/ticket/${encodeURIComponent(cleanTicketId)}/id-card`,
               paymentId: "pay_demo123456",
               status: "Used",
               createdAt: new Date().toISOString(),

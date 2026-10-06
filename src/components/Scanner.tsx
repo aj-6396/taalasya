@@ -37,8 +37,12 @@ function normalizeIdCardUrl(url?: string | null): string | null {
     return null;
   }
 
-  // Already standard HTTP URL
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+  // Already standard HTTP URL or relative API route
+  if (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("/")
+  ) {
     return trimmed;
   }
 
@@ -325,6 +329,44 @@ export default function Scanner() {
     setTimeout(() => {
       scanLockRef.current = false;
     }, 700);
+  };
+
+  const handleOpenFullImage = () => {
+    const norm = normalizeIdCardUrl(zoomedIdCard);
+    const ticketId = scanResult.ticket?.ticketId;
+
+    // 1. If ticketId is available, open the clean server route which serves genuine binary image headers
+    if (ticketId) {
+      window.open(`/api/ticket/${encodeURIComponent(ticketId)}/id-card`, "_blank");
+      return;
+    }
+
+    // 2. If norm is already an HTTP / HTTPS or relative path, navigate directly
+    if (norm && (norm.startsWith("http://") || norm.startsWith("https://") || norm.startsWith("/"))) {
+      window.open(norm, "_blank");
+      return;
+    }
+
+    // 3. If norm is a data: URI, convert to a Blob URL so browser won't block top-frame navigation
+    if (norm && norm.startsWith("data:")) {
+      try {
+        const parts = norm.split(",");
+        const mime = parts[0].match(/:(.*?);/)?.[1] || "image/jpeg";
+        const cleanB64 = (parts[1] || "").replace(/\s+/g, "+");
+        const bstr = atob(cleanB64);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, "_blank");
+        return;
+      } catch (err) {
+        console.error("Failed to convert data URI to blob URL:", err);
+      }
+    }
   };
 
   const toggleCameraFacing = async () => {
@@ -856,12 +898,16 @@ export default function Scanner() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="mt-4 w-full max-h-[72vh] overflow-auto rounded-2xl bg-black/80 flex items-center justify-center p-2 border border-slate-800">
+            <div
+              onClick={handleOpenFullImage}
+              className="mt-4 w-full max-h-[72vh] overflow-auto rounded-2xl bg-black/80 flex items-center justify-center p-2 border border-slate-800 cursor-pointer group"
+              title="Click to view full image in new tab"
+            >
               {normalizeIdCardUrl(zoomedIdCard) ? (
                 <img
                   src={normalizeIdCardUrl(zoomedIdCard)!}
                   alt="Namaste BHU ID Card Full Preview"
-                  className="max-h-[66vh] w-auto object-contain rounded-xl shadow-lg"
+                  className="max-h-[66vh] w-auto object-contain rounded-xl shadow-lg group-hover:opacity-95 transition-opacity"
                 />
               ) : (
                 <div className="p-8 text-center text-slate-400 text-xs">
@@ -873,17 +919,14 @@ export default function Scanner() {
               <p className="text-xs text-slate-400 text-center flex-1">
                 Cross-verify student name, photo, and roll number with attendee at gate.
               </p>
-              {normalizeIdCardUrl(zoomedIdCard) && (
-                <a
-                  href={normalizeIdCardUrl(zoomedIdCard)!}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-2.5 py-1 text-[11px] rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 inline-flex items-center gap-1 shrink-0 ml-2 cursor-pointer"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  <span>Open Full</span>
-                </a>
-              )}
+              <button
+                type="button"
+                onClick={handleOpenFullImage}
+                className="px-2.5 py-1 text-[11px] rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-200 inline-flex items-center gap-1 shrink-0 ml-2 cursor-pointer transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" />
+                <span>Open Full</span>
+              </button>
             </div>
           </div>
         </div>

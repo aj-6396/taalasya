@@ -71,3 +71,14 @@ FOR UPDATE
 TO anon, authenticated
 USING (true)
 WITH CHECK (true);
+
+-- 6. Storage Bucket for Namaste BHU ID Card Uploads (Optional but Recommended)
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('id-cards', 'id-cards', true)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Allow public read id-cards" ON storage.objects
+FOR SELECT TO anon, authenticated USING (bucket_id = 'id-cards');
+
+CREATE POLICY "Allow service role upload id-cards" ON storage.objects
+FOR ALL TO service_role USING (bucket_id = 'id-cards') WITH CHECK (bucket_id = 'id-cards');

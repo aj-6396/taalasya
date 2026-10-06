@@ -119,6 +119,50 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // 2.5 Optional: Upload ID Card images to Supabase Storage bucket 'id-cards' if available
+    try {
+      for (const t of generatedTickets) {
+        if (
+          t.idCardUrl &&
+          typeof t.idCardUrl === "string" &&
+          (t.idCardUrl.startsWith("data:") || t.idCardUrl.length > 200)
+        ) {
+          let mime = "image/jpeg";
+          let rawB64 = t.idCardUrl;
+          if (t.idCardUrl.startsWith("data:")) {
+            const commaIdx = t.idCardUrl.indexOf(",");
+            if (commaIdx !== -1) {
+              const header = t.idCardUrl.slice(0, commaIdx);
+              rawB64 = t.idCardUrl.slice(commaIdx + 1);
+              const m = header.match(/^data:([^;]+);base64/);
+              if (m) mime = m[1];
+            }
+          }
+          const cleanB64 = rawB64.replace(/\s+/g, "+");
+          const buffer = Buffer.from(cleanB64, "base64");
+          const fileName = `${t.ticketId}.jpg`;
+
+          const { data: uploadData, error: uploadErr } = await supabase.storage
+            .from("id-cards")
+            .upload(fileName, buffer, {
+              contentType: mime,
+              upsert: true,
+            });
+
+          if (!uploadErr && uploadData) {
+            const { data: publicData } = supabase.storage
+              .from("id-cards")
+              .getPublicUrl(fileName);
+            if (publicData?.publicUrl) {
+              t.idCardUrl = publicData.publicUrl;
+            }
+          }
+        }
+      }
+    } catch (storageErr) {
+      console.warn("[Verify Payment] Storage upload skipped:", storageErr);
+    }
+
     // 3. Batch Insert into Supabase
     try {
       const basePayload = generatedTickets.map((t) => ({
@@ -183,12 +227,20 @@ export async function POST(req: NextRequest) {
       console.error("[Verify Payment] Database write error:", dbErr);
     }
 
-    // 4. Return confirmed ticket details to client
+    // 4. Return confirmed ticket details to client with clean HTTP image URLs
+    const clientSafeTickets = generatedTickets.map((t) => ({
+      ...t,
+      idCardUrl:
+        t.idCardUrl && (t.idCardUrl.startsWith("http://") || t.idCardUrl.startsWith("https://"))
+          ? t.idCardUrl
+          : `/api/ticket/${encodeURIComponent(t.ticketId)}/id-card`,
+    }));
+
     return NextResponse.json({
       success: true,
       ticketId: generatedTicketIds[0],
       ticketIds: generatedTicketIds,
-      tickets: generatedTickets,
+      tickets: clientSafeTickets,
       quantity: ticketQuantity,
       message: `Payment verified. ${ticketQuantity} individual passes generated.`,
     });
