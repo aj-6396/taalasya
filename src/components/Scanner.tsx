@@ -196,21 +196,16 @@ export default function Scanner() {
     if (e) e.preventDefault();
     const pinToTest = (directPin || pinInput).trim();
     
-    // Check against DEFAULT_MARSHALS, database marshals or admin PIN
+    const adminPin = process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || DEFAULT_MARSHALS.find((m) => m.id === "admin")?.pin || "6028";
     const matched =
       marshalsList.find((m) => m.pin === pinToTest) ||
       DEFAULT_MARSHALS.find((m) => m.pin === pinToTest) ||
-      (pinToTest === (process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "1234")
-        ? { id: "admin", name: "Lead Supervisor", pin: pinToTest, gate: "Central Turnstiles" }
+      (pinToTest === adminPin
+        ? { id: "admin", name: "Lead Supervisor", pin: pinToTest, gate: "All Gates (Supervisor)" }
         : null);
 
-    if (matched || pinToTest === "1234") {
-      const active = matched || {
-        id: "staff",
-        name: "Gate Marshal",
-        pin: pinToTest,
-        gate: "Gate Terminal",
-      };
+    if (matched) {
+      const active = matched;
       setCurrentMarshal(active);
       setIsUnlocked(true);
       localStorage.setItem("taalsya_scanner_unlocked", "true");
@@ -349,7 +344,7 @@ export default function Scanner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ticketId,
-          pin: currentMarshal?.pin || "1234",
+          pin: currentMarshal?.pin || "6028",
           marshalName: currentMarshal?.name || "Gate Marshal",
         }),
       });
@@ -497,7 +492,7 @@ export default function Scanner() {
 
           {/* Quick Marshal Station Selectors */}
           <div className="grid grid-cols-2 gap-2 text-left">
-            {DEFAULT_MARSHALS.filter((m) => m.id !== "admin").map((m) => (
+            {(marshalsList.length > 0 ? marshalsList : DEFAULT_MARSHALS).filter((m) => m.id !== "admin").map((m) => (
               <button
                 key={m.id}
                 type="button"
@@ -549,7 +544,14 @@ export default function Scanner() {
           </form>
 
           <p className="text-[11px] text-slate-500 pt-1">
-            Supervisor Admin PIN: <span className="font-mono text-indigo-400 font-semibold">1234</span>
+            Supervisor Admin PIN:{" "}
+            <button
+              type="button"
+              onClick={() => handleUnlockPin(undefined, DEFAULT_MARSHALS.find((m) => m.id === "admin")?.pin || "6028")}
+              className="font-mono text-indigo-400 font-semibold hover:underline cursor-pointer"
+            >
+              {DEFAULT_MARSHALS.find((m) => m.id === "admin")?.pin || "6028"}
+            </button>
           </p>
         </div>
       </div>

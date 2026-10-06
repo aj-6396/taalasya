@@ -96,15 +96,15 @@ CREATE TABLE IF NOT EXISTS public.gate_marshals (
   "createdAt" TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
 );
 
--- Pre-populate default 4 Gate Marshals + Supervisor
+-- Pre-populate 4 Gate Marshals (2 on Gate A, 2 on Gate B) + 1 Lead Supervisor
 INSERT INTO public.gate_marshals (id, name, pin, gate)
 VALUES 
-  ('marshal_1', 'Marshal 1', '1001', 'Gate A (Main Entrance)'),
-  ('marshal_2', 'Marshal 2', '1002', 'Gate B (South Side)'),
-  ('marshal_3', 'Marshal 3', '1003', 'Gate C (North Side)'),
-  ('marshal_4', 'Marshal 4', '1004', 'Gate D (VIP / Fast Track)'),
-  ('admin', 'Lead Supervisor', '1234', 'Central Turnstile Hub')
-ON CONFLICT (pin) DO UPDATE SET name = EXCLUDED.name, gate = EXCLUDED.gate;
+  ('marshal_1', 'Marshal 1', '4821', 'Gate A (Lane 1)'),
+  ('marshal_2', 'Marshal 2', '7395', 'Gate A (Lane 2)'),
+  ('marshal_3', 'Marshal 3', '2964', 'Gate B (Lane 1)'),
+  ('marshal_4', 'Marshal 4', '8153', 'Gate B (Lane 2)'),
+  ('admin', 'Lead Supervisor', '6028', 'All Gates (Supervisor)')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, pin = EXCLUDED.pin, gate = EXCLUDED.gate;
 
 -- 8. Scan Logs Audit Table (Audit trail of every scan; powers live table & persistent counters)
 CREATE TABLE IF NOT EXISTS public.scan_logs (

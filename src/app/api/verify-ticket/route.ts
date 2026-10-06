@@ -19,14 +19,14 @@ export async function POST(req: NextRequest) {
     // Marshal & PIN resolution:
     // Check DEFAULT_MARSHALS or ADMIN_SCAN_PIN or Supabase gate_marshals table
     let matchedMarshal = DEFAULT_MARSHALS.find((m) => m.pin === cleanPin);
-    const requiredAdminPin = process.env.ADMIN_SCAN_PIN || "1234";
+    const requiredAdminPin = process.env.ADMIN_SCAN_PIN || process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "6028";
 
     if (!matchedMarshal && cleanPin === requiredAdminPin) {
       matchedMarshal = {
         id: "admin",
         name: "Lead Supervisor",
         pin: cleanPin,
-        gate: "Turnstiles",
+        gate: "All Gates (Supervisor)",
       };
     }
 
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (!matchedMarshal && cleanPin !== "1234") {
+    if (!matchedMarshal) {
       return NextResponse.json(
         { success: false, status: "Unauthorized", message: "Invalid Gate Scanner PIN. Access Denied." },
         { status: 401 }
