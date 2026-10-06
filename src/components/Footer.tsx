@@ -73,6 +73,11 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <Link href="/terms" className="hover:text-white transition-colors">
+                  Terms &amp; Conditions
+                </Link>
+              </li>
+              <li>
                 <a
                   href={EVENT_CONFIG.instagramUrl}
                   target="_blank"
@@ -102,7 +107,13 @@ export default function Footer() {
         </div>
 
         <div className="pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 text-center sm:text-left">
-          <p>© 2026 {EVENT_CONFIG.organizer}. All rights reserved.</p>
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1">
+            <p>© 2026 {EVENT_CONFIG.organizer}. All rights reserved.</p>
+            <span>•</span>
+            <Link href="/terms" className="hover:text-slate-300 underline underline-offset-2 transition-colors">
+              Terms &amp; Conditions
+            </Link>
+          </div>
           <p className="flex items-center justify-center gap-1.5 text-slate-400 font-medium">
             <span>Engineered with</span>
             <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline" />

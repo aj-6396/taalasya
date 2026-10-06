@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { EVENT_CONFIG, PASS_TIERS, getTierPrice } from "@/lib/constants";
 import { generateShortTicketId } from "@/lib/ticketId";
+import TermsModal from "@/components/TermsModal";
 
 declare global {
   interface Window {
@@ -139,6 +140,8 @@ export default function RegistrationForm() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [demoNotice, setDemoNotice] = useState<string | null>(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [isTestModeActive, setIsTestModeActive] = useState(
     process.env.NEXT_PUBLIC_TEST_MODE === "true"
   );
@@ -217,6 +220,10 @@ export default function RegistrationForm() {
     }
     if (!primaryIdCard) {
       setErrorMessage("Please upload a screenshot of Attendee 1's Namaste BHU ID card.");
+      return;
+    }
+    if (!agreedToTerms) {
+      setErrorMessage("Please accept the Terms and Conditions for entry passes to proceed.");
       return;
     }
 
@@ -1012,6 +1019,37 @@ export default function RegistrationForm() {
                 </div>
               </div>
 
+              {/* Terms and Conditions Consent Checkbox (Clause 1.1) */}
+              <div className="p-3.5 rounded-2xl bg-[#070b13] border border-white/[0.08] hover:border-slate-700 transition-colors">
+                <label className="flex items-start gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => {
+                      setAgreedToTerms(e.target.checked);
+                      if (errorMessage.includes("Terms and Conditions")) {
+                        setErrorMessage("");
+                      }
+                    }}
+                    className="mt-0.5 w-4 h-4 rounded border-slate-700 bg-slate-900 text-pink-500 focus:ring-pink-500/20 focus:ring-offset-0 cursor-pointer shrink-0 accent-pink-500"
+                  />
+                  <span className="text-xs text-slate-300 leading-relaxed">
+                    I agree to the{" "}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowTermsModal(true);
+                      }}
+                      className="text-pink-400 hover:text-pink-300 underline font-semibold cursor-pointer inline"
+                    >
+                      Terms and Conditions for Entry Passes (JHOOM &apos;26)
+                    </button>
+                    , including mandatory valid BHU ID card verification at gate, strict single entry rules, and conduct guidelines under Dean of Students, BHU.
+                  </span>
+                </label>
+              </div>
+
               {/* Submit CTA Button */}
               <button
                 type="submit"
@@ -1083,6 +1121,18 @@ export default function RegistrationForm() {
           </div>
         </div>
       )}
+
+      {/* Terms and Conditions Full Modal */}
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={() => {
+          setAgreedToTerms(true);
+          if (errorMessage.includes("Terms and Conditions")) {
+            setErrorMessage("");
+          }
+        }}
+      />
     </section>
   );
 }

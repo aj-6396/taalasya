@@ -30,6 +30,10 @@ export const EVENT_CONFIG = {
   instagramPostUrl:
     "https://www.instagram.com/taalasyadancesociety_bhu/p/Dd1H4mRi0QP/",
   maxTicketsPerBooking: 5,
+  contacts: [
+    { name: "Avinash", role: "Secretary", phone: "8677953892" },
+    { name: "Agrimaa", role: "Joint Secretary", phone: "9289399669" },
+  ],
 };
 
 export const PASS_TIERS = [
