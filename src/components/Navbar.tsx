@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { QrCode, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { EVENT_CONFIG } from "@/lib/constants";
 
 export default function Navbar() {
@@ -46,22 +46,10 @@ export default function Navbar() {
 
             <Link
               href="#register"
-              className="hidden xs:inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-pink-300 bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/25 transition-all active:scale-95"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 shadow-md shadow-pink-500/20 hover:opacity-95 transition-all active:scale-95"
             >
-              <Sparkles className="w-3.5 h-3.5 text-pink-400" />
+              <Sparkles className="w-3.5 h-3.5 text-pink-200" />
               <span>Book Pass</span>
-            </Link>
-
-            <Link
-              href="/scan"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-200 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 transition-all shadow-sm active:scale-95"
-            >
-              <QrCode className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="hidden sm:inline">Gate</span>
-              <span>Scanner</span>
-              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                Staff
-              </span>
             </Link>
           </div>
         </div>

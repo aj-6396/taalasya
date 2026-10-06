@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, Shield, Code2, QrCode } from "lucide-react";
+import { Heart, Shield, Code2 } from "lucide-react";
 import { EVENT_CONFIG } from "@/lib/constants";
 
 export default function Footer() {
@@ -72,12 +72,6 @@ export default function Footer() {
                 >
                   Instagram ({EVENT_CONFIG.instagramHandle})
                 </a>
-              </li>
-              <li>
-                <Link href="/scan" className="hover:text-white transition-colors flex items-center gap-1.5">
-                  <QrCode className="w-3.5 h-3.5 text-emerald-400" />
-                  Staff Entry Scanner
-                </Link>
               </li>
             </ul>
           </div>

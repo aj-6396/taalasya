@@ -179,9 +179,8 @@ export default function Scanner() {
         };
         setCurrentMarshal(found);
       }
+      fetchLiveStats();
     }
-
-    fetchLiveStats();
   }, []);
 
   // Poll database stats every 15s so all marshals see live progress across all 4 gates
