@@ -114,8 +114,8 @@ export const TERMS_AND_CONDITIONS = {
       title: "Refunds, cancellation and changes",
       subclauses: [
         "12.1 Passes are non-refundable once purchased, except as stated in this clause.",
-        "12.2 If the Organisers cancel the event, the Attendee will be refunded the full price paid for the pass, to the original payment method, within 15 working days of the cancellation announcement.",
-        "12.3 If the event is postponed or rescheduled, the pass remains valid for the new date. An Attendee who cannot attend the new date may request a refund within 7 days of the announcement.",
+        "12.2 If the Organisers cancel the event, the Attendee will be refunded the pass amount paid, excluding non-refundable payment gateway transaction and processing fees to the original payment method, within 15 working days of the cancellation announcement.",
+        "12.3 If the event is postponed or rescheduled, the pass remains valid for the new date. An Attendee who cannot attend the new date may request a refund within 7 days of the announcement (subject to deduction of payment gateway transaction charges).",
         "12.4 No refund will be given where the Attendee is refused entry or removed under these terms, does not attend or arrives late, is unable to attend for personal reasons, or where the event is interrupted or shortened after it has begun due to weather, safety concerns, or directions of the University or authorities.",
         "12.5 Changes to the schedule, performers, programme or venue within the University do not entitle the Attendee to a refund.",
       ],
