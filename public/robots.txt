@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /scan
+Disallow: /api/
+
+User-agent: Googlebot
+Allow: /
+Disallow: /scan
+Disallow: /api/
+
+Sitemap: https://taalasya-jhoom-26.vercel.app/sitemap.xml
