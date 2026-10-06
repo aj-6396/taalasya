@@ -20,9 +20,62 @@ import {
   Unlock,
   Eye,
   X,
+  ExternalLink,
 } from "lucide-react";
 import { playSuccessChime, playWarningBuzzer, playErrorBeep } from "@/lib/audio";
 import { Ticket } from "@/types";
+
+function normalizeIdCardUrl(url?: string | null): string | null {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (
+    trimmed === "" ||
+    trimmed === "null" ||
+    trimmed === "undefined" ||
+    trimmed === "[object Object]"
+  ) {
+    return null;
+  }
+
+  // Already standard HTTP URL
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+
+  // Decode URL-encoded data URI
+  let decoded = trimmed;
+  if (trimmed.startsWith("data%3A") || trimmed.includes("%2C")) {
+    try {
+      decoded = decodeURIComponent(trimmed);
+    } catch {
+      decoded = trimmed;
+    }
+  }
+
+  // Data URL format: ensure no spaces instead of +, and strip line breaks
+  if (decoded.startsWith("data:image/")) {
+    const commaIdx = decoded.indexOf(",");
+    if (commaIdx !== -1) {
+      const header = decoded.slice(0, commaIdx + 1);
+      const data = decoded.slice(commaIdx + 1).replace(/\s+/g, "+");
+      return header + data;
+    }
+    return decoded;
+  }
+
+  // Raw base64 string without data: prefix
+  if (
+    decoded.startsWith("/9j/") ||
+    decoded.startsWith("iVBORw0") ||
+    decoded.startsWith("UklGR") ||
+    decoded.length > 50
+  ) {
+    const cleanData = decoded.replace(/\s+/g, "+");
+    return `data:image/jpeg;base64,${cleanData}`;
+  }
+
+  return decoded;
+}
 
 type ScanResultState = {
   status: "Valid" | "Used" | "Invalid" | "Error" | null;
@@ -50,6 +103,7 @@ export default function Scanner() {
   });
 
   const [zoomedIdCard, setZoomedIdCard] = useState<string | null>(null);
+  const [idImageError, setIdImageError] = useState(false);
   const [manualTicketId, setManualTicketId] = useState("");
   const [showManualInput, setShowManualInput] = useState(false);
 
@@ -194,6 +248,7 @@ export default function Scanner() {
 
   const verifyTicketId = async (ticketId: string) => {
     setIsProcessing(true);
+    setIdImageError(false);
 
     try {
       const response = await fetch("/api/verify-ticket", {
@@ -253,6 +308,8 @@ export default function Scanner() {
   const resumeScanning = () => {
     // Clear previous modal
     setScanResult({ status: null, message: "" });
+    setZoomedIdCard(null);
+    setIdImageError(false);
     setIsProcessing(false);
 
     // Resume camera scanning
@@ -504,47 +561,73 @@ export default function Scanner() {
                   )}
 
                   {/* Namaste BHU ID Cross-Verification for Gate Security */}
-                  {scanResult.ticket.idCardUrl ? (
-                    <div className="pt-2 border-t border-emerald-800/80 space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px] font-semibold text-emerald-300">
-                        <span className="flex items-center gap-1">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                          Namaste BHU ID Card:
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setZoomedIdCard(scanResult.ticket?.idCardUrl || null)}
-                          className="text-[10px] text-emerald-300 hover:text-white underline flex items-center gap-0.5 cursor-pointer"
-                        >
-                          <Eye className="w-3 h-3" />
-                          <span>Tap to Zoom</span>
-                        </button>
-                      </div>
-                      <div
-                        onClick={() => setZoomedIdCard(scanResult.ticket?.idCardUrl || null)}
-                        className="relative w-full h-28 rounded-xl overflow-hidden border border-emerald-500/40 cursor-pointer group bg-black/60 shadow-inner"
-                        title="Click to zoom student ID card"
-                      >
-                        <img
-                          src={scanResult.ticket.idCardUrl}
-                          alt="Namaste BHU ID Card"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                          <div className="px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-sm text-[11px] font-bold text-white flex items-center gap-1">
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>Zoom Full ID</span>
-                          </div>
+                  {(() => {
+                    const validIdUrl = normalizeIdCardUrl(scanResult.ticket?.idCardUrl);
+                    if (!validIdUrl) {
+                      return (
+                        <div className="pt-1.5 border-t border-emerald-800/80">
+                          <p className="text-[10px] text-emerald-400/70 italic">
+                            No Namaste BHU ID card attached for this pass.
+                          </p>
                         </div>
+                      );
+                    }
+
+                    return (
+                      <div className="pt-2 border-t border-emerald-800/80 space-y-1.5">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-emerald-300">
+                          <span className="flex items-center gap-1">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                            Namaste BHU ID Card:
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setZoomedIdCard(validIdUrl)}
+                            className="text-[10px] text-emerald-300 hover:text-white underline flex items-center gap-0.5 cursor-pointer"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>Tap to Zoom</span>
+                          </button>
+                        </div>
+
+                        {!idImageError ? (
+                          <div
+                            onClick={() => setZoomedIdCard(validIdUrl)}
+                            className="relative w-full h-28 rounded-xl overflow-hidden border border-emerald-500/40 cursor-pointer group bg-black/60 shadow-inner"
+                            title="Click to zoom student ID card"
+                          >
+                            <img
+                              src={validIdUrl}
+                              alt="Namaste BHU ID Card"
+                              onError={() => setIdImageError(true)}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <div className="px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-sm text-[11px] font-bold text-white flex items-center gap-1">
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>Zoom Full ID</span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-500/20 text-center space-y-1.5">
+                            <p className="text-xs font-semibold text-emerald-300 flex items-center justify-center gap-1">
+                              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                              Namaste BHU ID Attached
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setZoomedIdCard(validIdUrl)}
+                              className="px-3 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>View Attached ID</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ) : (
-                    <div className="pt-1.5 border-t border-emerald-800/80">
-                      <p className="text-[10px] text-emerald-400/70 italic">
-                        No Namaste BHU ID card attached for this pass.
-                      </p>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   <p className="font-mono text-[10px] text-emerald-300/80 pt-1 border-t border-emerald-800">
                     Pass: {scanResult.ticket.ticketId.slice(0, 16)}...
@@ -596,30 +679,34 @@ export default function Scanner() {
                     Email: {scanResult.ticket.email}
                   </p>
 
-                  {scanResult.ticket.idCardUrl && (
-                    <div className="pt-2 border-t border-rose-800/80 space-y-1">
-                      <div className="flex items-center justify-between text-[11px] font-semibold text-rose-300">
-                        <span>Namaste BHU ID:</span>
-                        <button
-                          type="button"
-                          onClick={() => setZoomedIdCard(scanResult.ticket?.idCardUrl || null)}
-                          className="text-[10px] text-rose-300 hover:text-white underline cursor-pointer"
+                  {(() => {
+                    const validIdUrl = normalizeIdCardUrl(scanResult.ticket?.idCardUrl);
+                    if (!validIdUrl) return null;
+                    return (
+                      <div className="pt-2 border-t border-rose-800/80 space-y-1">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-rose-300">
+                          <span>Namaste BHU ID:</span>
+                          <button
+                            type="button"
+                            onClick={() => setZoomedIdCard(validIdUrl)}
+                            className="text-[10px] text-rose-300 hover:text-white underline cursor-pointer"
+                          >
+                            Tap to Zoom
+                          </button>
+                        </div>
+                        <div
+                          onClick={() => setZoomedIdCard(validIdUrl)}
+                          className="relative w-full h-20 rounded-xl overflow-hidden border border-rose-500/40 cursor-pointer group bg-black/60"
                         >
-                          Tap to Zoom
-                        </button>
+                          <img
+                            src={validIdUrl}
+                            alt="Namaste BHU ID"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        </div>
                       </div>
-                      <div
-                        onClick={() => setZoomedIdCard(scanResult.ticket?.idCardUrl || null)}
-                        className="relative w-full h-20 rounded-xl overflow-hidden border border-rose-500/40 cursor-pointer group bg-black/60"
-                      >
-                        <img
-                          src={scanResult.ticket.idCardUrl}
-                          alt="Namaste BHU ID"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   <p className="text-rose-300/90 text-[11px] flex items-center gap-1 mt-1">
                     <Clock className="w-3.5 h-3.5 text-rose-400" />
@@ -770,15 +857,34 @@ export default function Scanner() {
               </button>
             </div>
             <div className="mt-4 w-full max-h-[72vh] overflow-auto rounded-2xl bg-black/80 flex items-center justify-center p-2 border border-slate-800">
-              <img
-                src={zoomedIdCard}
-                alt="Namaste BHU ID Card Full Preview"
-                className="max-h-[66vh] w-auto object-contain rounded-xl shadow-lg"
-              />
+              {normalizeIdCardUrl(zoomedIdCard) ? (
+                <img
+                  src={normalizeIdCardUrl(zoomedIdCard)!}
+                  alt="Namaste BHU ID Card Full Preview"
+                  className="max-h-[66vh] w-auto object-contain rounded-xl shadow-lg"
+                />
+              ) : (
+                <div className="p-8 text-center text-slate-400 text-xs">
+                  ID card image data unavailable.
+                </div>
+              )}
             </div>
-            <p className="text-xs text-slate-400 mt-3 text-center">
-              Cross-verify student name, photo, and roll number with attendee at gate.
-            </p>
+            <div className="flex items-center justify-between w-full pt-3">
+              <p className="text-xs text-slate-400 text-center flex-1">
+                Cross-verify student name, photo, and roll number with attendee at gate.
+              </p>
+              {normalizeIdCardUrl(zoomedIdCard) && (
+                <a
+                  href={normalizeIdCardUrl(zoomedIdCard)!}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-2.5 py-1 text-[11px] rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 inline-flex items-center gap-1 shrink-0 ml-2 cursor-pointer"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span>Open Full</span>
+                </a>
+              )}
+            </div>
           </div>
         </div>
       )}

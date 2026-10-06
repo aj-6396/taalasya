@@ -121,26 +121,59 @@ export async function POST(req: NextRequest) {
 
     // 3. Batch Insert into Supabase
     try {
+      const basePayload = generatedTickets.map((t) => ({
+        ticketId: t.ticketId,
+        name: t.name,
+        email: t.email,
+        phone: t.phone,
+        idCardUrl: t.idCardUrl || null,
+        paymentId: t.paymentId,
+        orderId: t.orderId,
+        amount: t.amount,
+        status: "Valid",
+        eventName: t.eventName,
+        createdAt: t.createdAt,
+      }));
+
+      // Try 1: camelCase "idCardUrl"
       const { error: insertError } = await supabase
         .from("tickets")
-        .insert(
-          generatedTickets.map((t) => ({
-            ticketId: t.ticketId,
-            name: t.name,
-            email: t.email,
-            phone: t.phone,
-            idCardUrl: t.idCardUrl || null,
-            paymentId: t.paymentId,
-            orderId: t.orderId,
-            amount: t.amount,
-            status: "Valid",
-            eventName: t.eventName,
-            createdAt: t.createdAt,
-          }))
-        );
+        .insert(basePayload);
 
       if (insertError) {
-        console.error("[Verify Payment] Supabase insert error:", insertError);
+        console.warn("[Verify Payment] camelCase insert warning:", insertError.message);
+
+        // Try 2: snake_case "id_card_url"
+        const snakePayload = basePayload.map((row) => {
+          const { idCardUrl, ...rest } = row;
+          return { ...rest, id_card_url: idCardUrl };
+        });
+        const res2 = await supabase.from("tickets").insert(snakePayload);
+
+        if (res2.error) {
+          console.warn("[Verify Payment] snake_case insert warning:", res2.error.message);
+
+          // Try 3: lowercase "idcardurl"
+          const lowerPayload = basePayload.map((row) => {
+            const { idCardUrl, ...rest } = row;
+            return { ...rest, idcardurl: idCardUrl };
+          });
+          const res3 = await supabase.from("tickets").insert(lowerPayload);
+
+          if (res3.error) {
+            console.warn("[Verify Payment] lowercase insert warning:", res3.error.message);
+
+            // Try 4: Save ticket without ID column if column does not exist yet
+            const noIdPayload = basePayload.map((row) => {
+              const { idCardUrl, ...rest } = row;
+              return rest;
+            });
+            const res4 = await supabase.from("tickets").insert(noIdPayload);
+            if (res4.error) {
+              console.error("[Verify Payment] Fallback insert failed:", res4.error);
+            }
+          }
+        }
       } else {
         console.log(
           `[Verify Payment] Successfully saved ${generatedTickets.length} tickets to Supabase.`

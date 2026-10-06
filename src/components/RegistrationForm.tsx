@@ -79,7 +79,11 @@ function processIdCardFile(
 
         ctx.drawImage(img, 0, 0, width, height);
         const compressedBase64 = canvas.toDataURL("image/jpeg", 0.82);
-        onSuccess(compressedBase64, file.name);
+        if (compressedBase64 && compressedBase64.length > 200 && compressedBase64 !== "data:,") {
+          onSuccess(compressedBase64, file.name);
+        } else {
+          onSuccess(rawResult, file.name);
+        }
       } catch {
         onSuccess(rawResult, file.name);
       }

@@ -82,8 +82,20 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      if (ticketData && !ticketData.idCardUrl) {
-        ticketData.idCardUrl = ticketData.id_card_url || ticketData.idcardurl || undefined;
+      if (ticketData) {
+        ticketData.idCardUrl =
+          ticketData.idCardUrl ||
+          ticketData.id_card_url ||
+          ticketData.idcardurl ||
+          undefined;
+
+        if (
+          ticketData.idCardUrl === "null" ||
+          ticketData.idCardUrl === "undefined" ||
+          ticketData.idCardUrl === ""
+        ) {
+          ticketData.idCardUrl = undefined;
+        }
       }
 
       if (fetchErr || !ticketData) {
