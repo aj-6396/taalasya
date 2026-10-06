@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -233,6 +234,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-[#06090e] text-slate-100 font-sans selection:bg-pink-500 selection:text-white antialiased">
         {children}
+        <Analytics />
         <Script
           src="https://checkout.razorpay.com/v1/checkout.js"
           strategy="lazyOnload"
