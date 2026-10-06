@@ -9,18 +9,21 @@ export async function GET(req: NextRequest) {
     const supabase = getAdminSupabase();
 
     // 1. Fetch Marshals from database, or fallback to default configuration
-    let marshalsList = [...DEFAULT_MARSHALS];
+    let marshalsList: Array<{ id: string; name: string; gate: string }> = DEFAULT_MARSHALS.map((m) => ({
+      id: m.id,
+      name: m.name,
+      gate: m.gate,
+    }));
     try {
       const { data: dbMarshals } = await supabase
         .from("gate_marshals")
-        .select("*")
-        .order("pin", { ascending: true });
+        .select("id, name, gate")
+        .order("id", { ascending: true });
 
       if (dbMarshals && dbMarshals.length > 0) {
         marshalsList = dbMarshals.map((m) => ({
           id: m.id,
           name: m.name,
-          pin: m.pin,
           gate: m.gate || "Gate A",
         }));
       }
@@ -115,7 +118,6 @@ export async function GET(req: NextRequest) {
       const count =
         marshalScanCounts[m.name] ||
         marshalScanCounts[`${m.name} (${m.gate})`] ||
-        marshalScanCounts[m.pin] ||
         0;
 
       return {

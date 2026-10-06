@@ -96,6 +96,7 @@ export default function Scanner() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
+  const [isVerifyingPin, setIsVerifyingPin] = useState(false);
   const [currentMarshal, setCurrentMarshal] = useState<GateMarshal>(DEFAULT_MARSHALS[0]);
   const [marshalsList, setMarshalsList] = useState<Array<GateMarshal & { scannedCount?: number }>>(DEFAULT_MARSHALS);
   const [recentScans, setRecentScans] = useState<any[]>([]);
@@ -192,30 +193,86 @@ export default function Scanner() {
     return () => clearInterval(interval);
   }, [isUnlocked]);
 
-  const handleUnlockPin = (e?: React.FormEvent, directPin?: string) => {
+  const handleUnlockPin = async (e?: React.FormEvent, directPin?: string) => {
     if (e) e.preventDefault();
     const pinToTest = (directPin || pinInput).trim();
-    
-    const adminPin = process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || DEFAULT_MARSHALS.find((m) => m.id === "admin")?.pin || "6028";
-    const matched =
-      marshalsList.find((m) => m.pin === pinToTest) ||
-      DEFAULT_MARSHALS.find((m) => m.pin === pinToTest) ||
-      (pinToTest === adminPin
-        ? { id: "admin", name: "Lead Supervisor", pin: pinToTest, gate: "All Gates (Supervisor)" }
-        : null);
+    if (!pinToTest) return;
 
-    if (matched) {
-      const active = matched;
-      setCurrentMarshal(active);
-      setIsUnlocked(true);
-      localStorage.setItem("taalsya_scanner_unlocked", "true");
-      localStorage.setItem("taalsya_marshal_pin", pinToTest);
-      localStorage.setItem("taalsya_marshal_name", active.name);
-      setPinError(false);
-      fetchLiveStats();
-    } else {
-      setPinError(true);
-      if (soundEnabled) playErrorBeep();
+    setIsVerifyingPin(true);
+    setPinError(false);
+
+    try {
+      const res = await fetch("/api/verify-marshal-pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: pinToTest }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.marshal) {
+        const active = {
+          id: data.marshal.id,
+          name: data.marshal.name,
+          pin: pinToTest,
+          gate: data.marshal.gate,
+        };
+        setCurrentMarshal(active);
+        setIsUnlocked(true);
+        localStorage.setItem("taalsya_scanner_unlocked", "true");
+        localStorage.setItem("taalsya_marshal_pin", pinToTest);
+        localStorage.setItem("taalsya_marshal_name", active.name);
+        localStorage.setItem("taalsya_marshal_gate", active.gate);
+        localStorage.setItem("taalsya_marshal_id", active.id);
+        setPinError(false);
+        setPinInput("");
+        fetchLiveStats();
+      } else {
+        // Safe offline / fallback check
+        const fallback =
+          DEFAULT_MARSHALS.find((m) => m.pin === pinToTest) ||
+          (pinToTest === (process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "6028")
+            ? { id: "admin", name: "Lead Supervisor", pin: pinToTest, gate: "All Gates (Supervisor)" }
+            : null);
+
+        if (fallback) {
+          setCurrentMarshal(fallback);
+          setIsUnlocked(true);
+          localStorage.setItem("taalsya_scanner_unlocked", "true");
+          localStorage.setItem("taalsya_marshal_pin", pinToTest);
+          localStorage.setItem("taalsya_marshal_name", fallback.name);
+          localStorage.setItem("taalsya_marshal_gate", fallback.gate);
+          setPinError(false);
+          setPinInput("");
+          fetchLiveStats();
+        } else {
+          setPinError(true);
+          if (soundEnabled) playErrorBeep();
+        }
+      }
+    } catch {
+      // Offline fallback
+      const fallback =
+        DEFAULT_MARSHALS.find((m) => m.pin === pinToTest) ||
+        (pinToTest === (process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "6028")
+          ? { id: "admin", name: "Lead Supervisor", pin: pinToTest, gate: "All Gates (Supervisor)" }
+          : null);
+
+      if (fallback) {
+        setCurrentMarshal(fallback);
+        setIsUnlocked(true);
+        localStorage.setItem("taalsya_scanner_unlocked", "true");
+        localStorage.setItem("taalsya_marshal_pin", pinToTest);
+        localStorage.setItem("taalsya_marshal_name", fallback.name);
+        localStorage.setItem("taalsya_marshal_gate", fallback.gate);
+        setPinError(false);
+        setPinInput("");
+        fetchLiveStats();
+      } else {
+        setPinError(true);
+        if (soundEnabled) playErrorBeep();
+      }
+    } finally {
+      setIsVerifyingPin(false);
     }
   };
 
@@ -223,8 +280,11 @@ export default function Scanner() {
     localStorage.removeItem("taalsya_scanner_unlocked");
     localStorage.removeItem("taalsya_marshal_pin");
     localStorage.removeItem("taalsya_marshal_name");
+    localStorage.removeItem("taalsya_marshal_gate");
+    localStorage.removeItem("taalsya_marshal_id");
     setIsUnlocked(false);
     setPinInput("");
+    setPinError(false);
   };
 
   // Initialize html5-qrcode
@@ -469,7 +529,7 @@ export default function Scanner() {
   if (!isUnlocked) {
     return (
       <div className="max-w-md mx-auto px-4 py-12">
-        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 sm:p-8 shadow-2xl text-center space-y-5">
+        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 sm:p-8 shadow-2xl text-center space-y-6">
           <div className="relative w-20 h-20 mx-auto">
             <div className="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 shadow-xl shadow-indigo-500/20">
               <img
@@ -485,73 +545,54 @@ export default function Scanner() {
 
           <div>
             <h2 className="text-2xl font-black text-white">Entry Gate Terminal</h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Select your Gate Marshal station or enter your 4-digit PIN.
+            <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+              Enter your confidential 4-digit Station or Supervisor PIN to unlock.
             </p>
           </div>
 
-          {/* Quick Marshal Station Selectors */}
-          <div className="grid grid-cols-2 gap-2 text-left">
-            {(marshalsList.length > 0 ? marshalsList : DEFAULT_MARSHALS).filter((m) => m.id !== "admin").map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => handleUnlockPin(undefined, m.pin)}
-                className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-indigo-500/60 hover:bg-slate-800/60 transition-all cursor-pointer group"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white group-hover:text-indigo-300">
-                    {m.name}
-                  </span>
-                  <span className="text-[10px] font-mono text-indigo-400 font-semibold bg-indigo-950/60 px-1.5 py-0.5 rounded border border-indigo-500/30">
-                    {m.pin}
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-500 mt-0.5 truncate">{m.gate}</p>
-              </button>
-            ))}
-          </div>
-
-          <form onSubmit={handleUnlockPin} className="space-y-3 pt-2">
+          <form onSubmit={handleUnlockPin} className="space-y-4">
             <div>
               <input
                 type="password"
-                maxLength={6}
+                maxLength={4}
                 inputMode="numeric"
                 autoFocus
-                placeholder="Or enter 4-digit PIN..."
+                placeholder="••••"
                 value={pinInput}
                 onChange={(e) => {
-                  setPinInput(e.target.value);
+                  setPinInput(e.target.value.replace(/\D/g, "").slice(0, 4));
                   setPinError(false);
                 }}
-                className="w-full text-center tracking-[0.5em] text-xl font-mono py-3 px-4 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full text-center tracking-[0.6em] text-3xl font-mono py-3.5 px-4 rounded-2xl bg-slate-950 border border-slate-700 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
               />
               {pinError && (
-                <p className="text-xs text-rose-400 mt-1.5 font-medium">
-                  Invalid PIN. Please select your station above or check with supervisor.
+                <p className="text-xs text-rose-400 mt-2 font-medium">
+                  Invalid PIN. Access denied. Please check with your supervisor.
                 </p>
               )}
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/30"
+              disabled={isVerifyingPin || pinInput.length === 0}
+              className="w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Unlock className="w-4 h-4" />
-              <span>Unlock Scanner</span>
+              {isVerifyingPin ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Verifying PIN...</span>
+                </>
+              ) : (
+                <>
+                  <Unlock className="w-4 h-4" />
+                  <span>Unlock Scanner</span>
+                </>
+              )}
             </button>
           </form>
 
-          <p className="text-[11px] text-slate-500 pt-1">
-            Supervisor Admin PIN:{" "}
-            <button
-              type="button"
-              onClick={() => handleUnlockPin(undefined, DEFAULT_MARSHALS.find((m) => m.id === "admin")?.pin || "6028")}
-              className="font-mono text-indigo-400 font-semibold hover:underline cursor-pointer"
-            >
-              {DEFAULT_MARSHALS.find((m) => m.id === "admin")?.pin || "6028"}
-            </button>
+          <p className="text-[11px] text-slate-500">
+            🔒 Confidential Staff Terminal • All scans logged for audit
           </p>
         </div>
       </div>
@@ -1049,7 +1090,6 @@ export default function Scanner() {
                 <thead>
                   <tr className="border-b border-slate-800 bg-slate-900/60 text-slate-400 uppercase text-[10px] font-bold tracking-wider">
                     <th className="py-2.5 px-3">Marshal</th>
-                    <th className="py-2.5 px-2">PIN</th>
                     <th className="py-2.5 px-3">Station</th>
                     <th className="py-2.5 px-3 text-right">Admitted</th>
                     <th className="py-2.5 px-2 text-center">Status</th>
@@ -1057,7 +1097,7 @@ export default function Scanner() {
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 font-medium">
                   {marshalsList.map((m) => {
-                    const isCurrent = currentMarshal.pin === m.pin;
+                    const isCurrent = currentMarshal.id === m.id || currentMarshal.name === m.name;
                     return (
                       <tr
                         key={m.id}
@@ -1070,9 +1110,6 @@ export default function Scanner() {
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                           )}
                           <span>{m.name}</span>
-                        </td>
-                        <td className="py-2.5 px-2 font-mono text-[11px] text-indigo-300">
-                          {m.pin}
                         </td>
                         <td className="py-2.5 px-3 text-slate-400 truncate max-w-[140px]">
                           {m.gate}
