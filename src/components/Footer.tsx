@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, Shield, Code2 } from "lucide-react";
+import { Heart, Shield, Code2, ExternalLink } from "lucide-react";
 import { EVENT_CONFIG } from "@/lib/constants";
 
 export default function Footer() {
@@ -38,7 +38,16 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2 text-xs text-indigo-300 font-medium pl-6">
                 <span>Developer:</span>
-                <span className="text-white font-bold">{EVENT_CONFIG.developer}</span>
+                <a
+                  href={EVENT_CONFIG.developerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white font-bold hover:text-pink-400 transition-colors inline-flex items-center gap-1 group"
+                  title="Visit Developer Portfolio"
+                >
+                  <span className="underline underline-offset-2">{EVENT_CONFIG.developer}</span>
+                  <ExternalLink className="w-3 h-3 text-pink-400 opacity-70 group-hover:opacity-100 transition-opacity" />
+                </a>
               </div>
             </div>
           </div>
@@ -98,9 +107,16 @@ export default function Footer() {
             <span>Engineered with</span>
             <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline" />
             <span>by</span>
-            <strong className="text-white font-bold bg-white/5 px-2 py-0.5 rounded-md border border-white/10">
-              {EVENT_CONFIG.developer}
-            </strong>
+            <a
+              href={EVENT_CONFIG.developerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white font-bold bg-white/5 hover:bg-pink-500/15 hover:text-pink-300 hover:border-pink-500/30 px-2 py-0.5 rounded-md border border-white/10 transition-all inline-flex items-center gap-1 group cursor-pointer shadow-sm"
+              title="Visit AJ's Portfolio"
+            >
+              <span>{EVENT_CONFIG.developer}</span>
+              <ExternalLink className="w-3 h-3 text-pink-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </a>
           </p>
         </div>
       </div>

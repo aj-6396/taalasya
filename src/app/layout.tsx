@@ -21,7 +21,8 @@ export const metadata: Metadata = {
   title: "JHOOM '26: Dance Fest cum Dandiya Night | Taalasya Dance Society — BHU",
   description:
     "Official event portal for JHOOM '26: Dance Fest cum Dandiya Night on 13th October 2026 at Swatantrata Bhawan, Banaras Hindu University (BHU). Passes starting at ₹299 only. Developed by AJ.",
-  authors: [{ name: "AJ" }],
+  authors: [{ name: "AJ", url: "https://aj-7portfolio.vercel.app/" }],
+  creator: "AJ",
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",

@@ -1,6 +1,6 @@
 # 🎟️ JHOOM '26: Dance Fest cum Dandiya Night — Taalasya Dance Society (BHU)
 
-A production-ready, full-stack event ticketing and rapid entry management web application built for **JHOOM '26: Dance Fest cum Dandiya Night** (13th October 2026 at Swatantrata Bhawan, BHU) organized by **Taalasya Dance Society (BHU)**. Starting at ₹299 only. Developed by **Ambuj Singh**.
+A production-ready, full-stack event ticketing and rapid entry management web application built for **JHOOM '26: Dance Fest cum Dandiya Night** (13th October 2026 at Swatantrata Bhawan, BHU) organized by **Taalasya Dance Society (BHU)**. Starting at ₹299 only. Developed by [**AJ**](https://aj-7portfolio.vercel.app/).
 
 ---
 

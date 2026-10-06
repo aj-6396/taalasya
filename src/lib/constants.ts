@@ -24,6 +24,7 @@ export const EVENT_CONFIG = {
     process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "taalasyadancesociety.bhu@gmail.com",
   organizer: "Taalasya Dance Society — Banaras Hindu University (BHU)",
   developer: "AJ",
+  developerUrl: "https://aj-7portfolio.vercel.app/",
   instagramHandle: "@taalasyadancesociety_bhu",
   instagramUrl: "https://www.instagram.com/taalasyadancesociety_bhu/",
   instagramPostUrl:
