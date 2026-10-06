@@ -16,6 +16,14 @@ export async function uploadToGoogleDrive(params: {
   }
 
   try {
+    let rawB64 = params.base64;
+    if (rawB64.startsWith("data:")) {
+      const commaIdx = rawB64.indexOf(",");
+      if (commaIdx !== -1) {
+        rawB64 = rawB64.slice(commaIdx + 1);
+      }
+    }
+
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
@@ -23,7 +31,7 @@ export async function uploadToGoogleDrive(params: {
       },
       body: JSON.stringify({
         fileName: params.fileName,
-        base64: params.base64,
+        base64: rawB64,
         mimeType: params.mimeType || "image/jpeg",
       }),
       redirect: "follow",
