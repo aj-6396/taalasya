@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { EVENT_CONFIG, getTierPrice } from "@/lib/constants";
 import { generateShortTicketId } from "@/lib/ticketId";
+import { uploadToGoogleDrive } from "@/lib/drive";
 
 export async function POST(req: NextRequest) {
   try {
@@ -160,23 +161,40 @@ export async function POST(req: NextRequest) {
           const buffer = Buffer.from(cleanB64, "base64");
           const ext = mime.includes("png") ? "png" : "jpg";
           const fileName = `${t.ticketId}.${ext}`;
+          let uploadedUrl: string | null = null;
 
-          const { data: uploadData, error: uploadErr } = await supabase.storage
-            .from("id-cards")
-            .upload(fileName, buffer, {
-              contentType: mime,
-              upsert: true,
+          // Priority 1: Google Drive Webhook Upload (if configured)
+          if (process.env.GOOGLE_DRIVE_WEBHOOK_URL) {
+            uploadedUrl = await uploadToGoogleDrive({
+              fileName: `${t.ticketId}_${t.name.replace(/[^a-zA-Z0-9]/g, "_")}.${ext}`,
+              base64: cleanB64,
+              mimeType: mime,
             });
+          }
 
-          if (!uploadErr && uploadData) {
-            const { data: publicData } = supabase.storage
+          // Priority 2: Supabase Storage bucket 'id-cards'
+          if (!uploadedUrl) {
+            const { data: uploadData, error: uploadErr } = await supabase.storage
               .from("id-cards")
-              .getPublicUrl(fileName);
-            if (publicData?.publicUrl) {
-              t.idCardUrl = publicData.publicUrl;
+              .upload(fileName, buffer, {
+                contentType: mime,
+                upsert: true,
+              });
+
+            if (!uploadErr && uploadData) {
+              const { data: publicData } = supabase.storage
+                .from("id-cards")
+                .getPublicUrl(fileName);
+              if (publicData?.publicUrl) {
+                uploadedUrl = publicData.publicUrl;
+              }
+            } else if (uploadErr) {
+              console.warn("[Verify Payment] Supabase storage upload notice:", uploadErr.message);
             }
-          } else if (uploadErr) {
-            console.warn("[Verify Payment] Supabase storage upload notice:", uploadErr.message);
+          }
+
+          if (uploadedUrl) {
+            t.idCardUrl = uploadedUrl;
           }
         }
       }
