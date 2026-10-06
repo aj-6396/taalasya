@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 const siteUrl =
   process.env.NEXT_PUBLIC_APP_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://taalasya.vercel.app");
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://taalasya-jhoom-26.vercel.app");
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
