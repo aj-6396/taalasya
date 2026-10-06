@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#06090e] text-slate-100 flex flex-col selection:bg-pink-500 selection:text-white">
       <Navbar />
-      <main className="flex-1 pb-16 sm:pb-0">
+      <main className="flex-1">
         <HeroBanner />
         <RegistrationForm />
         <EventDetails />

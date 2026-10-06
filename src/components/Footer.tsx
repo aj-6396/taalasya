@@ -6,7 +6,7 @@ import { EVENT_CONFIG } from "@/lib/constants";
 export default function Footer() {
   return (
     <footer className="border-t border-white/[0.08] bg-[#06090e] text-slate-400 text-sm">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-32 sm:py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           <div className="sm:col-span-2 space-y-3.5">
             <div className="flex items-center gap-2.5">
@@ -92,13 +92,15 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+        <div className="pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 text-center sm:text-left">
           <p>© 2026 {EVENT_CONFIG.organizer}. All rights reserved.</p>
-          <p className="flex items-center gap-1.5">
+          <p className="flex items-center justify-center gap-1.5 text-slate-400 font-medium">
             <span>Engineered with</span>
-            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline" />
             <span>by</span>
-            <strong className="text-slate-200 font-semibold">{EVENT_CONFIG.developer}</strong>
+            <strong className="text-white font-bold bg-white/5 px-2 py-0.5 rounded-md border border-white/10">
+              {EVENT_CONFIG.developer}
+            </strong>
           </p>
         </div>
       </div>
