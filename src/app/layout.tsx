@@ -109,7 +109,11 @@ export const metadata: Metadata = {
     images: ["/logo.png"],
     creator: "@taalasyadancesociety_bhu",
   },
+  verification: {
+    google: "google34e2172c035cd370",
+  },
   other: {
+    "google-site-verification": "google34e2172c035cd370",
     "geo.region": "IN-UP",
     "geo.placename": "Varanasi, Banaras Hindu University (BHU)",
     "geo.position": "25.2677;82.9913",
