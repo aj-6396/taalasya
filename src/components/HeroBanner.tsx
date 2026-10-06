@@ -83,7 +83,7 @@ export default function HeroBanner() {
           </p>
 
           {/* Mobile-first compact key event fact chips */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 max-w-xl mx-auto pt-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 max-w-2xl sm:max-w-3xl mx-auto pt-1">
             <div className="p-2 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center flex flex-col items-center justify-center min-h-[96px] sm:min-h-[105px]">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-pink-500/10 text-pink-400 flex items-center justify-center mx-auto mb-1 shrink-0">
                 <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -98,8 +98,16 @@ export default function HeroBanner() {
                 <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Entry Time</p>
-              <p className="text-[10px] sm:text-xs font-black text-white leading-tight mt-0.5 whitespace-nowrap">2:30 PM - 4:30 PM</p>
-              <p className="text-[8.5px] sm:text-[10px] text-purple-400 font-semibold">Gates Close 04:30 PM</p>
+              <p className="text-[11px] sm:text-xs font-black text-white leading-tight mt-0.5 whitespace-nowrap">2:30 PM - 4:30 PM</p>
+              <p className="text-[8.5px] sm:text-[9.5px] text-purple-400 font-semibold whitespace-nowrap">Gate Closes @ 4:30 PM</p>
+            </div>
+
+            <div className="p-2 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center flex flex-col items-center justify-center min-h-[96px] sm:min-h-[105px]">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto mb-1 shrink-0">
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Event Timing</p>
+              <p className="text-[11px] sm:text-xs font-black text-white leading-tight mt-0.5 whitespace-nowrap">3:00 PM - 8:00 PM</p>
             </div>
 
             <div className="p-2 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center flex flex-col items-center justify-center min-h-[96px] sm:min-h-[105px]">
