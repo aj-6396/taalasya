@@ -77,7 +77,7 @@ export default function HeroBanner() {
           </div>
 
           <p className="text-xs sm:text-base text-slate-300 leading-relaxed max-w-xl mx-auto">
-            Experience the ultimate fusion of high-energy stage performances, DJ and vibrant Dandiya Night at Swatantrata Bhawan, BHU. Early bird passes starting at{" "}
+            The biggest <strong>Dandiya Night in BHU near Varanasi</strong>! Experience the ultimate fusion of live dhol beats, Garba, DJ and high-energy stage performances by <strong>Taalasya Dance Society</strong> at Swatantrata Bhawan, Banaras Hindu University (BHU). Passes starting at{" "}
             <span className="line-through text-slate-500 mr-1 font-semibold">₹399</span>
             <strong className="text-pink-400 font-bold">₹{EVENT_CONFIG.priceInINR} only</strong>!
           </p>

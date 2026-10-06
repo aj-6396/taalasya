@@ -62,6 +62,10 @@ export default function EventDetails() {
       q: "Who can attend the event?",
       a: "Students of Banaras Hindu University, faculty, alumni, and invited guests with a valid digital QR pass and a matching university/government photo ID are welcome.",
     },
+    {
+      q: "Where is the Dandiya Night venue located in BHU Varanasi?",
+      a: "JHOOM '26 is hosted at the prestigious Swatantrata Bhawan Auditorium inside the Banaras Hindu University (BHU) campus, Varanasi. It is conveniently situated near VT (Vishwanath Temple) and easily accessible from BHU Lanka Gate and Hyderabad Gate.",
+    },
   ];
 
   return (
