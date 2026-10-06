@@ -139,7 +139,14 @@ function SuccessContent() {
 
   // Parse individual attendees if passed from registration
   const attendeesParam = searchParams.get("attendees");
-  let parsedAttendees: Array<{ name: string; email?: string; phone?: string; idCardUrl?: string }> = [];
+  let parsedAttendees: Array<{
+    name: string;
+    email?: string;
+    phone?: string;
+    idCardUrl?: string;
+    hasIdCard?: boolean;
+  }> = [];
+
   try {
     if (attendeesParam) {
       parsedAttendees = JSON.parse(attendeesParam);
@@ -147,6 +154,21 @@ function SuccessContent() {
   } catch (e) {
     console.warn("Could not parse attendees param:", e);
   }
+
+  // Attempt to read cached local attendees if available (without blowing up URL)
+  useEffect(() => {
+    try {
+      const cached = sessionStorage.getItem("taalsya_recent_booking_attendees");
+      if (cached && parsedAttendees.length === 0) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // sessionStorage has rich local data
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Extract all distinct ticket IDs
   const rawTicketIds = ticketIdsParam
@@ -170,6 +192,10 @@ function SuccessContent() {
     const individualEmail = attendeeInfo.email?.trim() || paramEmail || "";
     const individualPhone = attendeeInfo.phone?.trim() || paramPhone || "";
     const individualIdCardUrl = attendeeInfo.idCardUrl || ticketData?.idCardUrl || "";
+    const individualHasId =
+      Boolean(attendeeInfo.hasIdCard) ||
+      Boolean(individualIdCardUrl) ||
+      Boolean(ticketData?.idCardUrl);
 
     return {
       ticketId: tId,
@@ -179,6 +205,7 @@ function SuccessContent() {
       email: individualEmail,
       phone: individualPhone,
       idCardUrl: individualIdCardUrl,
+      hasIdCard: individualHasId,
       paymentId: ticketData?.paymentId || paramPaymentId || "",
       orderId: ticketData?.orderId || paramOrderId || "",
       status: ticketData?.status || "Valid",

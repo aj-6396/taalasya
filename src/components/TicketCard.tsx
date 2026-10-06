@@ -147,7 +147,7 @@ export default function TicketCard({
                 <span className="font-semibold text-white print:text-black">{ticket.phone}</span>
               </div>
             )}
-            {ticket.idCardUrl && (
+            {(ticket.idCardUrl || (ticket as any).hasIdCard) && (
               <div className="flex justify-between items-center py-0.5 border-b border-slate-800/80 print:border-slate-300">
                 <span className="text-slate-400 print:text-slate-600">BHU ID Attached</span>
                 <span className="font-semibold text-emerald-400 print:text-emerald-700 text-[11px] flex items-center gap-1">

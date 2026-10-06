@@ -287,6 +287,22 @@ export default function RegistrationForm() {
             ? verifyData.ticketIds.join(",")
             : generatedTicketId;
 
+        const safeAttendeesForUrl = fullAttendees.map((a) => ({
+          name: a.name,
+          email: a.email,
+          phone: a.phone,
+          hasIdCard: Boolean(a.idCardUrl),
+        }));
+
+        try {
+          sessionStorage.setItem(
+            "taalsya_recent_booking_attendees",
+            JSON.stringify(fullAttendees)
+          );
+        } catch {
+          // ignore if storage quota exceeded
+        }
+
         router.push(
           `/success?ticket_id=${encodeURIComponent(
             generatedTicketId
@@ -303,7 +319,7 @@ export default function RegistrationForm() {
           )}&phone=${encodeURIComponent(
             formData.phone.trim()
           )}&quantity=${formData.quantity}&attendees=${encodeURIComponent(
-            JSON.stringify(fullAttendees)
+            JSON.stringify(safeAttendeesForUrl)
           )}&simulated=true`
         );
         return;
@@ -416,6 +432,22 @@ export default function RegistrationForm() {
                 ? verifyData.ticketIds.join(",")
                 : generatedTicketId;
 
+            const safeAttendeesForUrl = fullAttendees.map((a) => ({
+              name: a.name,
+              email: a.email,
+              phone: a.phone,
+              hasIdCard: Boolean(a.idCardUrl),
+            }));
+
+            try {
+              sessionStorage.setItem(
+                "taalsya_recent_booking_attendees",
+                JSON.stringify(fullAttendees)
+              );
+            } catch {
+              // ignore if storage quota exceeded
+            }
+
             // 5. Route to success page for direct ticket display & PDF download
             router.push(
               `/success?ticket_id=${encodeURIComponent(
@@ -433,7 +465,7 @@ export default function RegistrationForm() {
               )}&phone=${encodeURIComponent(
                 formData.phone.trim()
               )}&quantity=${formData.quantity}&attendees=${encodeURIComponent(
-                JSON.stringify(fullAttendees)
+                JSON.stringify(safeAttendeesForUrl)
               )}`
             );
           } catch (verifyErr: any) {
