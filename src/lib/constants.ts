@@ -63,3 +63,19 @@ export function getTierPrice(quantity: number): number {
   if (quantity === 5) return 1399;
   return 299;
 }
+
+export interface GateMarshal {
+  id: string;
+  name: string;
+  pin: string;
+  gate: string;
+}
+
+export const DEFAULT_MARSHALS: GateMarshal[] = [
+  { id: "marshal_1", name: "Marshal 1", pin: "1001", gate: "Gate A (Main Entrance)" },
+  { id: "marshal_2", name: "Marshal 2", pin: "1002", gate: "Gate B (South Side)" },
+  { id: "marshal_3", name: "Marshal 3", pin: "1003", gate: "Gate C (North Side)" },
+  { id: "marshal_4", name: "Marshal 4", pin: "1004", gate: "Gate D (VIP / Fast Track)" },
+  { id: "admin", name: "Lead Supervisor", pin: "1234", gate: "Central Turnstile Hub" },
+];
+

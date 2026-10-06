@@ -21,9 +21,13 @@ import {
   Eye,
   X,
   ExternalLink,
+  Users,
+  FileText,
+  UserCheck,
 } from "lucide-react";
 import { playSuccessChime, playWarningBuzzer, playErrorBeep } from "@/lib/audio";
 import { Ticket } from "@/types";
+import { DEFAULT_MARSHALS, GateMarshal } from "@/lib/constants";
 
 function normalizeIdCardUrl(url?: string | null): string | null {
   if (!url || typeof url !== "string") return null;
@@ -92,6 +96,12 @@ export default function Scanner() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
+  const [currentMarshal, setCurrentMarshal] = useState<GateMarshal>(DEFAULT_MARSHALS[0]);
+  const [marshalsList, setMarshalsList] = useState<Array<GateMarshal & { scannedCount?: number }>>(DEFAULT_MARSHALS);
+  const [recentScans, setRecentScans] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"marshals" | "logs">("marshals");
+  const [isRefreshingStats, setIsRefreshingStats] = useState(false);
+  const [lastSyncedTime, setLastSyncedTime] = useState<string>("");
 
   const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
   const [cameras, setCameras] = useState<Array<{ id: string; label: string }>>([]);
@@ -111,6 +121,7 @@ export default function Scanner() {
   const [manualTicketId, setManualTicketId] = useState("");
   const [showManualInput, setShowManualInput] = useState(false);
 
+  // Persistent stats initialized from database
   const [stats, setStats] = useState({
     validCount: 0,
     alreadyUsedCount: 0,
@@ -121,26 +132,104 @@ export default function Scanner() {
   const scanLockRef = useRef(false);
   const scannerContainerId = "qr-reader-container";
 
-  // Check Gate PIN from localStorage
+  // Fetch live persistent tallies, marshals and scan logs from database
+  const fetchLiveStats = async () => {
+    try {
+      setIsRefreshingStats(true);
+      const res = await fetch("/api/scanner-stats");
+      const data = await res.json();
+      if (data && data.success) {
+        if (data.stats) {
+          setStats({
+            validCount: data.stats.validCount || 0,
+            alreadyUsedCount: data.stats.alreadyUsedCount || 0,
+            invalidCount: data.stats.invalidCount || 0,
+          });
+        }
+        if (data.marshals && Array.isArray(data.marshals)) {
+          setMarshalsList(data.marshals);
+        }
+        if (data.recentScans && Array.isArray(data.recentScans)) {
+          setRecentScans(data.recentScans);
+        }
+        setLastSyncedTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+      }
+    } catch (err) {
+      console.warn("Could not fetch live scanner stats:", err);
+    } finally {
+      setIsRefreshingStats(false);
+    }
+  };
+
+  // Restore Gate Marshal login session from localStorage so refresh keeps them logged in
   useEffect(() => {
-    const savedUnlock = sessionStorage.getItem("taalsya_scanner_unlocked");
+    const savedUnlock = localStorage.getItem("taalsya_scanner_unlocked");
+    const savedPin = localStorage.getItem("taalsya_marshal_pin");
+    const savedName = localStorage.getItem("taalsya_marshal_name");
+
     if (savedUnlock === "true") {
       setIsUnlocked(true);
+      if (savedPin) {
+        const found = DEFAULT_MARSHALS.find((m) => m.pin === savedPin) || {
+          id: "custom",
+          name: savedName || "Gate Marshal",
+          pin: savedPin,
+          gate: "Gate Terminal",
+        };
+        setCurrentMarshal(found);
+      }
     }
+
+    fetchLiveStats();
   }, []);
 
-  const handleUnlockPin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Default PIN is 1234 if not configured
-    const validPin = process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "1234";
-    if (pinInput.trim() === validPin || pinInput.trim() === "1234") {
+  // Poll database stats every 15s so all marshals see live progress across all 4 gates
+  useEffect(() => {
+    if (!isUnlocked) return;
+    const interval = setInterval(() => {
+      fetchLiveStats();
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [isUnlocked]);
+
+  const handleUnlockPin = (e?: React.FormEvent, directPin?: string) => {
+    if (e) e.preventDefault();
+    const pinToTest = (directPin || pinInput).trim();
+    
+    // Check against DEFAULT_MARSHALS, database marshals or admin PIN
+    const matched =
+      marshalsList.find((m) => m.pin === pinToTest) ||
+      DEFAULT_MARSHALS.find((m) => m.pin === pinToTest) ||
+      (pinToTest === (process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "1234")
+        ? { id: "admin", name: "Lead Supervisor", pin: pinToTest, gate: "Central Turnstiles" }
+        : null);
+
+    if (matched || pinToTest === "1234") {
+      const active = matched || {
+        id: "staff",
+        name: "Gate Marshal",
+        pin: pinToTest,
+        gate: "Gate Terminal",
+      };
+      setCurrentMarshal(active);
       setIsUnlocked(true);
-      sessionStorage.setItem("taalsya_scanner_unlocked", "true");
+      localStorage.setItem("taalsya_scanner_unlocked", "true");
+      localStorage.setItem("taalsya_marshal_pin", pinToTest);
+      localStorage.setItem("taalsya_marshal_name", active.name);
       setPinError(false);
+      fetchLiveStats();
     } else {
       setPinError(true);
       if (soundEnabled) playErrorBeep();
     }
+  };
+
+  const handleSwitchMarshal = () => {
+    localStorage.removeItem("taalsya_scanner_unlocked");
+    localStorage.removeItem("taalsya_marshal_pin");
+    localStorage.removeItem("taalsya_marshal_name");
+    setIsUnlocked(false);
+    setPinInput("");
   };
 
   // Initialize html5-qrcode
@@ -260,12 +349,16 @@ export default function Scanner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ticketId,
-          pin: process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "1234",
+          pin: currentMarshal?.pin || "1234",
+          marshalName: currentMarshal?.name || "Gate Marshal",
         }),
       });
 
       const data = await response.json();
       const status = data.status as "Valid" | "Used" | "Invalid" | "Error";
+
+      // Refresh live persistent tallies from Supabase right after scan
+      setTimeout(() => fetchLiveStats(), 500);
 
       if (status === "Valid") {
         if (soundEnabled) playSuccessChime();
@@ -380,8 +473,8 @@ export default function Scanner() {
   // Staff PIN Lock Screen
   if (!isUnlocked) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16">
-        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-8 shadow-2xl text-center space-y-6">
+      <div className="max-w-md mx-auto px-4 py-12">
+        <div className="rounded-3xl bg-slate-900 border border-slate-800 p-6 sm:p-8 shadow-2xl text-center space-y-5">
           <div className="relative w-20 h-20 mx-auto">
             <div className="w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 shadow-xl shadow-indigo-500/20">
               <img
@@ -394,46 +487,69 @@ export default function Scanner() {
               <Lock className="w-3.5 h-3.5" />
             </div>
           </div>
+
           <div>
             <h2 className="text-2xl font-black text-white">Entry Gate Terminal</h2>
             <p className="text-xs text-slate-400 mt-1">
-              Taalasya Gate Marshal Access. Enter staff PIN to activate camera.
+              Select your Gate Marshal station or enter your 4-digit PIN.
             </p>
           </div>
 
-          <form onSubmit={handleUnlockPin} className="space-y-4">
+          {/* Quick Marshal Station Selectors */}
+          <div className="grid grid-cols-2 gap-2 text-left">
+            {DEFAULT_MARSHALS.filter((m) => m.id !== "admin").map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => handleUnlockPin(undefined, m.pin)}
+                className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-indigo-500/60 hover:bg-slate-800/60 transition-all cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white group-hover:text-indigo-300">
+                    {m.name}
+                  </span>
+                  <span className="text-[10px] font-mono text-indigo-400 font-semibold bg-indigo-950/60 px-1.5 py-0.5 rounded border border-indigo-500/30">
+                    {m.pin}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-0.5 truncate">{m.gate}</p>
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleUnlockPin} className="space-y-3 pt-2">
             <div>
               <input
                 type="password"
                 maxLength={6}
                 inputMode="numeric"
                 autoFocus
-                placeholder="Enter Gate PIN (e.g. 1234)"
+                placeholder="Or enter 4-digit PIN..."
                 value={pinInput}
                 onChange={(e) => {
                   setPinInput(e.target.value);
                   setPinError(false);
                 }}
-                className="w-full text-center tracking-[0.5em] text-2xl font-mono py-3.5 px-4 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full text-center tracking-[0.5em] text-xl font-mono py-3 px-4 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               {pinError && (
-                <p className="text-xs text-rose-400 mt-2 font-medium">
-                  Incorrect PIN. Please re-enter or check with gate supervisor.
+                <p className="text-xs text-rose-400 mt-1.5 font-medium">
+                  Invalid PIN. Please select your station above or check with supervisor.
                 </p>
               )}
             </div>
 
             <button
               type="submit"
-              className="w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-indigo-600/30"
             >
               <Unlock className="w-4 h-4" />
               <span>Unlock Scanner</span>
             </button>
           </form>
 
-          <p className="text-[11px] text-slate-500">
-            Default Demo PIN: <span className="font-mono text-indigo-400">1234</span>
+          <p className="text-[11px] text-slate-500 pt-1">
+            Supervisor Admin PIN: <span className="font-mono text-indigo-400 font-semibold">1234</span>
           </p>
         </div>
       </div>
@@ -442,6 +558,30 @@ export default function Scanner() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
+      {/* Active Marshal Station Badge */}
+      <div className="flex items-center justify-between p-3 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 text-xs">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span className="text-slate-400 text-[11px] shrink-0">Terminal:</span>
+          <span className="font-bold text-white truncate">
+            {currentMarshal.name}
+          </span>
+          <span className="text-[10px] text-indigo-300 font-mono hidden sm:inline truncate">
+            ({currentMarshal.gate})
+          </span>
+        </div>
+
+        <button
+          onClick={handleSwitchMarshal}
+          className="text-[11px] font-semibold text-indigo-400 hover:text-indigo-200 underline cursor-pointer shrink-0 ml-2"
+        >
+          Switch PIN
+        </button>
+      </div>
+
       {/* Top Header & Live Counter Bar */}
       <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-900 border border-slate-800">
         <div className="flex items-center gap-3">
@@ -853,26 +993,161 @@ export default function Scanner() {
         )}
       </div>
 
-      {/* Quick Test Demo Bar */}
-      <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between">
-        <span className="flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-          Test with demo pass:
-        </span>
-        <div className="flex gap-2">
+      {/* 4 Gate Marshals & Live Scan Audit Log Tables */}
+      <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-950 border border-slate-800 text-xs font-semibold">
+            <button
+              onClick={() => setActiveTab("marshals")}
+              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === "marshals"
+                  ? "bg-indigo-600 text-white shadow-sm font-bold"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>4 Gate Marshals</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("logs")}
+              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === "logs"
+                  ? "bg-indigo-600 text-white shadow-sm font-bold"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Live Scans ({recentScans.length})</span>
+            </button>
+          </div>
+
           <button
-            onClick={() => verifyTicketId("demo_valid_pass_123")}
-            className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 font-mono text-[10px] font-semibold"
+            onClick={fetchLiveStats}
+            disabled={isRefreshingStats}
+            className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+            title="Refresh database tallies"
           >
-            Test Valid
-          </button>
-          <button
-            onClick={() => verifyTicketId("invalid_pass_xyz")}
-            className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-rose-400 font-mono text-[10px] font-semibold"
-          >
-            Test Invalid
+            <RefreshCw className={`w-3.5 h-3.5 text-indigo-400 ${isRefreshingStats ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
+
+        {/* Tab 1: 4 Gate Marshals Overview Table */}
+        {activeTab === "marshals" && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs text-slate-400">
+              <span className="font-semibold text-slate-300">Turnstile Staff Stations</span>
+              {lastSyncedTime && (
+                <span className="text-[10px] text-slate-500 font-mono">Synced: {lastSyncedTime}</span>
+              )}
+            </div>
+
+            <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/70">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-800 bg-slate-900/60 text-slate-400 uppercase text-[10px] font-bold tracking-wider">
+                    <th className="py-2.5 px-3">Marshal</th>
+                    <th className="py-2.5 px-2">PIN</th>
+                    <th className="py-2.5 px-3">Station</th>
+                    <th className="py-2.5 px-3 text-right">Admitted</th>
+                    <th className="py-2.5 px-2 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60 font-medium">
+                  {marshalsList.map((m) => {
+                    const isCurrent = currentMarshal.pin === m.pin;
+                    return (
+                      <tr
+                        key={m.id}
+                        className={`hover:bg-slate-900/40 transition-colors ${
+                          isCurrent ? "bg-indigo-950/30" : ""
+                        }`}
+                      >
+                        <td className="py-2.5 px-3 font-semibold text-white flex items-center gap-1.5">
+                          {isCurrent && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          )}
+                          <span>{m.name}</span>
+                        </td>
+                        <td className="py-2.5 px-2 font-mono text-[11px] text-indigo-300">
+                          {m.pin}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-400 truncate max-w-[140px]">
+                          {m.gate}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-400">
+                          {m.scannedCount || 0}
+                        </td>
+                        <td className="py-2.5 px-2 text-center">
+                          <span className="inline-block w-2 h-2 rounded-full bg-emerald-400" title="Active Station" />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-[11px] text-slate-500 text-center">
+              Each marshal logs in with their 4-digit PIN. Counts persist in Supabase across browser reloads.
+            </p>
+          </div>
+        )}
+
+        {/* Tab 2: Live Passes Scanned Audit Trail */}
+        {activeTab === "logs" && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs text-slate-400">
+              <span className="font-semibold text-slate-300">Live Turnstile Admission Stream</span>
+              <span className="text-[10px] text-slate-500 font-mono">Last 50 Scans</span>
+            </div>
+
+            {recentScans.length === 0 ? (
+              <div className="p-8 rounded-2xl bg-slate-950/60 border border-slate-800 text-center text-xs text-slate-500">
+                No tickets scanned yet. Scans from all 4 marshals will stream here live.
+              </div>
+            ) : (
+              <div className="max-h-72 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                {recentScans.map((scan, i) => {
+                  const isSuccess = scan.scanStatus === "Valid";
+                  const isUsed = scan.scanStatus === "Already Used" || scan.scanStatus === "Used";
+                  return (
+                    <div
+                      key={scan.id || i}
+                      className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 flex items-center justify-between text-xs"
+                    >
+                      <div className="space-y-0.5 min-w-0 pr-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-bold text-white tracking-wide">
+                            {scan.ticketId}
+                          </span>
+                          <span className="text-slate-400 truncate max-w-[130px]">
+                            • {scan.attendeeName}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500">
+                          By <span className="text-indigo-300 font-semibold">{scan.marshalName}</span> •{" "}
+                          {new Date(scan.scannedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+
+                      <span
+                        className={`px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider shrink-0 ${
+                          isSuccess
+                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            : isUsed
+                            ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                            : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                        }`}
+                      >
+                        {scan.scanStatus}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Full-Screen Zoom Lightbox Modal for Gate Marshal Verification */}

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { normalizeTicketLookup } from "@/lib/ticketId";
+import { DEFAULT_MARSHALS } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
   try {
-    const { ticketId, pin } = await req.json();
+    const { ticketId, pin, marshalName } = await req.json();
 
     if (!ticketId || typeof ticketId !== "string") {
       return NextResponse.json(
@@ -13,14 +14,52 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Optional admin security pin verification
-    const requiredPin = process.env.ADMIN_SCAN_PIN;
-    if (requiredPin && pin !== requiredPin) {
+    const cleanPin = String(pin || "").trim();
+
+    // Marshal & PIN resolution:
+    // Check DEFAULT_MARSHALS or ADMIN_SCAN_PIN or Supabase gate_marshals table
+    let matchedMarshal = DEFAULT_MARSHALS.find((m) => m.pin === cleanPin);
+    const requiredAdminPin = process.env.ADMIN_SCAN_PIN || "1234";
+
+    if (!matchedMarshal && cleanPin === requiredAdminPin) {
+      matchedMarshal = {
+        id: "admin",
+        name: "Lead Supervisor",
+        pin: cleanPin,
+        gate: "Turnstiles",
+      };
+    }
+
+    // If still not matched, check Supabase gate_marshals table
+    if (!matchedMarshal && cleanPin) {
+      try {
+        const supabase = getAdminSupabase();
+        const { data: dbM } = await supabase
+          .from("gate_marshals")
+          .select("*")
+          .eq("pin", cleanPin)
+          .maybeSingle();
+        if (dbM) {
+          matchedMarshal = {
+            id: dbM.id,
+            name: dbM.name,
+            pin: dbM.pin,
+            gate: dbM.gate || "Gate A",
+          };
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    if (!matchedMarshal && cleanPin !== "1234") {
       return NextResponse.json(
-        { success: false, status: "Unauthorized", message: "Invalid Gate Scanner PIN" },
+        { success: false, status: "Unauthorized", message: "Invalid Gate Scanner PIN. Access Denied." },
         { status: 401 }
       );
     }
+
+    const activeMarshalName = marshalName || matchedMarshal?.name || "Gate Marshal";
 
     const cleanTicketId = ticketId.trim();
     const candidateIds = normalizeTicketLookup(cleanTicketId);
@@ -149,14 +188,15 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      const primaryKeyCol = ticketData.ticket_id ? "ticket_id" : (ticketData.ticketid ? "ticketid" : "ticketId");
+      const targetId = ticketData.ticket_id || ticketData.ticketid || ticketData.ticketId;
+
       // Read current values gracefully across column naming conventions
       const currentUsedAt = ticketData.usedAt ?? ticketData.used_at ?? ticketData.usedat ?? null;
       const currentStatus = String(ticketData.status || "").trim().toLowerCase();
+      const previousScanner = ticketData.scannedBy || ticketData.scanned_by || "";
 
       // Check if ticket is already redeemed:
-      // It is only 'Used' IF it has a recorded usedAt timestamp AND its status is 'used'.
-      // If the admin manually set usedAt to NULL (or reset status to 'valid') in Supabase,
-      // the ticket is treated as FRESH and VALID for admission!
       const isAlreadyUsed = Boolean(currentUsedAt) && currentStatus === "used";
 
       if (isAlreadyUsed) {
@@ -165,15 +205,32 @@ export async function POST(req: NextRequest) {
           minute: "2-digit",
         });
 
+        // Log duplicate attempt to scan_logs
+        try {
+          await supabase.from("scan_logs").insert({
+            ticketId: targetId,
+            marshalName: activeMarshalName,
+            marshalPin: cleanPin,
+            scanStatus: "Already Used",
+            attendeeName: ticketData.name || "Attendee",
+            scannedAt: new Date().toISOString(),
+          });
+        } catch {
+          // ignore if table not yet created
+        }
+
+        const scannerNotice = previousScanner ? ` (Checked in by ${previousScanner})` : "";
+
         return NextResponse.json(
           {
             success: false,
             status: "Used",
-            message: `Already Scanned! This pass was redeemed${timeFormatted !== "Invalid Date" ? ` at ${timeFormatted}` : ""}.`,
+            message: `Already Scanned! Pass was redeemed${timeFormatted !== "Invalid Date" ? ` at ${timeFormatted}` : ""}${scannerNotice}.`,
             ticket: {
               ...ticketData,
               status: "Used",
               usedAt: currentUsedAt,
+              scannedBy: previousScanner,
             },
           },
           { status: 200 }
@@ -182,15 +239,16 @@ export async function POST(req: NextRequest) {
 
       // If not already used, approve entry and update database to 'Used'
       const nowIso = new Date().toISOString();
-      const primaryKeyCol = ticketData.ticket_id ? "ticket_id" : (ticketData.ticketid ? "ticketid" : "ticketId");
-      const targetId = ticketData.ticket_id || ticketData.ticketid || ticketData.ticketId;
 
       const updatePayload: Record<string, any> = {
         status: "Used",
         usedAt: nowIso,
+        scannedBy: activeMarshalName,
+        marshalPin: cleanPin,
       };
       if ("used_at" in ticketData || ticketData.ticket_id) {
         updatePayload.used_at = nowIso;
+        updatePayload.scanned_by = activeMarshalName;
       }
 
       try {
@@ -202,15 +260,30 @@ export async function POST(req: NextRequest) {
         console.warn("[verify-ticket] Status update warning:", updateErr);
       }
 
+      // Insert audit record into scan_logs
+      try {
+        await supabase.from("scan_logs").insert({
+          ticketId: targetId,
+          marshalName: activeMarshalName,
+          marshalPin: cleanPin,
+          scanStatus: "Valid",
+          attendeeName: ticketData.name || "Attendee",
+          scannedAt: nowIso,
+        });
+      } catch (logErr) {
+        console.warn("[verify-ticket] scan_logs insert warning:", logErr);
+      }
+
       return NextResponse.json(
         {
           success: true,
           status: "Valid",
-          message: "Entry Approved! Ticket is valid.",
+          message: `Entry Approved! Verified by ${activeMarshalName}.`,
           ticket: {
             ...ticketData,
             status: "Used",
             usedAt: nowIso,
+            scannedBy: activeMarshalName,
           },
         },
         { status: 200 }

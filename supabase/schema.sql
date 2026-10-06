@@ -82,3 +82,56 @@ FOR SELECT TO anon, authenticated USING (bucket_id = 'id-cards');
 
 CREATE POLICY "Allow service role upload id-cards" ON storage.objects
 FOR ALL TO service_role USING (bucket_id = 'id-cards') WITH CHECK (bucket_id = 'id-cards');
+
+-- Ensure columns for marshal tracking exist in tickets table
+ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS "scannedBy" TEXT;
+ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS "marshalPin" TEXT;
+
+-- 7. Gate Marshals Table (Track all 4 gate volunteers + supervisors)
+CREATE TABLE IF NOT EXISTS public.gate_marshals (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  pin TEXT NOT NULL UNIQUE,
+  gate TEXT DEFAULT 'Gate A',
+  "createdAt" TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
+);
+
+-- Pre-populate default 4 Gate Marshals + Supervisor
+INSERT INTO public.gate_marshals (id, name, pin, gate)
+VALUES 
+  ('marshal_1', 'Marshal 1', '1001', 'Gate A (Main Entrance)'),
+  ('marshal_2', 'Marshal 2', '1002', 'Gate B (South Side)'),
+  ('marshal_3', 'Marshal 3', '1003', 'Gate C (North Side)'),
+  ('marshal_4', 'Marshal 4', '1004', 'Gate D (VIP / Fast Track)'),
+  ('admin', 'Lead Supervisor', '1234', 'Central Turnstile Hub')
+ON CONFLICT (pin) DO UPDATE SET name = EXCLUDED.name, gate = EXCLUDED.gate;
+
+-- 8. Scan Logs Audit Table (Audit trail of every scan; powers live table & persistent counters)
+CREATE TABLE IF NOT EXISTS public.scan_logs (
+  id BIGSERIAL PRIMARY KEY,
+  "ticketId" TEXT NOT NULL,
+  "marshalName" TEXT NOT NULL,
+  "marshalPin" TEXT,
+  "scanStatus" TEXT NOT NULL, -- 'Valid', 'Already Used', 'Invalid'
+  "attendeeName" TEXT,
+  "scannedAt" TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_scan_logs_ticket ON public.scan_logs ("ticketId");
+CREATE INDEX IF NOT EXISTS idx_scan_logs_marshal ON public.scan_logs ("marshalName");
+CREATE INDEX IF NOT EXISTS idx_scan_logs_time ON public.scan_logs ("scannedAt");
+
+ALTER TABLE public.gate_marshals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.scan_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read gate_marshals" ON public.gate_marshals;
+DROP POLICY IF EXISTS "Allow service role all gate_marshals" ON public.gate_marshals;
+CREATE POLICY "Allow public read gate_marshals" ON public.gate_marshals FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Allow service role all gate_marshals" ON public.gate_marshals FOR ALL TO service_role USING (true);
+
+DROP POLICY IF EXISTS "Allow public read scan_logs" ON public.scan_logs;
+DROP POLICY IF EXISTS "Allow public insert scan_logs" ON public.scan_logs;
+DROP POLICY IF EXISTS "Allow service role all scan_logs" ON public.scan_logs;
+CREATE POLICY "Allow public read scan_logs" ON public.scan_logs FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "Allow public insert scan_logs" ON public.scan_logs FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "Allow service role all scan_logs" ON public.scan_logs FOR ALL TO service_role USING (true);
