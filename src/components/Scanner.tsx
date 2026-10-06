@@ -18,6 +18,8 @@ import {
   Clock,
   Lock,
   Unlock,
+  Eye,
+  X,
 } from "lucide-react";
 import { playSuccessChime, playWarningBuzzer, playErrorBeep } from "@/lib/audio";
 import { Ticket } from "@/types";
@@ -47,6 +49,7 @@ export default function Scanner() {
     message: "",
   });
 
+  const [zoomedIdCard, setZoomedIdCard] = useState<string | null>(null);
   const [manualTicketId, setManualTicketId] = useState("");
   const [showManualInput, setShowManualInput] = useState(false);
 
@@ -484,7 +487,7 @@ export default function Scanner() {
               </div>
 
               {scanResult.ticket && (
-                <div className="mt-4 p-4 rounded-2xl bg-emerald-900/40 border border-emerald-500/30 text-left text-xs space-y-1.5 max-w-xs mx-auto text-emerald-100">
+                <div className="mt-3 p-3.5 rounded-2xl bg-emerald-900/40 border border-emerald-500/30 text-left text-xs space-y-2 max-w-xs mx-auto text-emerald-100">
                   <div className="flex items-center gap-1.5 font-bold text-white text-sm">
                     <User className="w-4 h-4 text-emerald-300" />
                     <span>{scanResult.ticket.name}</span>
@@ -499,6 +502,50 @@ export default function Scanner() {
                       <span>{scanResult.ticket.phone}</span>
                     </div>
                   )}
+
+                  {/* Namaste BHU ID Cross-Verification for Gate Security */}
+                  {scanResult.ticket.idCardUrl ? (
+                    <div className="pt-2 border-t border-emerald-800/80 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-semibold text-emerald-300">
+                        <span className="flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                          Namaste BHU ID Card:
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setZoomedIdCard(scanResult.ticket?.idCardUrl || null)}
+                          className="text-[10px] text-emerald-300 hover:text-white underline flex items-center gap-0.5 cursor-pointer"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>Tap to Zoom</span>
+                        </button>
+                      </div>
+                      <div
+                        onClick={() => setZoomedIdCard(scanResult.ticket?.idCardUrl || null)}
+                        className="relative w-full h-28 rounded-xl overflow-hidden border border-emerald-500/40 cursor-pointer group bg-black/60 shadow-inner"
+                        title="Click to zoom student ID card"
+                      >
+                        <img
+                          src={scanResult.ticket.idCardUrl}
+                          alt="Namaste BHU ID Card"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                          <div className="px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-sm text-[11px] font-bold text-white flex items-center gap-1">
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Zoom Full ID</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="pt-1.5 border-t border-emerald-800/80">
+                      <p className="text-[10px] text-emerald-400/70 italic">
+                        No Namaste BHU ID card attached for this pass.
+                      </p>
+                    </div>
+                  )}
+
                   <p className="font-mono text-[10px] text-emerald-300/80 pt-1 border-t border-emerald-800">
                     Pass: {scanResult.ticket.ticketId.slice(0, 16)}...
                   </p>
@@ -541,13 +588,39 @@ export default function Scanner() {
               </div>
 
               {scanResult.ticket && (
-                <div className="mt-4 p-4 rounded-2xl bg-rose-900/40 border border-rose-500/30 text-left text-xs space-y-1.5 max-w-xs mx-auto text-rose-100">
+                <div className="mt-3 p-3.5 rounded-2xl bg-rose-900/40 border border-rose-500/30 text-left text-xs space-y-2 max-w-xs mx-auto text-rose-100">
                   <p className="font-bold text-white text-sm">
                     Owner: {scanResult.ticket.name}
                   </p>
                   <p className="text-rose-200">
                     Email: {scanResult.ticket.email}
                   </p>
+
+                  {scanResult.ticket.idCardUrl && (
+                    <div className="pt-2 border-t border-rose-800/80 space-y-1">
+                      <div className="flex items-center justify-between text-[11px] font-semibold text-rose-300">
+                        <span>Namaste BHU ID:</span>
+                        <button
+                          type="button"
+                          onClick={() => setZoomedIdCard(scanResult.ticket?.idCardUrl || null)}
+                          className="text-[10px] text-rose-300 hover:text-white underline cursor-pointer"
+                        >
+                          Tap to Zoom
+                        </button>
+                      </div>
+                      <div
+                        onClick={() => setZoomedIdCard(scanResult.ticket?.idCardUrl || null)}
+                        className="relative w-full h-20 rounded-xl overflow-hidden border border-rose-500/40 cursor-pointer group bg-black/60"
+                      >
+                        <img
+                          src={scanResult.ticket.idCardUrl}
+                          alt="Namaste BHU ID"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <p className="text-rose-300/90 text-[11px] flex items-center gap-1 mt-1">
                     <Clock className="w-3.5 h-3.5 text-rose-400" />
                     Status: Marked as Used
@@ -672,6 +745,43 @@ export default function Scanner() {
           </button>
         </div>
       </div>
+
+      {/* Full-Screen Zoom Lightbox Modal for Gate Marshal Verification */}
+      {zoomedIdCard && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setZoomedIdCard(null)}
+        >
+          <div
+            className="relative max-w-lg w-full bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between w-full pb-3 border-b border-slate-800">
+              <span className="text-sm font-bold text-white flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                Namaste BHU ID Verification
+              </span>
+              <button
+                type="button"
+                onClick={() => setZoomedIdCard(null)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mt-4 w-full max-h-[72vh] overflow-auto rounded-2xl bg-black/80 flex items-center justify-center p-2 border border-slate-800">
+              <img
+                src={zoomedIdCard}
+                alt="Namaste BHU ID Card Full Preview"
+                className="max-h-[66vh] w-auto object-contain rounded-xl shadow-lg"
+              />
+            </div>
+            <p className="text-xs text-slate-400 mt-3 text-center">
+              Cross-verify student name, photo, and roll number with attendee at gate.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -139,7 +139,7 @@ function SuccessContent() {
 
   // Parse individual attendees if passed from registration
   const attendeesParam = searchParams.get("attendees");
-  let parsedAttendees: Array<{ name: string; email?: string; phone?: string }> = [];
+  let parsedAttendees: Array<{ name: string; email?: string; phone?: string; idCardUrl?: string }> = [];
   try {
     if (attendeesParam) {
       parsedAttendees = JSON.parse(attendeesParam);
@@ -169,6 +169,7 @@ function SuccessContent() {
         : `Guest ${idx + 1} (${paramName || "Main Booker"})`);
     const individualEmail = attendeeInfo.email?.trim() || paramEmail || "";
     const individualPhone = attendeeInfo.phone?.trim() || paramPhone || "";
+    const individualIdCardUrl = attendeeInfo.idCardUrl || ticketData?.idCardUrl || "";
 
     return {
       ticketId: tId,
@@ -177,6 +178,7 @@ function SuccessContent() {
       name: individualName,
       email: individualEmail,
       phone: individualPhone,
+      idCardUrl: individualIdCardUrl,
       paymentId: ticketData?.paymentId || paramPaymentId || "",
       orderId: ticketData?.orderId || paramOrderId || "",
       status: ticketData?.status || "Valid",

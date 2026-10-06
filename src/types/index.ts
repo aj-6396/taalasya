@@ -10,6 +10,7 @@ export interface Ticket {
   usedAt?: any;
   amount?: number;
   eventName?: string;
+  idCardUrl?: string;
 }
 
 export interface CreateOrderRequest {

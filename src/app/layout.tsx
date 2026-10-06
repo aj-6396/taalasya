@@ -20,8 +20,8 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "JHOOM '26: Dance Fest cum Dandiya Night | Taalasya Dance Society — BHU",
   description:
-    "Official event portal for JHOOM '26: Dance Fest cum Dandiya Night on 13th October 2026 at Swatantrata Bhawan, Banaras Hindu University (BHU). Passes starting at ₹299 only. Developed by Ambuj Singh.",
-  authors: [{ name: "Ambuj Singh" }],
+    "Official event portal for JHOOM '26: Dance Fest cum Dandiya Night on 13th October 2026 at Swatantrata Bhawan, Banaras Hindu University (BHU). Passes starting at ₹299 only. Developed by AJ.",
+  authors: [{ name: "AJ" }],
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     "Taalasya Dance Society",
     "BHU Varanasi",
     "Swatantrata Bhawan",
-    "Ambuj Singh",
+    "AJ",
     "QR Ticket",
   ],
 };

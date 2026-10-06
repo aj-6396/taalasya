@@ -23,7 +23,7 @@ export const EVENT_CONFIG = {
   supportEmail:
     process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "taalasyadancesociety.bhu@gmail.com",
   organizer: "Taalasya Dance Society — Banaras Hindu University (BHU)",
-  developer: "Ambuj Singh",
+  developer: "AJ",
   instagramHandle: "@taalasyadancesociety_bhu",
   instagramUrl: "https://www.instagram.com/taalasyadancesociety_bhu/",
   instagramPostUrl:

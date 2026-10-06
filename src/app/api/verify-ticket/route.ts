@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
             usedAt: res2.data.used_at ?? res2.data.usedAt,
             paymentId: res2.data.payment_id ?? res2.data.paymentId,
             orderId: res2.data.order_id ?? res2.data.orderId,
+            idCardUrl: res2.data.id_card_url ?? res2.data.idCardUrl,
           };
           fetchErr = null;
         } else if (res2.error) {
@@ -74,10 +75,15 @@ export async function POST(req: NextRequest) {
               ...res3.data,
               ticketId: res3.data.ticketid || res3.data.ticketId,
               usedAt: res3.data.usedat ?? res3.data.usedAt,
+              idCardUrl: res3.data.idcardurl ?? res3.data.idCardUrl,
             };
             fetchErr = null;
           }
         }
+      }
+
+      if (ticketData && !ticketData.idCardUrl) {
+        ticketData.idCardUrl = ticketData.id_card_url || ticketData.idcardurl || undefined;
       }
 
       if (fetchErr || !ticketData) {

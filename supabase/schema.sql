@@ -15,9 +15,13 @@ CREATE TABLE IF NOT EXISTS public.tickets (
   "amount" NUMERIC DEFAULT 299,
   "status" TEXT NOT NULL DEFAULT 'Valid',
   "eventName" TEXT DEFAULT 'JHOOM ''26 — Dance Fest cum Dandiya Night',
+  "idCardUrl" TEXT,
   "createdAt" TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
   "usedAt" TIMESTAMPTZ
 );
+
+-- Ensure idCardUrl column exists if table was already created
+ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS "idCardUrl" TEXT;
 
 -- 2. Helpful Comment on Table
 COMMENT ON TABLE public.tickets IS 'Stores participant tickets for JHOOM 26 Dance Fest cum Dandiya Night (Taalasya Dance Society, BHU)';

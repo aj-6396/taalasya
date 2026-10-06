@@ -100,6 +100,7 @@ export async function POST(req: NextRequest) {
       const attendeeName = attendeeInfo.name?.trim() || (i === 0 ? name : `Attendee ${i + 1} of ${name}`);
       const attendeeEmail = attendeeInfo.email?.trim() || email || "";
       const attendeePhone = attendeeInfo.phone?.trim() || phone || "";
+      const idCardUrl = attendeeInfo.idCardUrl || attendeeInfo.idCard || "";
 
       generatedTickets.push({
         ticketId,
@@ -108,6 +109,7 @@ export async function POST(req: NextRequest) {
         name: attendeeName,
         email: attendeeEmail,
         phone: attendeePhone,
+        idCardUrl,
         paymentId: razorpay_payment_id,
         orderId: razorpay_order_id,
         amount: Math.round(getTierPrice(ticketQuantity) / ticketQuantity),
@@ -127,6 +129,7 @@ export async function POST(req: NextRequest) {
             name: t.name,
             email: t.email,
             phone: t.phone,
+            idCardUrl: t.idCardUrl || null,
             paymentId: t.paymentId,
             orderId: t.orderId,
             amount: t.amount,
