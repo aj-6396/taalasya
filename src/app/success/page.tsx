@@ -490,7 +490,7 @@ function SuccessContent() {
           <span>Gate Entry Guidelines</span>
         </div>
         <p className="leading-relaxed">
-          Each QR code above is a unique single-use admission ticket. Please download the white-sheet PDF or keep this screen open with high screen brightness when approaching gate marshals at Swatantrata Bhawan.
+          No printout required! These are digital tickets—you can show the QR code directly on your phone or keep the downloaded PDF/screenshot ready when approaching gate marshals at Swatantrata Bhawan.
         </p>
       </div>
 

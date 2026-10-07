@@ -45,6 +45,10 @@ export default function EventDetails() {
       a: "JHOOM '26 is the First ever Dance Fest cum Dandiya Night organized by Taalasya Dance Society, the official dance club of Banaras Hindu University (BHU). Taking place on 13th October 2026 at Swatantrata Bhawan, it unites campus dance lovers for an unforgettable cultural evening.",
     },
     {
+      q: "Do we have to print the tickets?",
+      a: "No! These are 100% digital tickets. You do not need to print them—you can simply show the QR code directly on your phone at the entry gate. (Keeping a screenshot or saved PDF on your phone is mandatory).",
+    },
+    {
       q: "Are Dandiya sticks provided?",
       a: "Yes! Festive Dandiya sticks will be available at designated event counters which you can purchase inside the venue. Traditional ethnic attire (Kurtas, Chaniya Cholis) is warmly encouraged!",
     },
