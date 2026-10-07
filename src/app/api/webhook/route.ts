@@ -92,53 +92,62 @@ export async function POST(req: NextRequest) {
       console.warn("[Webhook] Attendee email not found in payment entity or notes:", paymentEntity);
     }
 
-    // Generate short human-friendly Ticket ID
-    const ticketId = generateShortTicketId();
+    // Multi-Ticket setup from notes
+    const ticketQuantity = Math.max(1, Number(notes.ticketQuantity) || 1);
+    const rawNames = notes.attendeeNames ? String(notes.attendeeNames).split(",") : [];
+    const namesList = rawNames.map((s: string) => s.trim()).filter(Boolean);
 
     let savedToDatabase = false;
+    const generatedTicketIds: string[] = [];
 
     // Write to Supabase tickets table
     try {
       const supabase = getAdminSupabase();
 
-      // Idempotency check: see if paymentId already has a generated ticket
-      const { data: existingTicket } = await supabase
+      // Idempotency check: see if paymentId already has generated tickets
+      const { data: existingTickets } = await supabase
         .from("tickets")
         .select("ticketId")
-        .eq("paymentId", paymentId)
-        .maybeSingle();
+        .eq("paymentId", paymentId);
 
-      if (existingTicket) {
-        console.log(`[Webhook] Ticket already generated for paymentId: ${paymentId}`);
+      if (existingTickets && existingTickets.length >= ticketQuantity) {
+        console.log(`[Webhook] All ${ticketQuantity} tickets already generated for paymentId: ${paymentId}`);
         return NextResponse.json(
           { status: "ok", message: "Duplicate payment already processed" },
           { status: 200 }
         );
       }
 
-      // Store in Supabase
-      const ticketData = {
-        ticketId,
-        name: attendeeName,
-        email: attendeeEmail || "",
-        phone: attendeePhone,
-        paymentId,
-        orderId,
-        amount: amountInRupees,
-        status: "Valid",
-        eventName: EVENT_CONFIG.name,
-        createdAt: new Date().toISOString(),
-      };
+      // Generate all tickets
+      const ticketsToInsert = [];
+      for (let i = 0; i < ticketQuantity; i++) {
+        const ticketId = generateShortTicketId();
+        generatedTicketIds.push(ticketId);
+        const indName = namesList[i] || (i === 0 ? attendeeName : `Attendee ${i + 1} of ${attendeeName}`);
+
+        ticketsToInsert.push({
+          ticketId,
+          name: indName,
+          email: attendeeEmail || "",
+          phone: attendeePhone,
+          paymentId,
+          orderId,
+          amount: Math.round(amountInRupees / ticketQuantity),
+          status: "Valid",
+          eventName: EVENT_CONFIG.name,
+          createdAt: new Date().toISOString(),
+        });
+      }
 
       const { error: insertErr } = await supabase
         .from("tickets")
-        .insert([ticketData]);
+        .insert(ticketsToInsert);
 
       if (insertErr) {
         console.error("[Webhook] Supabase insert error:", insertErr);
       } else {
         savedToDatabase = true;
-        console.log(`[Webhook] Ticket ${ticketId} saved to Supabase successfully.`);
+        console.log(`[Webhook] ${ticketsToInsert.length} tickets saved to Supabase successfully.`);
       }
     } catch (dbErr) {
       console.error("[Webhook] Failed to save ticket to Supabase:", dbErr);
@@ -147,8 +156,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         status: "ok",
-        message: "Payment captured and ticket generated",
-        ticketId,
+        message: "Payment captured and tickets generated",
+        ticketId: generatedTicketIds[0] || null,
+        ticketIds: generatedTicketIds,
         savedToDatabase,
       },
       { status: 200 }

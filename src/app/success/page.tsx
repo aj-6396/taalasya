@@ -233,6 +233,7 @@ function SuccessContent() {
           email: ticketData?.email || paramEmail || "",
           phone: ticketData?.phone || paramPhone || "",
           attendees: allTickets.map((t) => ({
+            ticketId: t.ticketId,
             name: t.name,
             email: t.email,
             phone: t.phone,

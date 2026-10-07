@@ -55,7 +55,7 @@ function processIdCardFile(
     const img = new window.Image();
     img.onload = () => {
       try {
-        const maxDim = 1200;
+        const maxDim = 950;
         let width = img.width;
         let height = img.height;
 
@@ -79,7 +79,7 @@ function processIdCardFile(
         }
 
         ctx.drawImage(img, 0, 0, width, height);
-        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.82);
+        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.76);
         if (compressedBase64 && compressedBase64.length > 200 && compressedBase64 !== "data:,") {
           onSuccess(compressedBase64, file.name);
         } else {
@@ -355,6 +355,7 @@ export default function RegistrationForm() {
           email: formData.email.trim(),
           phone: formData.phone.trim(),
           quantity: formData.quantity,
+          attendeeNames: fullAttendees.map((a) => a.name).join(", "),
         }),
       });
 

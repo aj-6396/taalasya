@@ -61,14 +61,40 @@ export async function POST(req: NextRequest) {
       createdAt: string;
     }> = [];
 
+    // If existing tickets are in DB for this payment, look them up so PDF matches DB exactly
+    let dbTickets: any[] = [];
+    if (paymentId && !paymentId.startsWith("pay_sim_") && !paymentId.startsWith("pay_test_")) {
+      try {
+        const supabase = getAdminSupabase();
+        const { data } = await supabase
+          .from("tickets")
+          .select("*")
+          .eq("paymentId", paymentId)
+          .order("createdAt", { ascending: true });
+        if (data && data.length > 0) {
+          dbTickets = data;
+        }
+      } catch (err) {
+        console.warn("[download-tickets] DB lookup warning:", err);
+      }
+    }
+
     for (let i = 0; i < ticketQuantity; i++) {
       const attendeeInfo = (Array.isArray(attendees) && attendees[i]) || {};
-      const ticketId = attendeeInfo.ticketId || generateShortTicketId();
+      const matchedDb = dbTickets[i];
+      const ticketId =
+        attendeeInfo.ticketId ||
+        matchedDb?.ticketId ||
+        matchedDb?.ticket_id ||
+        generateShortTicketId();
       const attendeeName =
         attendeeInfo.name?.trim() ||
+        matchedDb?.name ||
         (i === 0 ? buyerName : `Guest ${i + 1} (${buyerName})`);
-      const attendeeEmail = attendeeInfo.email?.trim() || email || "";
-      const attendeePhone = attendeeInfo.phone?.trim() || phone || "";
+      const attendeeEmail =
+        attendeeInfo.email?.trim() || matchedDb?.email || email || "";
+      const attendeePhone =
+        attendeeInfo.phone?.trim() || matchedDb?.phone || phone || "";
 
       tickets.push({
         ticketId,
@@ -85,31 +111,13 @@ export async function POST(req: NextRequest) {
         venue: eventVenue,
         date: eventDate,
         time: eventTime,
-        createdAt: new Date().toISOString(),
+        createdAt: matchedDb?.createdAt || new Date().toISOString(),
       });
     }
 
-    // --- Database Writes: Supabase & Firebase Admin Snippet ---
-    try {
-      const supabase = getAdminSupabase();
-      await supabase.from("tickets").upsert(
-        tickets.map((t) => ({
-          ticketId: t.ticketId,
-          name: t.name,
-          email: t.email,
-          phone: t.phone,
-          paymentId: t.paymentId,
-          orderId: t.orderId,
-          amount: Math.round(getTierPrice(ticketQuantity) / ticketQuantity),
-          status: "Valid",
-          eventName: t.eventName,
-          createdAt: t.createdAt,
-        })),
-        { onConflict: "ticketId" }
-      );
-    } catch (sbErr) {
-      console.warn("[download-tickets] Database insertion note:", sbErr);
-    }
+    // NOTE: We deliberately do NOT insert or upsert tickets into Supabase here.
+    // Tickets are already created and verified at payment time (/api/verify-payment).
+    // Writing to the database here was causing duplicate tickets to be generated.
     // =========================================================================
     // 2. Multi-Page PDF Generation (Server-Side with PDFKit & QRCode)
     // =========================================================================

@@ -68,28 +68,34 @@ export async function POST(req: NextRequest) {
 
     const supabase = getAdminSupabase();
 
-    // 1. Idempotency Check: check if tickets already created for this paymentId
+    // 1. Multi-Ticket Setup: Calculate ticket quantity
+    const ticketQuantity = Math.max(1, Number(quantity) || 1);
+
+    // 2. Idempotency Check: check if tickets already created for this paymentId
     try {
       const { data: existingTickets } = await supabase
         .from("tickets")
         .select("*")
         .eq("paymentId", razorpay_payment_id);
 
-      if (existingTickets && existingTickets.length > 0) {
+      if (existingTickets && existingTickets.length >= ticketQuantity) {
         return NextResponse.json({
           success: true,
-          ticketId: existingTickets[0].ticketId,
-          ticketIds: existingTickets.map((t: any) => t.ticketId),
+          ticketId: existingTickets[0].ticketId || existingTickets[0].ticket_id,
+          ticketIds: existingTickets.map((t: any) => t.ticketId || t.ticket_id),
           tickets: existingTickets,
           message: "Tickets already generated for this payment.",
         });
+      } else if (existingTickets && existingTickets.length > 0) {
+        // Incomplete/partial tickets (e.g. 1 placeholder row created by webhook)
+        // Clean up the incomplete row so full multi-attendee tickets can be cleanly written
+        await supabase.from("tickets").delete().eq("paymentId", razorpay_payment_id);
       }
     } catch (checkErr) {
       console.warn("[Verify Payment] Supabase idempotency check warning:", checkErr);
     }
 
-    // 2. Multi-Ticket Loop: Generate exact quantity of unique UUID tickets
-    const ticketQuantity = Math.max(1, Number(quantity) || 1);
+    // 3. Multi-Ticket Loop: Generate exact quantity of unique UUID tickets
     const generatedTickets: any[] = [];
     const generatedTicketIds: string[] = [];
 
@@ -120,7 +126,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2.5 Upload ID Card images to Supabase Storage bucket 'id-cards' if available
+    // 3.5 Parallel Upload ID Card images to Supabase Storage bucket 'id-cards' or Google Drive
     try {
       try {
         await supabase.storage.createBucket("id-cards", { public: true });
@@ -128,76 +134,90 @@ export async function POST(req: NextRequest) {
         // Bucket may already exist or restricted; ignore
       }
 
-      for (const t of generatedTickets) {
-        if (
-          t.idCardUrl &&
-          typeof t.idCardUrl === "string" &&
-          (t.idCardUrl.startsWith("data:") || t.idCardUrl.length > 200)
-        ) {
-          let trimmedUrl = t.idCardUrl.trim();
-          if (trimmedUrl.includes("%") || trimmedUrl.startsWith("data%3A")) {
-            try {
-              trimmedUrl = decodeURIComponent(trimmedUrl);
-            } catch {
-              trimmedUrl = trimmedUrl.replace(/%2B/gi, "+").replace(/%2F/gi, "/").replace(/%3D/gi, "=").replace(/%20/gi, "+");
-            }
-          }
-
-          let mime = "image/jpeg";
-          let rawB64 = trimmedUrl;
-          if (trimmedUrl.startsWith("data:")) {
-            const commaIdx = trimmedUrl.indexOf(",");
-            if (commaIdx !== -1) {
-              const header = trimmedUrl.slice(0, commaIdx);
-              rawB64 = trimmedUrl.slice(commaIdx + 1);
-              const m = header.match(/^data:([^;]+);base64/);
-              if (m) mime = m[1];
-            }
-          }
-          let cleanB64 = rawB64.replace(/\s+/g, "+").replace(/[^A-Za-z0-9+/=]/g, "");
-          while (cleanB64.length % 4 !== 0) {
-            cleanB64 += "=";
-          }
-          const buffer = Buffer.from(cleanB64, "base64");
-          const ext = mime.includes("png") ? "png" : "jpg";
-          const fileName = `${t.ticketId}.${ext}`;
-          let uploadedUrl: string | null = null;
-
-          // Priority 1: Google Drive Webhook Upload (if configured)
-          if (process.env.GOOGLE_DRIVE_WEBHOOK_URL) {
-            uploadedUrl = await uploadToGoogleDrive({
-              fileName: `${t.ticketId}_${t.name.replace(/[^a-zA-Z0-9]/g, "_")}.${ext}`,
-              base64: cleanB64,
-              mimeType: mime,
-            });
-          }
-
-          // Priority 2: Supabase Storage bucket 'id-cards'
-          if (!uploadedUrl) {
-            const { data: uploadData, error: uploadErr } = await supabase.storage
-              .from("id-cards")
-              .upload(fileName, buffer, {
-                contentType: mime,
-                upsert: true,
-              });
-
-            if (!uploadErr && uploadData) {
-              const { data: publicData } = supabase.storage
-                .from("id-cards")
-                .getPublicUrl(fileName);
-              if (publicData?.publicUrl) {
-                uploadedUrl = publicData.publicUrl;
+      await Promise.all(
+        generatedTickets.map(async (t) => {
+          if (
+            t.idCardUrl &&
+            typeof t.idCardUrl === "string" &&
+            (t.idCardUrl.startsWith("data:") || t.idCardUrl.length > 200)
+          ) {
+            let trimmedUrl = t.idCardUrl.trim();
+            if (trimmedUrl.includes("%") || trimmedUrl.startsWith("data%3A")) {
+              try {
+                trimmedUrl = decodeURIComponent(trimmedUrl);
+              } catch {
+                trimmedUrl = trimmedUrl
+                  .replace(/%2B/gi, "+")
+                  .replace(/%2F/gi, "/")
+                  .replace(/%3D/gi, "=")
+                  .replace(/%20/gi, "+");
               }
-            } else if (uploadErr) {
-              console.warn("[Verify Payment] Supabase storage upload notice:", uploadErr.message);
+            }
+
+            let mime = "image/jpeg";
+            let rawB64 = trimmedUrl;
+            if (trimmedUrl.startsWith("data:")) {
+              const commaIdx = trimmedUrl.indexOf(",");
+              if (commaIdx !== -1) {
+                const header = trimmedUrl.slice(0, commaIdx);
+                rawB64 = trimmedUrl.slice(commaIdx + 1);
+                const m = header.match(/^data:([^;]+);base64/);
+                if (m) mime = m[1];
+              }
+            }
+            let cleanB64 = rawB64.replace(/\s+/g, "+").replace(/[^A-Za-z0-9+/=]/g, "");
+            while (cleanB64.length % 4 !== 0) {
+              cleanB64 += "=";
+            }
+            const buffer = Buffer.from(cleanB64, "base64");
+            const ext = mime.includes("png") ? "png" : "jpg";
+            const fileName = `${t.ticketId}.${ext}`;
+            let uploadedUrl: string | null = null;
+
+            // Priority 1: Google Drive Webhook Upload (if configured)
+            if (process.env.GOOGLE_DRIVE_WEBHOOK_URL) {
+              try {
+                uploadedUrl = await uploadToGoogleDrive({
+                  fileName: `${t.ticketId}_${t.name.replace(/[^a-zA-Z0-9]/g, "_")}.${ext}`,
+                  base64: cleanB64,
+                  mimeType: mime,
+                });
+              } catch (driveErr) {
+                console.warn("[Verify Payment] Google Drive upload notice:", driveErr);
+              }
+            }
+
+            // Priority 2: Supabase Storage bucket 'id-cards'
+            if (!uploadedUrl) {
+              try {
+                const { data: uploadData, error: uploadErr } = await supabase.storage
+                  .from("id-cards")
+                  .upload(fileName, buffer, {
+                    contentType: mime,
+                    upsert: true,
+                  });
+
+                if (!uploadErr && uploadData) {
+                  const { data: publicData } = supabase.storage
+                    .from("id-cards")
+                    .getPublicUrl(fileName);
+                  if (publicData?.publicUrl) {
+                    uploadedUrl = publicData.publicUrl;
+                  }
+                } else if (uploadErr) {
+                  console.warn("[Verify Payment] Supabase storage upload notice:", uploadErr.message);
+                }
+              } catch (supaUploadErr) {
+                console.warn("[Verify Payment] Supabase storage upload notice:", supaUploadErr);
+              }
+            }
+
+            if (uploadedUrl) {
+              t.idCardUrl = uploadedUrl;
             }
           }
-
-          if (uploadedUrl) {
-            t.idCardUrl = uploadedUrl;
-          }
-        }
-      }
+        })
+      );
     } catch (storageErr) {
       console.warn("[Verify Payment] Storage upload skipped:", storageErr);
     }
