@@ -300,12 +300,7 @@ CREATE POLICY "Allow service role all scan_logs" ON public.scan_logs FOR ALL TO 
 
 The `/scan` route is a dedicated, responsive mobile scanner designed for gate personnel:
 
-1. **Access Control:** Gate staff enter their designated 4-digit PIN:
-   - **Gate A (Lane 1):** `4821`
-   - **Gate A (Lane 2):** `7395`
-   - **Gate B (Lane 1):** `2964`
-   - **Gate B (Lane 2):** `8153`
-   - **Lead Supervisor:** `6028` (or custom `ADMIN_SCAN_PIN`)
+1. **Access Control:** Gate staff enter their designated 4-digit PIN.
 2. **Scanning Capabilities:**
    - Real-time video viewfinder with camera toggle (Rear environment camera / Front camera).
    - Instant camera flash/torch toggle on supported mobile browsers.
@@ -466,7 +461,3 @@ To guarantee that tickets are generated even if an attendee closes their browser
 ## 👨‍💻 Author & Credits
 
 Engineered with ❤️ by [**AJ**](https://aj-7portfolio.vercel.app/) for **Taalasya Dance Society**, Banaras Hindu University (BHU).
-
-For inquiries or technical support:
-- **Email:** `taalasyadancesociety.bhu@gmail.com`
-- **Instagram:** [@taalasyadancesociety_bhu](https://www.instagram.com/taalasyadancesociety_bhu/)
