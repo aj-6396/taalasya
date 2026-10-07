@@ -26,9 +26,9 @@ import {
   ChevronDown,
   Loader2,
   AlertCircle,
-  TrendingUp,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { isTestTicket } from "@/lib/isTestTicket";
 
 type TicketRecord = {
   ticketId: string;
@@ -50,7 +50,6 @@ type AdminStats = {
   totalTickets: number;
   scannedTickets: number;
   pendingTickets: number;
-  totalRevenue: number;
 };
 
 export default function AdminPage() {
@@ -67,7 +66,6 @@ export default function AdminPage() {
     totalTickets: 0,
     scannedTickets: 0,
     pendingTickets: 0,
-    totalRevenue: 0,
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -176,9 +174,12 @@ export default function AdminPage() {
     }
   };
 
-  // Filtered tickets
+  // Filtered tickets (strictly excludes any test/simulated tickets)
   const filteredTickets = useMemo(() => {
     return tickets.filter((t) => {
+      // Exclude test/demo tickets
+      if (isTestTicket(t)) return false;
+
       // Status filter
       if (statusFilter === "scanned" && t.status !== "Used") return false;
       if (statusFilter === "pending" && t.status === "Used") return false;
@@ -348,26 +349,15 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {/* Metrics Grid (Revenue Removed as requested) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
                 <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider">Total Passes</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">Total Confirmed Passes</span>
                   <Ticket className="w-4 h-4 text-pink-400" />
                 </div>
                 <p className="text-2xl sm:text-3xl font-black text-white">{stats.totalTickets}</p>
                 <p className="text-[11px] text-slate-400 mt-1">Confirmed in Supabase</p>
-              </div>
-
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider">Total Revenue</span>
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
-                </div>
-                <p className="text-2xl sm:text-3xl font-black text-emerald-400">
-                  ₹{stats.totalRevenue.toLocaleString("en-IN")}
-                </p>
-                <p className="text-[11px] text-slate-400 mt-1">Direct via Razorpay</p>
               </div>
 
               <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800">

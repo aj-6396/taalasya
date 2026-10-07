@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSupabase } from "@/lib/supabase/admin";
+import { isTestTicket } from "@/lib/isTestTicket";
 
 export const dynamic = "force-dynamic";
 
@@ -48,8 +49,11 @@ export async function POST(req: NextRequest) {
       console.warn("[Admin API] Failed to fetch tickets from Supabase:", err);
     }
 
+    // Filter out simulated / test mode tickets
+    const genuineTickets = rawTickets.filter((t) => !isTestTicket(t));
+
     // Normalize tickets
-    const normalizedTickets = rawTickets.map((t) => {
+    const normalizedTickets = genuineTickets.map((t) => {
       const isUsed =
         t.status === "Used" ||
         t.scanned === true ||
@@ -76,7 +80,6 @@ export async function POST(req: NextRequest) {
     const totalTickets = normalizedTickets.length;
     const scannedTickets = normalizedTickets.filter((t) => t.status === "Used").length;
     const pendingTickets = totalTickets - scannedTickets;
-    const totalRevenue = normalizedTickets.reduce((acc, t) => acc + (t.amount || 299), 0);
 
     return NextResponse.json({
       success: true,
@@ -84,7 +87,6 @@ export async function POST(req: NextRequest) {
         totalTickets,
         scannedTickets,
         pendingTickets,
-        totalRevenue,
       },
       tickets: normalizedTickets,
     });

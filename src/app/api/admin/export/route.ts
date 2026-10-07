@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { getAdminSupabase } from "@/lib/supabase/admin";
+import { isTestTicket } from "@/lib/isTestTicket";
 
 export const dynamic = "force-dynamic";
 
@@ -49,8 +50,11 @@ export async function GET(req: NextRequest) {
       console.warn("[Admin Export] Error fetching tickets:", err);
     }
 
+    // Filter out test / simulated tickets
+    const genuineTickets = rawTickets.filter((t) => !isTestTicket(t));
+
     // Filter if needed
-    let filtered = rawTickets.map((t, idx) => {
+    let filtered = genuineTickets.map((t, idx) => {
       const isUsed =
         t.status === "Used" ||
         t.scanned === true ||
