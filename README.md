@@ -262,11 +262,11 @@ CREATE TABLE IF NOT EXISTS public.gate_marshals (
 
 -- Pre-populate default marshals
 INSERT INTO public.gate_marshals (id, name, pin, gate) VALUES 
-  ('marshal_1', 'Marshal 1', '4821', 'Gate A (Lane 1)'),
-  ('marshal_2', 'Marshal 2', '7395', 'Gate A (Lane 2)'),
-  ('marshal_3', 'Marshal 3', '2964', 'Gate B (Lane 1)'),
-  ('marshal_4', 'Marshal 4', '8153', 'Gate B (Lane 2)'),
-  ('admin', 'Lead Supervisor', '6028', 'All Gates (Supervisor)')
+  ('marshal_1', 'Marshal 1' 'Gate A (Lane 1)'),
+  ('marshal_2', 'Marshal 2' 'Gate A (Lane 2)'),
+  ('marshal_3', 'Marshal 3','Gate B (Lane 1)'),
+  ('marshal_4', 'Marshal 4', 'Gate B (Lane 2)'),
+  ('admin', 'Lead Supervisor''All Gates (Supervisor)')
 ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, pin = EXCLUDED.pin, gate = EXCLUDED.gate;
 
 -- 6. Scan Logs Table for Live Auditing
