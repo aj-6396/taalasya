@@ -30,7 +30,7 @@ export const TERMS_AND_CONDITIONS = {
         "2.1 Entry is permitted only on presentation of a valid pass together with a valid BHU ID card.",
         "2.2 Passes are non-transferable and non-refundable, except as provided in Clause 12.",
         "2.3 The Organisers may refuse entry to anyone who cannot verify their identity or who appears to be under the influence of alcohol or any prohibited substance.",
-        "2.4 Passes are valid for entry between 02:30 PM and 04:30 PM only (gates close strictly at 04:30 PM). Passes are valid for a single entry. Re-entry is not permitted.",
+        "2.4 Passes are valid for entry between 02:30 PM and 04:30 PM only (gates close strictly at 04:30 PM). Passes are valid for a single entry. Re-entry is not permitted hence do not leave the venue.",
       ],
     },
     {

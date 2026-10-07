@@ -100,7 +100,7 @@ export default function Footer() {
                 <span>Verified QR Admission</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-normal">
-                Passes are stored securely in Supabase with cryptographic Razorpay verification. Each QR code is strictly single-use at turnstiles.
+                Passes are valid for a single entry. Re-entry is not permitted hence do not leave the venue. Each QR code is strictly single-use at turnstiles.
               </p>
             </div>
           </div>

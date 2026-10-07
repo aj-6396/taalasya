@@ -420,38 +420,48 @@ export async function POST(req: NextRequest) {
           // Terms & Entry Conditions (Bottom Box)
           const footerTop = row3Top + 54;
           doc
-            .roundedRect(leftColX, footerTop, 595.28 - 120, 64, 8)
-            .lineWidth(0.5)
-            .strokeColor("#cbd5e1")
-            .fillAndStroke("#ffffff", "#cbd5e1");
+            .roundedRect(leftColX, footerTop, 595.28 - 120, 76, 8)
+            .lineWidth(0.8)
+            .strokeColor("#f87171")
+            .fillAndStroke("#fff1f2", "#f87171");
 
           doc
-            .fillColor("#0f172a")
+            .fillColor("#991b1b")
             .fontSize(8)
             .font("Helvetica-Bold")
-            .text("ENTRY GUIDELINES & SECURITY RULES:", leftColX + 10, footerTop + 8);
+            .text("CRITICAL ADVISORY & ENTRY RULES:", leftColX + 10, footerTop + 8);
 
           doc
-            .fillColor("#475569")
+            .fillColor("#b91c1c")
             .fontSize(7.5)
-            .font("Helvetica")
+            .font("Helvetica-Bold")
             .text(
-              "1. Each QR code is single-use and valid for exactly ONE individual entry at Swatantrata Bhawan gates.\n" +
-                "2. Entry time is strictly 02:30 PM - 04:30 PM (Gates close at 04:30 PM). Please arrive on time with this pass.\n" +
-                "3. Admission passes are non-transferable once scanned by gate marshals.",
+              "• Passes are valid for a single entry. Re-entry is not permitted hence do not leave the venue.",
               leftColX + 10,
               footerTop + 20,
+              { width: 595.28 - 140 }
+            );
+
+          doc
+            .fillColor("#334155")
+            .fontSize(7.2)
+            .font("Helvetica")
+            .text(
+              "• Entry time is strictly 02:30 PM - 04:30 PM (Gates close at 04:30 PM). Valid BHU ID required.\n" +
+                "• Each QR code is strictly single-use and non-transferable once scanned by gate marshals.",
+              leftColX + 10,
+              footerTop + 33,
               { width: 595.28 - 140, lineGap: 1.5 }
             );
 
           doc
             .fillColor("#64748b")
-            .fontSize(8)
+            .fontSize(7.5)
             .font("Helvetica-Oblique")
             .text(
               `Organized by ${organizer}  •  Swatantrata Bhawan, BHU`,
               leftColX + 10,
-              footerTop + 50,
+              footerTop + 61,
               { align: "center", width: 595.28 - 140 }
             );
 

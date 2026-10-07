@@ -1019,6 +1019,15 @@ export default function RegistrationForm() {
                 </div>
               </div>
 
+              {/* Important Venue Advisory (Single Entry / No Re-entry) */}
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5 text-amber-200 text-xs sm:text-sm">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div className="leading-snug">
+                  <span className="font-bold text-amber-300">Important Venue Advisory: </span>
+                  <span>Passes are valid for a single entry. Re-entry is not permitted hence do not leave the venue.</span>
+                </div>
+              </div>
+
               {/* Terms and Conditions Consent Checkbox (Clause 1.1) */}
               <div className="p-3.5 rounded-2xl bg-[#070b13] border border-white/[0.08] hover:border-slate-700 transition-colors">
                 <label className="flex items-start gap-3 cursor-pointer select-none">

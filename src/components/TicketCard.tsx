@@ -172,9 +172,9 @@ export default function TicketCard({
           </div>
 
           <div className="pt-1">
-            <p className="text-[11px] text-slate-400 flex items-center justify-center gap-1.5 print:text-slate-600">
-              <Shield className="w-3.5 h-3.5 text-emerald-400 print:text-emerald-700" />
-              Strictly single-person entry per QR code. Gates close at 4:30 PM.
+            <p className="text-[11px] text-amber-300 print:text-red-700 flex items-center justify-center gap-1.5 text-center leading-tight">
+              <Shield className="w-3.5 h-3.5 text-amber-400 print:text-red-700 shrink-0" />
+              <span>Passes are valid for a single entry. Re-entry is not permitted hence do not leave the venue.</span>
             </p>
           </div>
         </div>

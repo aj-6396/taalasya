@@ -11,6 +11,7 @@ import {
   Compass,
   ChevronDown,
   ExternalLink,
+  AlertCircle,
 } from "lucide-react";
 import { EVENT_CONFIG } from "@/lib/constants";
 
@@ -54,6 +55,10 @@ export default function EventDetails() {
     {
       q: "Who can attend the event?",
       a: "Students of Banaras Hindu University with a valid digital QR pass and a matching university Photo ID are welcome.",
+    },
+    {
+      q: "Can I leave the venue and re-enter later?",
+      a: "No. Passes are valid for a single entry. Re-entry is not permitted hence do not leave the venue once you have entered Swatantrata Bhawan.",
     },
   ];
 
@@ -125,6 +130,13 @@ export default function EventDetails() {
                   <Compass className="w-3.5 h-3.5 text-purple-400" />
                   <span>Near BHU Main Gate (Lanka)</span>
                 </div>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>
+                  <strong className="text-amber-300">Gate Policy:</strong> Passes are valid for a single entry. Re-entry is not permitted hence do not leave the venue.
+                </span>
               </div>
             </div>
 

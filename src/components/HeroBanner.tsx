@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Calendar, MapPin, Clock, ShieldCheck, Zap, ArrowRight, Sparkles } from "lucide-react";
+import { Calendar, MapPin, Clock, ShieldCheck, Zap, ArrowRight, Sparkles, AlertCircle } from "lucide-react";
 import { EVENT_CONFIG } from "@/lib/constants";
 
 export default function HeroBanner() {
@@ -118,6 +118,14 @@ export default function HeroBanner() {
               <p className="text-xs sm:text-sm font-black text-white leading-tight mt-0.5">Swatantrata</p>
               <p className="text-[9px] sm:text-[10px] text-indigo-400 font-semibold">Bhawan, BHU</p>
             </div>
+          </div>
+
+          {/* Single Entry & Re-entry Notice Badge */}
+          <div className="mx-auto max-w-xl px-3.5 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs sm:text-[13px] font-medium flex items-center justify-center gap-2 shadow-sm text-center">
+            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>
+              <strong className="text-amber-300 font-bold">Notice:</strong> Passes are valid for a single entry. Re-entry is not permitted hence do not leave the venue.
+            </span>
           </div>
 
           {/* Countdown timer */}
