@@ -558,16 +558,16 @@ export default function RegistrationForm() {
                   </p>
                   <div className="flex items-baseline gap-1.5 sm:justify-end">
                     <span className="text-sm sm:text-base text-slate-500 line-through font-semibold">
-                      ₹399
+                      ₹{EVENT_CONFIG.originalPriceInINR}
                     </span>
                     <p className="text-2xl sm:text-3xl font-black text-white leading-tight">
-                      ₹299
+                      ₹{EVENT_CONFIG.priceInINR}
                       <span className="text-xs font-normal text-slate-400 ml-1">/ person</span>
                     </p>
                   </div>
                 </div>
                 <span className="inline-block sm:block text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 mt-0.5">
-                  ⚡ Save ₹100 • 0% Fee
+                  ⚡ Save ₹{EVENT_CONFIG.originalPriceInINR - EVENT_CONFIG.priceInINR} • 0% Fee
                 </span>
               </div>
             </div>

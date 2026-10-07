@@ -65,9 +65,9 @@ export const PASS_TIERS = [
 ] as const;
 
 export function getTierPrice(quantity: number): number {
-  if (quantity === 2) return 549;
-  if (quantity === 5) return 1399;
-  return 299;
+  const tier = (PASS_TIERS as readonly { quantity: number; price: number }[]).find((t) => t.quantity === quantity);
+  if (tier) return tier.price;
+  return EVENT_CONFIG.priceInINR * quantity;
 }
 
 export interface GateMarshal {
