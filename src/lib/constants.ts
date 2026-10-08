@@ -60,7 +60,7 @@ export const PASS_TIERS = [
     price: 999,
     originalPrice: 1596,
     savings: 597,
-    tag: "Just ₹999",
+    tag: "Save ₹597",
   },
   {
     quantity: 5,
