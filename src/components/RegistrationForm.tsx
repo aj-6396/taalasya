@@ -629,23 +629,30 @@ export default function RegistrationForm() {
                       >
                         {tier.savings > 0 && (
                           <span
-                            className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider whitespace-nowrap z-10 pointer-events-none flex items-center gap-1 shadow-md ${
+                            className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider whitespace-nowrap z-10 pointer-events-none flex items-center gap-1 shadow-md max-w-[92%] justify-center ${
                               isSpecial
-                                ? "bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 text-white shadow-orange-500/35 ring-1 ring-amber-300/40 animate-pulse"
+                                ? "bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 text-white shadow-orange-500/35 ring-1 ring-amber-300/40"
                                 : "bg-gradient-to-r from-emerald-500 to-teal-400 text-black"
                             }`}
                           >
-                            {isSpecial && <Flame className="w-3 h-3 text-yellow-200 fill-yellow-200" />}
-                            <span>{isSpecial ? "SAVE ₹597 • BEST VALUE" : tier.tag}</span>
+                            {isSpecial && <Flame className="w-2.5 h-2.5 text-yellow-200 fill-yellow-200 shrink-0" />}
+                            <span className="truncate">{tier.tag}</span>
                           </span>
                         )}
-                        <span
-                          className={`text-[11px] sm:text-sm font-bold leading-tight ${
-                            isSpecial ? "text-amber-300 font-extrabold" : ""
-                          }`}
-                        >
-                          {tier.name}
-                        </span>
+                        <div className="flex flex-col items-center">
+                          <span
+                            className={`text-[11px] sm:text-sm font-bold leading-tight ${
+                              isSpecial ? "text-amber-300 font-extrabold" : ""
+                            }`}
+                          >
+                            {tier.name}
+                          </span>
+                          {isSpecial && (
+                            <span className="mt-0.5 px-1.5 py-0.5 rounded-full text-[7.5px] sm:text-[8px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30 whitespace-nowrap">
+                              ★ Best Value
+                            </span>
+                          )}
+                        </div>
                         <div className="my-1 sm:my-1.5">
                           <span
                             className={`text-base sm:text-2xl font-black ${
@@ -663,14 +670,14 @@ export default function RegistrationForm() {
                         <div className="flex flex-col items-center gap-0.5">
                           <span
                             className={`text-[9.5px] sm:text-[11px] font-semibold ${
-                              isSpecial ? "text-amber-200" : "text-slate-400"
+                              isSpecial ? "text-amber-200 font-bold" : "text-slate-400"
                             }`}
                           >
                             {tier.quantity} {tier.quantity === 1 ? "Person" : "Persons"}
                           </span>
                           {isSpecial && (
                             <span className="text-[8.5px] sm:text-[9px] font-extrabold text-emerald-400">
-                              (Just ₹250/each)
+                              (₹250/each)
                             </span>
                           )}
                         </div>
