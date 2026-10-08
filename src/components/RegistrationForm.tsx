@@ -18,6 +18,7 @@ import {
   Trash2,
   Eye,
   X,
+  Flame,
 } from "lucide-react";
 import { EVENT_CONFIG, PASS_TIERS, getTierPrice } from "@/lib/constants";
 import { generateShortTicketId } from "@/lib/ticketId";
@@ -610,27 +611,47 @@ export default function RegistrationForm() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-3">
                   {PASS_TIERS.map((tier) => {
                     const isSelected = formData.quantity === tier.quantity;
+                    const isSpecial = Boolean((tier as any).highlight);
                     return (
                       <button
                         key={tier.quantity}
                         type="button"
                         onClick={() => handleQuantitySelect(tier.quantity)}
-                        className={`relative pt-5 sm:pt-6 pb-2.5 sm:pb-3 px-1 sm:px-2 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between min-h-[110px] sm:min-h-[125px] ${
+                        className={`relative pt-5 sm:pt-6 pb-2.5 sm:pb-3 px-1 sm:px-2 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between min-h-[115px] sm:min-h-[130px] ${
                           isSelected
-                            ? "bg-gradient-to-b from-pink-500/20 via-purple-600/20 to-indigo-600/30 border-pink-500 text-white shadow-lg shadow-pink-500/20 scale-[1.02]"
+                            ? isSpecial
+                              ? "bg-gradient-to-b from-amber-500/25 via-orange-600/20 to-purple-900/35 border-amber-400 text-white shadow-xl shadow-amber-500/30 scale-[1.03] ring-1 ring-amber-400/50"
+                              : "bg-gradient-to-b from-pink-500/20 via-purple-600/20 to-indigo-600/30 border-pink-500 text-white shadow-lg shadow-pink-500/20 scale-[1.02]"
+                            : isSpecial
+                            ? "bg-gradient-to-b from-amber-500/15 via-slate-900/90 to-[#070b13] border-amber-500/70 hover:border-amber-400 text-white shadow-lg shadow-amber-500/15 ring-1 ring-amber-500/30 hover:scale-[1.01]"
                             : "bg-slate-900/70 border-white/[0.08] hover:border-slate-700 text-slate-300"
                         }`}
                       >
                         {tier.savings > 0 && (
-                          <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-400 text-black shadow-md whitespace-nowrap z-10 pointer-events-none">
-                            {tier.tag}
+                          <span
+                            className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9.5px] font-black uppercase tracking-wider whitespace-nowrap z-10 pointer-events-none flex items-center gap-1 shadow-md ${
+                              isSpecial
+                                ? "bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 text-white shadow-orange-500/35 ring-1 ring-amber-300/40 animate-pulse"
+                                : "bg-gradient-to-r from-emerald-500 to-teal-400 text-black"
+                            }`}
+                          >
+                            {isSpecial && <Flame className="w-3 h-3 text-yellow-200 fill-yellow-200" />}
+                            <span>{isSpecial ? "SAVE ₹597 • BEST VALUE" : tier.tag}</span>
                           </span>
                         )}
-                        <span className="text-[11px] sm:text-sm font-bold leading-tight">
+                        <span
+                          className={`text-[11px] sm:text-sm font-bold leading-tight ${
+                            isSpecial ? "text-amber-300 font-extrabold" : ""
+                          }`}
+                        >
                           {tier.name}
                         </span>
                         <div className="my-1 sm:my-1.5">
-                          <span className="text-base sm:text-2xl font-black text-white">
+                          <span
+                            className={`text-base sm:text-2xl font-black ${
+                              isSpecial ? "text-amber-300" : "text-white"
+                            }`}
+                          >
                             ₹{tier.price}
                           </span>
                           {tier.savings > 0 && (
@@ -639,9 +660,20 @@ export default function RegistrationForm() {
                             </span>
                           )}
                         </div>
-                        <span className="text-[9.5px] sm:text-[11px] font-semibold text-slate-400">
-                          {tier.quantity} {tier.quantity === 1 ? "Person" : "Persons"}
-                        </span>
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span
+                            className={`text-[9.5px] sm:text-[11px] font-semibold ${
+                              isSpecial ? "text-amber-200" : "text-slate-400"
+                            }`}
+                          >
+                            {tier.quantity} {tier.quantity === 1 ? "Person" : "Persons"}
+                          </span>
+                          {isSpecial && (
+                            <span className="text-[8.5px] sm:text-[9px] font-extrabold text-emerald-400">
+                              (Just ₹250/each)
+                            </span>
+                          )}
+                        </div>
                       </button>
                     );
                   })}
