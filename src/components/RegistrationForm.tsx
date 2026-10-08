@@ -548,7 +548,7 @@ export default function RegistrationForm() {
                   Book Your Fest &amp; Dandiya Pass
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                  Early bird passes available for 1, 2, and 5 attendees with special group discounts!
+                  Early bird passes available for 1, 2, 4, and 5 attendees with special group discounts!
                 </p>
               </div>
 
@@ -594,7 +594,7 @@ export default function RegistrationForm() {
             )}
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-              {/* Pass Tier Selection (1, 2, 5 Passes) */}
+              {/* Pass Tier Selection (1, 2, 4, 5 Passes) */}
               <div className="p-4 rounded-2xl bg-[#070b13] border border-white/[0.06] space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
@@ -606,8 +606,8 @@ export default function RegistrationForm() {
                   </span>
                 </div>
 
-                {/* 3 Tier Options: 1, 2, 5 */}
-                <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-3">
+                {/* 4 Tier Options: 1, 2, 4, 5 */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-3">
                   {PASS_TIERS.map((tier) => {
                     const isSelected = formData.quantity === tier.quantity;
                     return (
@@ -989,11 +989,13 @@ export default function RegistrationForm() {
               <div className="p-4 rounded-2xl bg-[#070b13] border border-white/[0.08] space-y-2">
                 <div className="flex justify-between items-center text-xs text-slate-400 pb-2 border-b border-dashed border-slate-800">
                   <span>
-                    {formData.quantity === 1
-                      ? "Single Pass (1 Person)"
-                      : formData.quantity === 2
-                      ? "Duo Pass (2 Persons • Save ₹49)"
-                      : "Group Pass (5 Persons • Save ₹96)"}
+                    {(() => {
+                      const tier = PASS_TIERS.find((t) => t.quantity === formData.quantity);
+                      if (!tier) return `${formData.quantity} Passes (${formData.quantity} Persons)`;
+                      return tier.savings > 0
+                        ? `${tier.name} (${tier.quantity} Persons • Save ₹${tier.savings})`
+                        : `${tier.name} (${tier.quantity} Person)`;
+                    })()}
                   </span>
                   <span className="font-semibold text-white">₹{totalAmount}</span>
                 </div>

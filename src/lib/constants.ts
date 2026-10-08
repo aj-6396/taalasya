@@ -55,6 +55,14 @@ export const PASS_TIERS = [
     tag: "Save ₹249",
   },
   {
+    quantity: 4,
+    name: "Special Pass (4)",
+    price: 999,
+    originalPrice: 1596,
+    savings: 597,
+    tag: "Just ₹999",
+  },
+  {
     quantity: 5,
     name: "Group Pass (5)",
     price: 1399,
