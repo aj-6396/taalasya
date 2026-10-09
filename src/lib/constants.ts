@@ -66,10 +66,10 @@ export const PASS_TIERS = [
   {
     quantity: 5,
     name: "Group Pass (5)",
-    price: 1399,
+    price: 1249,
     originalPrice: 1995,
-    savings: 596,
-    tag: "Save ₹596",
+    savings: 746,
+    tag: "Save ₹746",
   },
 ] as const;
 
