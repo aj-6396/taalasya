@@ -84,6 +84,11 @@ export async function POST(req: NextRequest) {
       paymentEntity.contact ||
       "N/A";
 
+    const attendeeCollege =
+      notes.attendeeCollege ||
+      notes.college ||
+      "";
+
     const amountInRupees = paymentEntity.amount
       ? Math.round(paymentEntity.amount / 100)
       : EVENT_CONFIG.priceInINR;
@@ -130,6 +135,7 @@ export async function POST(req: NextRequest) {
           name: indName,
           email: attendeeEmail || "",
           phone: attendeePhone,
+          college: attendeeCollege || null,
           paymentId,
           orderId,
           amount: Math.round(amountInRupees / ticketQuantity),
@@ -144,7 +150,16 @@ export async function POST(req: NextRequest) {
         .insert(ticketsToInsert);
 
       if (insertErr) {
-        console.error("[Webhook] Supabase insert error:", insertErr);
+        console.warn("[Webhook] Primary Supabase insert warning:", insertErr.message);
+        // Fallback: retry without college column if column doesn't exist
+        const fallbackTickets = ticketsToInsert.map(({ college, ...rest }) => rest);
+        const { error: fallbackErr } = await supabase.from("tickets").insert(fallbackTickets);
+        if (fallbackErr) {
+          console.error("[Webhook] Fallback Supabase insert error:", fallbackErr.message);
+        } else {
+          savedToDatabase = true;
+          console.log(`[Webhook] ${fallbackTickets.length} tickets saved to Supabase via fallback.`);
+        }
       } else {
         savedToDatabase = true;
         console.log(`[Webhook] ${ticketsToInsert.length} tickets saved to Supabase successfully.`);

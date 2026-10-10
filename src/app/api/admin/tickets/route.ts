@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
         name: t.name || "Attendee",
         email: t.email || "",
         phone: t.phone || "",
+        college: t.college || t.institute || t.faculty || "",
         paymentId: t.paymentId || t.payment_id || "",
         orderId: t.orderId || t.order_id || "",
         amount: Number(t.amount || 299),

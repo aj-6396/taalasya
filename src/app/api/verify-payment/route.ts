@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
       name,
       email,
       phone,
+      college,
       quantity = 1,
       attendees = [],
     } = body;
@@ -107,6 +108,7 @@ export async function POST(req: NextRequest) {
       const attendeeName = attendeeInfo.name?.trim() || (i === 0 ? name : `Attendee ${i + 1} of ${name}`);
       const attendeeEmail = attendeeInfo.email?.trim() || email || "";
       const attendeePhone = attendeeInfo.phone?.trim() || phone || "";
+      const attendeeCollege = attendeeInfo.college?.trim() || college?.trim() || "";
       const idCardUrl = attendeeInfo.idCardUrl || attendeeInfo.idCard || "";
 
       generatedTickets.push({
@@ -116,6 +118,7 @@ export async function POST(req: NextRequest) {
         name: attendeeName,
         email: attendeeEmail,
         phone: attendeePhone,
+        college: attendeeCollege,
         idCardUrl,
         paymentId: razorpay_payment_id,
         orderId: razorpay_order_id,
@@ -229,6 +232,7 @@ export async function POST(req: NextRequest) {
         name: t.name,
         email: t.email,
         phone: t.phone,
+        college: t.college || null,
         idCardUrl: t.idCardUrl || null,
         paymentId: t.paymentId,
         orderId: t.orderId,
@@ -238,7 +242,7 @@ export async function POST(req: NextRequest) {
         createdAt: t.createdAt,
       }));
 
-      // Try 1: camelCase "idCardUrl"
+      // Try 1: camelCase "idCardUrl" with "college"
       const { error: insertError } = await supabase
         .from("tickets")
         .insert(basePayload);
@@ -246,7 +250,7 @@ export async function POST(req: NextRequest) {
       if (insertError) {
         console.warn("[Verify Payment] camelCase insert warning:", insertError.message);
 
-        // Try 2: snake_case "id_card_url"
+        // Try 2: snake_case "id_card_url" with "college"
         const snakePayload = basePayload.map((row) => {
           const { idCardUrl, ...rest } = row;
           return { ...rest, id_card_url: idCardUrl };
@@ -256,7 +260,7 @@ export async function POST(req: NextRequest) {
         if (res2.error) {
           console.warn("[Verify Payment] snake_case insert warning:", res2.error.message);
 
-          // Try 3: lowercase "idcardurl"
+          // Try 3: lowercase "idcardurl" with "college"
           const lowerPayload = basePayload.map((row) => {
             const { idCardUrl, ...rest } = row;
             return { ...rest, idcardurl: idCardUrl };
@@ -266,14 +270,27 @@ export async function POST(req: NextRequest) {
           if (res3.error) {
             console.warn("[Verify Payment] lowercase insert warning:", res3.error.message);
 
-            // Try 4: Save ticket without ID column if column does not exist yet
+            // Try 4: Save ticket without ID card column
             const noIdPayload = basePayload.map((row) => {
               const { idCardUrl, ...rest } = row;
               return rest;
             });
             const res4 = await supabase.from("tickets").insert(noIdPayload);
+
             if (res4.error) {
-              console.error("[Verify Payment] Fallback insert failed:", res4.error);
+              console.warn("[Verify Payment] without idCardUrl insert warning:", res4.error.message);
+
+              // Try 5: If college column is also not yet migrated in Supabase, strip both college and idCardUrl
+              const fallbackPayload = basePayload.map((row) => {
+                const { idCardUrl, college, ...rest } = row;
+                return rest;
+              });
+              const res5 = await supabase.from("tickets").insert(fallbackPayload);
+              if (res5.error) {
+                console.error("[Verify Payment] Fallback insert failed:", res5.error);
+              } else {
+                console.log("[Verify Payment] Saved tickets using baseline schema fallback.");
+              }
             }
           }
         }

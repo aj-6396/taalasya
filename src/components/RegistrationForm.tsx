@@ -19,6 +19,7 @@ import {
   Eye,
   X,
   Flame,
+  GraduationCap,
 } from "lucide-react";
 import { EVENT_CONFIG, PASS_TIERS, getTierPrice } from "@/lib/constants";
 import { generateShortTicketId } from "@/lib/ticketId";
@@ -121,6 +122,7 @@ export default function RegistrationForm() {
     name: "",
     email: "",
     phone: "",
+    college: "",
     quantity: 1,
   });
 
@@ -133,6 +135,7 @@ export default function RegistrationForm() {
       name: string;
       email: string;
       phone: string;
+      college?: string;
       idCard: string;
       idCardName?: string;
     }>
@@ -185,6 +188,7 @@ export default function RegistrationForm() {
             name: "",
             email: "",
             phone: "",
+            college: "",
             idCard: "",
             idCardName: "",
           });
@@ -202,7 +206,7 @@ export default function RegistrationForm() {
 
   const handleExtraAttendeeChange = (
     index: number,
-    field: "name" | "email" | "phone" | "idCard" | "idCardName",
+    field: "name" | "email" | "phone" | "college" | "idCard" | "idCardName",
     val: string
   ) => {
     setExtraAttendees((prev) => {
@@ -243,6 +247,14 @@ export default function RegistrationForm() {
       showPromptToast(msg);
       document.getElementById("primary-phone-input")?.focus();
       document.getElementById("primary-phone-input")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    if (!formData.college.trim()) {
+      const msg = "Please enter your Institute, Faculty, or College name.";
+      setErrorMessage(msg);
+      showPromptToast(msg);
+      document.getElementById("primary-college-input")?.focus();
+      document.getElementById("primary-college-input")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     if (!primaryIdCard) {
@@ -294,12 +306,14 @@ export default function RegistrationForm() {
         name: formData.name.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
+        college: formData.college.trim(),
         idCardUrl: primaryIdCard,
       },
       ...extraAttendees.map((a, i) => ({
         name: a.name.trim() || `Guest ${i + 2}`,
         email: a.email.trim() || formData.email.trim(),
         phone: a.phone.trim() || formData.phone.trim(),
+        college: a.college?.trim() || formData.college.trim(),
         idCardUrl: a.idCard || "",
       })),
     ];
@@ -325,6 +339,7 @@ export default function RegistrationForm() {
             name: formData.name.trim(),
             email: formData.email.trim(),
             phone: formData.phone.trim(),
+            college: formData.college.trim(),
             quantity: formData.quantity,
             attendees: fullAttendees,
           }),
@@ -348,6 +363,7 @@ export default function RegistrationForm() {
           name: a.name,
           email: a.email,
           phone: a.phone,
+          college: a.college,
           hasIdCard: Boolean(a.idCardUrl),
         }));
 
@@ -375,6 +391,8 @@ export default function RegistrationForm() {
             formData.email.trim()
           )}&phone=${encodeURIComponent(
             formData.phone.trim()
+          )}&college=${encodeURIComponent(
+            formData.college.trim()
           )}&quantity=${formData.quantity}&attendees=${encodeURIComponent(
             JSON.stringify(safeAttendeesForUrl)
           )}&simulated=true`
@@ -400,6 +418,7 @@ export default function RegistrationForm() {
           name: formData.name.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim(),
+          college: formData.college.trim(),
           quantity: formData.quantity,
           attendeeNames: fullAttendees.map((a) => a.name).join(", "),
         }),
@@ -446,6 +465,7 @@ export default function RegistrationForm() {
         remember_customer: false,
         notes: {
           quantity: String(formData.quantity),
+          attendeeCollege: formData.college.trim(),
           attendeeNames: fullAttendees.map((a) => a.name).join(", "),
         },
         theme: {
@@ -471,6 +491,7 @@ export default function RegistrationForm() {
                 name: formData.name.trim(),
                 email: formData.email.trim(),
                 phone: formData.phone.trim(),
+                college: formData.college.trim(),
                 quantity: formData.quantity,
                 attendees: fullAttendees,
               }),
@@ -494,6 +515,7 @@ export default function RegistrationForm() {
               name: a.name,
               email: a.email,
               phone: a.phone,
+              college: a.college,
               hasIdCard: Boolean(a.idCardUrl),
             }));
 
@@ -522,6 +544,8 @@ export default function RegistrationForm() {
                 formData.email.trim()
               )}&phone=${encodeURIComponent(
                 formData.phone.trim()
+              )}&college=${encodeURIComponent(
+                formData.college.trim()
               )}&quantity=${formData.quantity}&attendees=${encodeURIComponent(
                 JSON.stringify(safeAttendeesForUrl)
               )}`
@@ -793,26 +817,48 @@ export default function RegistrationForm() {
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-pink-400" />
-                    Mobile / WhatsApp Number <span className="text-pink-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    id="primary-phone-input"
-                    name="phone"
-                    required
-                    autoComplete="tel"
-                    inputMode="tel"
-                    placeholder="e.g. 9876543210"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full px-3.5 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all"
-                  />
-                  <p className="text-[10px] text-slate-400">
-                    Used for entry verification &amp; festival notifications.
-                  </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-pink-400" />
+                      Mobile / WhatsApp Number <span className="text-pink-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      id="primary-phone-input"
+                      name="phone"
+                      required
+                      autoComplete="tel"
+                      inputMode="tel"
+                      placeholder="e.g. 9876543210"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="w-full px-3.5 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all"
+                    />
+                    <p className="text-[10px] text-slate-400">
+                      Used for entry verification &amp; updates.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                      <GraduationCap className="w-3.5 h-3.5 text-amber-400" />
+                      Institute / Faculty / College <span className="text-pink-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="primary-college-input"
+                      name="college"
+                      required
+                      placeholder="e.g. Faculty of Performing Arts, BHU"
+                      value={formData.college}
+                      onChange={handleInputChange}
+                      className="w-full px-3.5 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                    />
+                    <p className="text-[10px] text-slate-400">
+                      BHU Faculty / IIT BHU / College name.
+                    </p>
+                  </div>
                 </div>
 
                 {/* ID Card Upload for Attendee 1 */}
@@ -997,6 +1043,22 @@ export default function RegistrationForm() {
                               className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-pink-500"
                             />
                           </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1">
+                            <GraduationCap className="w-3 h-3 text-amber-400" />
+                            Institute / Faculty / College <span className="text-slate-500 text-[10px]">(Optional — defaults to Attendee 1)</span>
+                          </label>
+                          <input
+                            type="text"
+                            placeholder={formData.college.trim() || "e.g. Faculty of Performing Arts, BHU"}
+                            value={att.college || ""}
+                            onChange={(e) =>
+                              handleExtraAttendeeChange(idx, "college", e.target.value)
+                            }
+                            className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          />
                         </div>
 
                         {/* ID Card for Extra Attendee */}

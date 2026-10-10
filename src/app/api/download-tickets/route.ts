@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
       buyerName: string;
       email: string;
       phone: string;
+      college?: string;
       paymentId: string;
       orderId: string;
       status: string;
@@ -95,6 +96,8 @@ export async function POST(req: NextRequest) {
         attendeeInfo.email?.trim() || matchedDb?.email || email || "";
       const attendeePhone =
         attendeeInfo.phone?.trim() || matchedDb?.phone || phone || "";
+      const attendeeCollege =
+        attendeeInfo.college?.trim() || matchedDb?.college || body.college?.trim() || "";
 
       tickets.push({
         ticketId,
@@ -104,6 +107,7 @@ export async function POST(req: NextRequest) {
         buyerName,
         email: attendeeEmail,
         phone: attendeePhone,
+        college: attendeeCollege,
         paymentId,
         orderId,
         status: "Valid",
@@ -415,14 +419,16 @@ export async function POST(req: NextRequest) {
             .font("Helvetica-Bold")
             .text("BOOKING & PAYMENT REFERENCE", leftColX + 12, row3Top + 8);
 
+          const collegeDetail = currentTicket.college ? `   |   College: ${currentTicket.college}` : "";
           doc
             .fillColor("#0f172a")
-            .fontSize(9)
+            .fontSize(8.5)
             .font("Courier")
             .text(
-              `Booked by: ${currentTicket.buyerName}   |   Payment ID: ${paymentId}   |   Status: VALID PASS`,
+              `Booked by: ${currentTicket.buyerName}${collegeDetail}   |   Payment ID: ${paymentId}`,
               leftColX + 12,
-              row3Top + 22
+              row3Top + 22,
+              { width: 595.28 - 144, ellipsis: true }
             );
 
           // Terms & Entry Conditions (Bottom Box)

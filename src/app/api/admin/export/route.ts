@@ -66,6 +66,7 @@ export async function GET(req: NextRequest) {
         name: t.name || "Attendee",
         email: t.email || "",
         phone: t.phone || "",
+        college: t.college || t.institute || t.faculty || "-",
         paymentId: t.paymentId || t.payment_id || "",
         orderId: t.orderId || t.order_id || "",
         amount: Number(t.amount || 299),
@@ -89,6 +90,7 @@ export async function GET(req: NextRequest) {
       "S.No": index + 1,
       "Ticket ID": t.ticketId,
       "Attendee Name": t.name,
+      "Institute / College": t.college,
       "Email Address": t.email,
       "Phone Number": t.phone,
       "Payment ID": t.paymentId,
@@ -110,6 +112,7 @@ export async function GET(req: NextRequest) {
       { wch: 6 },   // S.No
       { wch: 22 },  // Ticket ID
       { wch: 24 },  // Attendee Name
+      { wch: 32 },  // Institute / College
       { wch: 28 },  // Email
       { wch: 16 },  // Phone
       { wch: 24 },  // Payment ID

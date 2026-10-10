@@ -3,6 +3,7 @@ export interface Ticket {
   name: string;
   email: string;
   phone: string;
+  college?: string;
   paymentId: string;
   orderId?: string;
   status: 'Valid' | 'Used' | 'Cancelled';
@@ -17,6 +18,7 @@ export interface CreateOrderRequest {
   name: string;
   email: string;
   phone: string;
+  college?: string;
   ticketQuantity?: number;
 }
 

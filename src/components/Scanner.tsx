@@ -24,6 +24,7 @@ import {
   Users,
   FileText,
   UserCheck,
+  GraduationCap,
 } from "lucide-react";
 import { playSuccessChime, playWarningBuzzer, playErrorBeep } from "@/lib/audio";
 import { Ticket } from "@/types";
@@ -783,6 +784,12 @@ export default function Scanner() {
                       <span>{scanResult.ticket.phone}</span>
                     </div>
                   )}
+                  {scanResult.ticket.college && (
+                    <div className="flex items-center gap-1.5 text-emerald-200">
+                      <GraduationCap className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span className="truncate">{scanResult.ticket.college}</span>
+                    </div>
+                  )}
 
                   {/* Aadhaar Card Cross-Verification for Gate Security */}
                   {(() => {
@@ -902,6 +909,12 @@ export default function Scanner() {
                   <p className="text-rose-200">
                     Email: {scanResult.ticket.email}
                   </p>
+                  {scanResult.ticket.college && (
+                    <p className="text-rose-200 text-xs flex items-center gap-1">
+                      <GraduationCap className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      <span className="truncate">{scanResult.ticket.college}</span>
+                    </p>
+                  )}
 
                   {(() => {
                     const validIdUrl = normalizeIdCardUrl(scanResult.ticket?.idCardUrl);

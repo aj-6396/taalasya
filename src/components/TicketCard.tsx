@@ -16,6 +16,7 @@ interface TicketCardProps {
     name: string;
     email: string;
     phone?: string;
+    college?: string;
     paymentId?: string;
     status?: string;
   };
@@ -145,6 +146,14 @@ export default function TicketCard({
               <div className="flex justify-between items-center py-0.5 border-b border-slate-800/80 print:border-slate-300">
                 <span className="text-slate-400 print:text-slate-600">Phone</span>
                 <span className="font-semibold text-white print:text-black">{ticket.phone}</span>
+              </div>
+            )}
+            {ticket.college && (
+              <div className="flex justify-between items-center py-0.5 border-b border-slate-800/80 print:border-slate-300">
+                <span className="text-slate-400 print:text-slate-600">College / Institute</span>
+                <span className="font-semibold text-white print:text-black truncate max-w-[200px]" title={ticket.college}>
+                  {ticket.college}
+                </span>
               </div>
             )}
             {(ticket.idCardUrl || (ticket as any).hasIdCard) && (

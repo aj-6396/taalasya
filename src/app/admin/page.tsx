@@ -35,6 +35,7 @@ type TicketRecord = {
   name: string;
   email: string;
   phone: string;
+  college?: string;
   paymentId: string;
   orderId: string;
   amount: number;
@@ -192,7 +193,8 @@ export default function AdminPage() {
         t.ticketId.toLowerCase().includes(q) ||
         t.phone.toLowerCase().includes(q) ||
         t.email.toLowerCase().includes(q) ||
-        t.paymentId.toLowerCase().includes(q)
+        t.paymentId.toLowerCase().includes(q) ||
+        Boolean(t.college && t.college.toLowerCase().includes(q))
       );
     });
   }, [tickets, statusFilter, searchQuery]);
@@ -474,8 +476,13 @@ export default function AdminPage() {
                                 {t.ticketId}
                               </span>
                             </td>
-                            <td className="py-3 px-3.5 font-semibold text-white">
-                              {t.name}
+                            <td className="py-3 px-3.5">
+                              <div className="font-semibold text-white">{t.name}</div>
+                              {t.college && (
+                                <div className="text-[11px] text-amber-300/90 flex items-center gap-1 mt-0.5 max-w-[180px] truncate" title={t.college}>
+                                  <span>{t.college}</span>
+                                </div>
+                              )}
                             </td>
                             <td className="py-3 px-3.5">
                               <div>{t.phone}</div>

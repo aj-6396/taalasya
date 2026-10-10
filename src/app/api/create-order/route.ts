@@ -5,7 +5,7 @@ import { EVENT_CONFIG, getTierPrice } from "@/lib/constants";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, phone, quantity = 1, attendeeNames } = body;
+    const { name, email, phone, college, quantity = 1, attendeeNames } = body;
 
     if (!name || !email || !phone) {
       return NextResponse.json(
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
         attendeeName: name,
         attendeeEmail: email,
         attendeePhone: phone,
+        attendeeCollege: college ? String(college).slice(0, 500) : "",
         ticketQuantity: String(quantity),
         attendeeNames: attendeeNames ? String(attendeeNames).slice(0, 500) : name,
         eventName: EVENT_CONFIG.name,

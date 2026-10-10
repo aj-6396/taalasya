@@ -30,6 +30,7 @@ function SuccessContent() {
   const paramName = searchParams.get("name") || "";
   const paramEmail = searchParams.get("email") || "";
   const paramPhone = searchParams.get("phone") || "";
+  const paramCollege = searchParams.get("college") || "";
   const isSimulated = searchParams.get("simulated") === "true";
   const quantity = Math.max(1, Number(searchParams.get("quantity")) || 1);
 
@@ -70,6 +71,7 @@ function SuccessContent() {
             name: paramName || "Valued Guest",
             email: paramEmail,
             phone: paramPhone,
+            college: paramCollege,
             paymentId: paramPaymentId,
             orderId: paramOrderId,
             status: "Valid",
@@ -85,6 +87,7 @@ function SuccessContent() {
             name: paramName || "Valued Guest",
             email: paramEmail,
             phone: paramPhone,
+            college: paramCollege,
             paymentId: paramPaymentId,
             orderId: paramOrderId,
             status: "Valid",
@@ -143,6 +146,7 @@ function SuccessContent() {
     name: string;
     email?: string;
     phone?: string;
+    college?: string;
     idCardUrl?: string;
     hasIdCard?: boolean;
   }> = [];
@@ -191,6 +195,7 @@ function SuccessContent() {
         : `Guest ${idx + 1} (${paramName || "Main Booker"})`);
     const individualEmail = attendeeInfo.email?.trim() || paramEmail || "";
     const individualPhone = attendeeInfo.phone?.trim() || paramPhone || "";
+    const individualCollege = attendeeInfo.college?.trim() || ticketData?.college || paramCollege || "";
     const individualIdCardUrl = attendeeInfo.idCardUrl || ticketData?.idCardUrl || "";
     const individualHasId =
       Boolean(attendeeInfo.hasIdCard) ||
@@ -204,6 +209,7 @@ function SuccessContent() {
       name: individualName,
       email: individualEmail,
       phone: individualPhone,
+      college: individualCollege,
       idCardUrl: individualIdCardUrl,
       hasIdCard: individualHasId,
       paymentId: ticketData?.paymentId || paramPaymentId || "",
@@ -232,11 +238,13 @@ function SuccessContent() {
           quantity: quantity,
           email: ticketData?.email || paramEmail || "",
           phone: ticketData?.phone || paramPhone || "",
+          college: ticketData?.college || paramCollege || "",
           attendees: allTickets.map((t) => ({
             ticketId: t.ticketId,
             name: t.name,
             email: t.email,
             phone: t.phone,
+            college: t.college,
           })),
         }),
       });
