@@ -87,18 +87,25 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "447x447" },
+      { url: "/logo.png", type: "image/png", sizes: "447x447" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/logo.png", sizes: "447x447", type: "image/png" },
+    ],
   },
   openGraph: {
     type: "website",
     locale: "en_IN",
     url: siteUrl,
-    siteName: "Taalasya Dance Society — BHU",
+    siteName: "Taalasya — JHOOM '26",
     title: "JHOOM '26: Dandiya Night in BHU Varanasi | Taalasya Dance Society",
     description:
-      "Join the biggest Dandiya Night & Dance Fest in BHU Varanasi: JHOOM '26 hosted by Taalasya Dance Society on 13th October 2026 at Swatantrata Bhawan, BHU. Live Dhol, Garba, DJ & Dance face-offs. Passes starting ₹299!",
+      "Join the biggest Dandiya Night & Dance Fest in BHU Varanasi: JHOOM '26 hosted by Taalasya Dance Society on 13th October 2026 at Swatantrata Bhawan, BHU. Garba, DJ & Dance face-offs. Passes starting ₹299!",
     images: [
       {
         url: "/logo.png",
@@ -224,7 +231,14 @@ const jsonLd = {
     {
       "@type": "WebSite",
       "@id": `${siteUrl}/#website`,
-      name: "Taalasya JHOOM '26 Official Website",
+      name: "Taalasya — JHOOM '26",
+      alternateName: [
+        "Taalasya",
+        "Taalasya Dance Society",
+        "Taalasya Dance Society — BHU",
+        "JHOOM '26",
+        "Taalasya BHU",
+      ],
       url: siteUrl,
       description: "Official ticketing & gate pass portal for JHOOM '26 by Taalasya Dance Society, Banaras Hindu University (BHU).",
       author: {
@@ -285,6 +299,10 @@ export default function RootLayout({
       className={`${plusJakartaSans.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
     >
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" href="/icon.png" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
+        <meta property="og:site_name" content="Taalasya — JHOOM '26" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
