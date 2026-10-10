@@ -66,11 +66,11 @@ export default function TermsPage() {
           <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-1.5 backdrop-blur-sm">
             <div className="flex items-center gap-2 text-pink-400 font-bold text-xs">
               <BadgeCheck className="w-4 h-4 shrink-0" />
-              <span>Valid BHU ID Required</span>
+              <span>Valid ID Card Required</span>
             </div>
             <p className="text-[11.5px] text-slate-400 leading-normal">
               Entry is permitted strictly on presentation of a valid digital pass
-              along with a valid BHU ID card.
+              along with a valid BHU ID card or Govt. Issued Photo ID card.
             </p>
           </div>
 

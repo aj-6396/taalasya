@@ -455,7 +455,7 @@ export async function POST(req: NextRequest) {
             .fontSize(7.2)
             .font("Helvetica")
             .text(
-              "• Entry time is strictly 02:30 PM - 04:30 PM (Gates close at 04:30 PM). Valid BHU ID required.\n" +
+              "• Entry time is strictly 02:30 PM - 04:30 PM (Gates close at 04:30 PM). Valid BHU ID card or Govt. Issued Photo ID card required.\n" +
                 "• Each QR code is strictly single-use and non-transferable once scanned by gate marshals.",
               leftColX + 10,
               footerTop + 33,

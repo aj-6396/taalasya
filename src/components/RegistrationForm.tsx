@@ -1192,7 +1192,7 @@ export default function RegistrationForm() {
                     >
                       Terms and Conditions for Entry Passes (JHOOM &apos;26)
                     </button>
-                    , including mandatory valid ID card (Namaste BHU ID or Aadhar Card) verification at gate, strict single entry rules, and conduct guidelines under Dean of Students, BHU.
+                    , including mandatory valid ID card (BHU ID card or Govt. Issued Photo ID card) verification at gate, strict single entry rules, and conduct guidelines under Dean of Students, BHU.
                   </span>
                 </label>
                 {(termsError || errorMessage.includes("Terms and Conditions")) && (
