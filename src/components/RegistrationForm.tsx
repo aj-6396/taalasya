@@ -850,7 +850,7 @@ export default function RegistrationForm() {
                       id="primary-college-input"
                       name="college"
                       required
-                      placeholder="e.g. Faculty of Performing Arts, BHU"
+                      placeholder="e.g. Institute of Science, BHU"
                       value={formData.college}
                       onChange={handleInputChange}
                       className="w-full px-3.5 py-3 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
@@ -1052,7 +1052,7 @@ export default function RegistrationForm() {
                           </label>
                           <input
                             type="text"
-                            placeholder={formData.college.trim() || "e.g. Faculty of Performing Arts, BHU"}
+                            placeholder={formData.college.trim() || "e.g. Institute of Science, BHU"}
                             value={att.college || ""}
                             onChange={(e) =>
                               handleExtraAttendeeChange(idx, "college", e.target.value)

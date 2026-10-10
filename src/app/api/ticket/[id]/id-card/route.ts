@@ -29,7 +29,7 @@ export async function GET(
         <path d="M 75 280 C 75 245, 145 245, 145 280 Z" fill="#64748b"/>
         <text x="200" y="180" fill="#f8fafc" font-family="sans-serif" font-size="18" font-weight="bold">Name: Demo Attendee</text>
         <text x="200" y="215" fill="#cbd5e1" font-family="sans-serif" font-size="14">Roll No: 24BHUDEMO99</text>
-        <text x="200" y="245" fill="#cbd5e1" font-family="sans-serif" font-size="14">Faculty: Performing Arts (Dance)</text>
+        <text x="200" y="245" fill="#cbd5e1" font-family="sans-serif" font-size="14">Faculty: Institute of Science</text>
         <text x="200" y="275" fill="#34d399" font-family="sans-serif" font-size="13" font-weight="bold">Status: Verified BHU Student</text>
         <text x="300" y="340" text-anchor="middle" fill="#64748b" font-family="sans-serif" font-size="11">Taalasya — JHOOM '26 Gate Verification System</text>
       </svg>`;
