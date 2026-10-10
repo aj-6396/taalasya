@@ -123,7 +123,7 @@ export default function EventDetails() {
                 {EVENT_CONFIG.venue}
               </h3>
               <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                Located within the iconic Banaras Hindu University campus in Varanasi. Equipped with world-class stage lighting, acoustic sound systems, and designated entry lanes.
+                Located near Seer Gate within the iconic Banaras Hindu University campus in Varanasi. Equipped with world-class stage lighting, acoustic sound systems, and designated entry lanes.
               </p>
               <div className="pt-1 flex flex-wrap gap-3 text-xs text-slate-300">
                 <div className="flex items-center gap-1.5">
@@ -132,7 +132,7 @@ export default function EventDetails() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Compass className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Near BHU Main Gate (Lanka)</span>
+                  <span>Near Seer Gate, BHU</span>
                 </div>
               </div>
 

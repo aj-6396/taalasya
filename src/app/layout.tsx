@@ -169,7 +169,7 @@ const jsonLd = {
         name: "Swatantrata Bhawan",
         address: {
           "@type": "PostalAddress",
-          streetAddress: "Banaras Hindu University (BHU) Campus",
+          streetAddress: "Near Seer Gate, Banaras Hindu University (BHU) Campus",
           addressLocality: "Varanasi",
           addressRegion: "Uttar Pradesh",
           postalCode: "221005",
