@@ -23,7 +23,7 @@ export async function GET(
         <rect width="600" height="380" rx="20" fill="#0f172a"/>
         <rect x="15" y="15" width="570" height="350" rx="16" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
         <text x="300" y="80" text-anchor="middle" fill="#60a5fa" font-family="sans-serif" font-size="22" font-weight="bold">BANARAS HINDU UNIVERSITY</text>
-        <text x="300" y="115" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="14">Namaste BHU Student ID Portal (Demo Pass)</text>
+        <text x="300" y="115" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="14">Aadhaar Card Verification (Demo Pass)</text>
         <rect x="50" y="150" width="120" height="150" rx="10" fill="#334155" stroke="#64748b"/>
         <circle cx="110" cy="205" r="30" fill="#64748b"/>
         <path d="M 75 280 C 75 245, 145 245, 145 280 Z" fill="#64748b"/>
@@ -153,7 +153,7 @@ export async function GET(
         "Content-Type": mimeType,
         "Content-Length": String(buffer.length),
         "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
-        "Content-Disposition": `inline; filename="namaste_bhu_id_${cleanId}.jpg"`,
+        "Content-Disposition": `inline; filename="aadhaar_card_${cleanId}.jpg"`,
       },
     });
   } catch (err: any) {

@@ -446,7 +446,7 @@ export default function AdminPage() {
                       <th className="py-3 px-3.5">Payment</th>
                       <th className="py-3 px-3.5">Entry Status</th>
                       <th className="py-3 px-3.5">Scanned Info</th>
-                      <th className="py-3 px-3.5 text-center">BHU ID</th>
+                      <th className="py-3 px-3.5 text-center">Aadhaar Card</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 text-slate-300">
@@ -523,7 +523,7 @@ export default function AdminPage() {
                                   type="button"
                                   onClick={() => setPreviewIdUrl(t.idCardUrl)}
                                   className="p-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 transition-colors cursor-pointer"
-                                  title="View Uploaded BHU ID Card"
+                                  title="View Uploaded Aadhaar Card"
                                 >
                                   <Eye className="w-3.5 h-3.5" />
                                 </button>
@@ -564,7 +564,7 @@ export default function AdminPage() {
             <div className="flex items-center justify-between w-full pb-3 border-b border-slate-800">
               <span className="text-sm font-bold text-white flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Verified BHU ID Screenshot
+                Verified Aadhaar Card Photo
               </span>
               <button
                 type="button"
@@ -577,7 +577,7 @@ export default function AdminPage() {
             <div className="mt-4 w-full max-h-[68vh] overflow-auto rounded-2xl bg-black/70 flex items-center justify-center p-2 border border-slate-800">
               <img
                 src={previewIdUrl}
-                alt="BHU ID Screenshot"
+                alt="Aadhaar Card Photo"
                 className="max-h-[62vh] w-auto object-contain rounded-xl shadow-lg"
               />
             </div>

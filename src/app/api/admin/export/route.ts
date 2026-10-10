@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
       "Check-in Timestamp": t.usedAt ? new Date(t.usedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "Not Admitted",
       "Scanned By Marshal": t.scannedBy || "-",
       "Booking Time": t.createdAt ? new Date(t.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) : "-",
-      "BHU ID Attached": t.hasIdCard,
+      "Aadhaar Card Attached": t.hasIdCard,
     }));
 
     // Create SheetJS Workbook
@@ -119,7 +119,7 @@ export async function GET(req: NextRequest) {
       { wch: 24 },  // Check-in Timestamp
       { wch: 20 },  // Scanned By Marshal
       { wch: 24 },  // Booking Time
-      { wch: 16 },  // BHU ID Attached
+      { wch: 22 },  // Aadhaar Card Attached
     ];
 
     XLSX.utils.book_append_sheet(workbook, worksheet, "All Attendees");

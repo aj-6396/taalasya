@@ -220,7 +220,7 @@ export default function RegistrationForm() {
       return;
     }
     if (!primaryIdCard) {
-      setErrorMessage("Please upload a screenshot of Attendee 1's Namaste BHU ID card.");
+      setErrorMessage("Please upload Attendee 1's Aadhaar Card.");
       return;
     }
     if (!agreedToTerms) {
@@ -238,7 +238,7 @@ export default function RegistrationForm() {
       }
       if (!extraAttendees[i].idCard) {
         setErrorMessage(
-          `Please upload a screenshot of Attendee ${i + 2}'s Namaste BHU ID card.`
+          `Please upload Attendee ${i + 2}'s Aadhaar Card.`
         );
         return;
       }
@@ -767,15 +767,15 @@ export default function RegistrationForm() {
                   </p>
                 </div>
 
-                {/* Namaste BHU ID Card Upload for Attendee 1 */}
+                {/* Aadhaar Card Upload for Attendee 1 */}
                 <div className="space-y-2 pt-2 border-t border-slate-800/80">
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                       <UploadCloud className="w-3.5 h-3.5 text-pink-400" />
-                      Namaste BHU ID Card Screenshot <span className="text-pink-500">*</span>
+                      Aadhaar Card Photo / Screenshot <span className="text-pink-500">*</span>
                     </label>
                     <span className="text-[10px] text-slate-400">
-                      Required for gate verification
+                      Required for entry verification
                     </span>
                   </div>
 
@@ -786,10 +786,10 @@ export default function RegistrationForm() {
                       </div>
                       <div className="text-center">
                         <p className="text-xs font-semibold text-slate-200">
-                          Click to upload or drag screenshot
+                          Click to upload or drag Aadhaar card
                         </p>
                         <p className="text-[10px] text-slate-400 mt-0.5">
-                          Screenshot from Namaste BHU app (PNG, JPG, WebP)
+                          Photo or clear screenshot of Aadhaar Card (PNG, JPG, WebP)
                         </p>
                       </div>
                       <input
@@ -821,7 +821,7 @@ export default function RegistrationForm() {
                         >
                           <img
                             src={primaryIdCard}
-                            alt="Attendee 1 Namaste BHU ID"
+                            alt="Attendee 1 Aadhaar Card"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                           />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
@@ -831,10 +831,10 @@ export default function RegistrationForm() {
                         <div className="truncate">
                           <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
                             <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                            <span>Namaste BHU ID Attached</span>
+                            <span>Aadhaar Card Attached</span>
                           </div>
                           <p className="text-[11px] text-slate-400 truncate max-w-[180px] sm:max-w-xs">
-                            {primaryIdCardName || "bhu_id_screenshot.jpg"}
+                            {primaryIdCardName || "aadhaar_card.jpg"}
                           </p>
                         </div>
                       </div>
@@ -933,21 +933,21 @@ export default function RegistrationForm() {
                           </div>
                         </div>
 
-                        {/* Namaste BHU ID Card for Extra Attendee */}
+                        {/* Aadhaar Card for Extra Attendee */}
                         <div className="space-y-1.5 pt-2 border-t border-slate-800">
                           <label className="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1">
                             <UploadCloud className="w-3 h-3 text-pink-400" />
-                            Namaste BHU ID Card Screenshot <span className="text-pink-500">*</span>
+                            Aadhaar Card Photo / Screenshot <span className="text-pink-500">*</span>
                           </label>
 
                           {!att.idCard ? (
                             <label className="border border-dashed border-slate-700/80 hover:border-pink-500/60 rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-slate-900/40 hover:bg-slate-900 transition-all group">
                               <UploadCloud className="w-4 h-4 text-pink-400 group-hover:scale-110 transition-transform" />
                               <span className="text-[11px] font-semibold text-slate-300">
-                                Upload Attendee {idx + 2}&apos;s Namaste BHU ID Screenshot
+                                Upload Attendee {idx + 2}&apos;s Aadhaar Card
                               </span>
                               <span className="text-[9.5px] text-slate-500">
-                                PNG, JPG, WebP screenshot
+                                PNG, JPG, WebP photo or screenshot
                               </span>
                               <input
                                 type="file"
@@ -978,7 +978,7 @@ export default function RegistrationForm() {
                                 >
                                   <img
                                     src={att.idCard}
-                                    alt={`Attendee ${idx + 2} ID`}
+                                    alt={`Attendee ${idx + 2} Aadhaar Card`}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                                   />
                                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
@@ -988,10 +988,10 @@ export default function RegistrationForm() {
                                 <div className="truncate">
                                   <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
                                     <CheckCircle2 className="w-3 h-3 shrink-0" />
-                                    <span>ID Screenshot Attached</span>
+                                    <span>Aadhaar Card Attached</span>
                                   </div>
                                   <p className="text-[10px] text-slate-400 truncate max-w-[150px] sm:max-w-xs">
-                                    {att.idCardName || `attendee_${idx + 2}_id.jpg`}
+                                    {att.idCardName || `attendee_${idx + 2}_aadhaar.jpg`}
                                   </p>
                                 </div>
                               </div>
@@ -1096,7 +1096,7 @@ export default function RegistrationForm() {
                     >
                       Terms and Conditions for Entry Passes (JHOOM &apos;26)
                     </button>
-                    , including mandatory valid BHU ID card verification at gate, strict single entry rules, and conduct guidelines under Dean of Students, BHU.
+                    , including mandatory valid ID / Aadhaar card verification at gate, strict single entry rules, and conduct guidelines under Dean of Students, BHU.
                   </span>
                 </label>
               </div>
@@ -1149,7 +1149,7 @@ export default function RegistrationForm() {
             <div className="flex items-center justify-between w-full pb-3 border-b border-slate-800">
               <span className="text-sm font-bold text-white flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Namaste BHU ID Card Preview
+                Aadhaar Card Preview
               </span>
               <button
                 type="button"
@@ -1162,12 +1162,12 @@ export default function RegistrationForm() {
             <div className="mt-4 w-full max-h-[68vh] overflow-auto rounded-2xl bg-black/70 flex items-center justify-center p-2 border border-slate-800">
               <img
                 src={previewModalUrl}
-                alt="Full ID Card Preview"
+                alt="Aadhaar Card Preview"
                 className="max-h-[62vh] w-auto object-contain rounded-xl shadow-lg"
               />
             </div>
             <p className="text-xs text-slate-400 mt-3 text-center">
-              Please verify that student name and photo are clearly visible.
+              Please verify that attendee name and photo are clearly visible.
             </p>
           </div>
         </div>

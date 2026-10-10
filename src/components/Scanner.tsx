@@ -784,14 +784,14 @@ export default function Scanner() {
                     </div>
                   )}
 
-                  {/* Namaste BHU ID Cross-Verification for Gate Security */}
+                  {/* Aadhaar Card Cross-Verification for Gate Security */}
                   {(() => {
                     const validIdUrl = normalizeIdCardUrl(scanResult.ticket?.idCardUrl);
                     if (!validIdUrl) {
                       return (
                         <div className="pt-1.5 border-t border-emerald-800/80">
                           <p className="text-[10px] text-emerald-400/70 italic">
-                            No Namaste BHU ID card attached for this pass.
+                            No Aadhaar card attached for this pass.
                           </p>
                         </div>
                       );
@@ -802,7 +802,7 @@ export default function Scanner() {
                         <div className="flex items-center justify-between text-[11px] font-semibold text-emerald-300">
                           <span className="flex items-center gap-1">
                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                            Namaste BHU ID Card:
+                            Aadhaar Card:
                           </span>
                           <button
                             type="button"
@@ -818,18 +818,18 @@ export default function Scanner() {
                           <div
                             onClick={() => setZoomedIdCard(validIdUrl)}
                             className="relative w-full h-28 rounded-xl overflow-hidden border border-emerald-500/40 cursor-pointer group bg-black/60 shadow-inner"
-                            title="Click to zoom student ID card"
+                            title="Click to zoom Aadhaar card"
                           >
                             <img
                               src={validIdUrl}
-                              alt="Namaste BHU ID Card"
+                              alt="Aadhaar Card"
                               onError={() => setIdImageError(true)}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                               <div className="px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-sm text-[11px] font-bold text-white flex items-center gap-1">
                                 <Eye className="w-3.5 h-3.5" />
-                                <span>Zoom Full ID</span>
+                                <span>Zoom Aadhaar Card</span>
                               </div>
                             </div>
                           </div>
@@ -837,7 +837,7 @@ export default function Scanner() {
                           <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-500/20 text-center space-y-1.5">
                             <p className="text-xs font-semibold text-emerald-300 flex items-center justify-center gap-1">
                               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                              Namaste BHU ID Attached
+                              Aadhaar Card Attached
                             </p>
                             <button
                               type="button"
@@ -909,7 +909,7 @@ export default function Scanner() {
                     return (
                       <div className="pt-2 border-t border-rose-800/80 space-y-1">
                         <div className="flex items-center justify-between text-[11px] font-semibold text-rose-300">
-                          <span>Namaste BHU ID:</span>
+                          <span>Aadhaar Card:</span>
                           <button
                             type="button"
                             onClick={() => setZoomedIdCard(validIdUrl)}
@@ -924,7 +924,7 @@ export default function Scanner() {
                         >
                           <img
                             src={validIdUrl}
-                            alt="Namaste BHU ID"
+                            alt="Aadhaar Card"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                           />
                         </div>
@@ -1201,7 +1201,7 @@ export default function Scanner() {
             <div className="flex items-center justify-between w-full pb-3 border-b border-slate-800">
               <span className="text-sm font-bold text-white flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Namaste BHU ID Verification
+                Aadhaar Card Verification
               </span>
               <button
                 type="button"
@@ -1219,18 +1219,18 @@ export default function Scanner() {
               {normalizeIdCardUrl(zoomedIdCard) ? (
                 <img
                   src={normalizeIdCardUrl(zoomedIdCard)!}
-                  alt="Namaste BHU ID Card Full Preview"
+                  alt="Aadhaar Card Full Preview"
                   className="max-h-[66vh] w-auto object-contain rounded-xl shadow-lg group-hover:opacity-95 transition-opacity"
                 />
               ) : (
                 <div className="p-8 text-center text-slate-400 text-xs">
-                  ID card image data unavailable.
+                  Aadhaar card image data unavailable.
                 </div>
               )}
             </div>
             <div className="flex items-center justify-between w-full pt-3">
               <p className="text-xs text-slate-400 text-center flex-1">
-                Cross-verify student name, photo, and roll number with attendee at gate.
+                Cross-verify attendee name and photo with Aadhaar card at gate.
               </p>
               <button
                 type="button"
