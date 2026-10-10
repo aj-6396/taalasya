@@ -149,7 +149,7 @@ export default function TicketCard({
             )}
             {(ticket.idCardUrl || (ticket as any).hasIdCard) && (
               <div className="flex justify-between items-center py-0.5 border-b border-slate-800/80 print:border-slate-300">
-                <span className="text-slate-400 print:text-slate-600">Aadhaar Card Attached</span>
+                <span className="text-slate-400 print:text-slate-600">ID Card Attached</span>
                 <span className="font-semibold text-emerald-400 print:text-emerald-700 text-[11px] flex items-center gap-1">
                   ✓ Verified Screenshot
                 </span>
