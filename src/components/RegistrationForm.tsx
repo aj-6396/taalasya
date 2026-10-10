@@ -140,12 +140,24 @@ export default function RegistrationForm() {
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [missingIdError, setMissingIdError] = useState<number | null>(null);
+  const [termsError, setTermsError] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [demoNotice, setDemoNotice] = useState<string | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [isTestModeActive, setIsTestModeActive] = useState(
     process.env.NEXT_PUBLIC_TEST_MODE === "true"
   );
+
+  const showPromptToast = (msg: string) => {
+    setToastMessage(msg);
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        setToastMessage((prev) => (prev === msg ? null : prev));
+      }, 5000);
+    }
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -205,43 +217,76 @@ export default function RegistrationForm() {
     e.preventDefault();
     setErrorMessage("");
     setDemoNotice(null);
+    setTermsError(false);
+    setMissingIdError(null);
 
     // Primary Attendee Validation
     if (!formData.name.trim()) {
-      setErrorMessage("Please enter the primary attendee's full name.");
+      const msg = "Please enter Attendee 1's full legal name.";
+      setErrorMessage(msg);
+      showPromptToast(msg);
+      document.getElementById("primary-name-input")?.focus();
+      document.getElementById("primary-name-input")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     if (!formData.email.trim() || !formData.email.includes("@")) {
-      setErrorMessage("Please enter a valid primary email address.");
+      const msg = "Please enter a valid email address for Attendee 1.";
+      setErrorMessage(msg);
+      showPromptToast(msg);
+      document.getElementById("primary-email-input")?.focus();
+      document.getElementById("primary-email-input")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     if (!formData.phone.trim() || formData.phone.length < 8) {
-      setErrorMessage("Please enter a valid mobile number for entry verification.");
+      const msg = "Please enter a valid mobile number for entry verification.";
+      setErrorMessage(msg);
+      showPromptToast(msg);
+      document.getElementById("primary-phone-input")?.focus();
+      document.getElementById("primary-phone-input")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     if (!primaryIdCard) {
-      setErrorMessage("Please upload Attendee 1's Namaste BHU ID or Aadhar Card.");
-      return;
-    }
-    if (!agreedToTerms) {
-      setErrorMessage("Please accept the Terms and Conditions for entry passes to proceed.");
+      const msg = "Please upload Attendee 1's Namaste BHU ID or Aadhar Card.";
+      setErrorMessage(msg);
+      showPromptToast(msg);
+      setMissingIdError(1);
+      setTimeout(() => {
+        document.getElementById("attendee-1-id-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
       return;
     }
 
     // Additional Attendees Validation
     for (let i = 0; i < extraAttendees.length; i++) {
       if (!extraAttendees[i].name.trim()) {
-        setErrorMessage(
-          `Please enter the full legal name for Attendee ${i + 2}.`
-        );
+        const msg = `Please enter the full legal name for Attendee ${i + 2}.`;
+        setErrorMessage(msg);
+        showPromptToast(msg);
+        document.getElementById(`extra-attendee-${i}-name`)?.focus();
+        document.getElementById(`extra-attendee-${i}-name`)?.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
       if (!extraAttendees[i].idCard) {
-        setErrorMessage(
-          `Please upload Attendee ${i + 2}'s Namaste BHU ID or Aadhar Card.`
-        );
+        const msg = `Please upload Attendee ${i + 2}'s Namaste BHU ID or Aadhar Card.`
+        setErrorMessage(msg);
+        showPromptToast(msg);
+        setMissingIdError(i + 2);
+        setTimeout(() => {
+          document.getElementById(`attendee-${i + 2}-id-section`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 50);
         return;
       }
+    }
+
+    if (!agreedToTerms) {
+      const msg = "Please accept the Terms and Conditions for entry passes to proceed.";
+      setErrorMessage(msg);
+      showPromptToast(msg);
+      setTermsError(true);
+      setTimeout(() => {
+        document.getElementById("terms-consent-box")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
+      return;
     }
 
     const fullAttendees = [
@@ -716,6 +761,7 @@ export default function RegistrationForm() {
                     </label>
                     <input
                       type="text"
+                      id="primary-name-input"
                       name="name"
                       required
                       autoComplete="name"
@@ -734,6 +780,7 @@ export default function RegistrationForm() {
                     </label>
                     <input
                       type="email"
+                      id="primary-email-input"
                       name="email"
                       required
                       autoComplete="email"
@@ -753,6 +800,7 @@ export default function RegistrationForm() {
                   </label>
                   <input
                     type="tel"
+                    id="primary-phone-input"
                     name="phone"
                     required
                     autoComplete="tel"
@@ -768,7 +816,7 @@ export default function RegistrationForm() {
                 </div>
 
                 {/* ID Card Upload for Attendee 1 */}
-                <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                <div id="attendee-1-id-section" className="space-y-2 pt-2 border-t border-slate-800/80">
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                       <UploadCloud className="w-3.5 h-3.5 text-pink-400" />
@@ -780,7 +828,11 @@ export default function RegistrationForm() {
                   </div>
 
                   {!primaryIdCard ? (
-                    <label className="border-2 border-dashed border-slate-700/80 hover:border-pink-500/60 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer bg-slate-900/40 hover:bg-slate-900 transition-all group">
+                    <label className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group ${
+                      missingIdError === 1 || (errorMessage.includes("Attendee 1") && errorMessage.includes("ID"))
+                        ? "border-rose-500 bg-rose-950/20 ring-2 ring-rose-500/40 animate-pulse"
+                        : "border-slate-700/80 hover:border-pink-500/60 bg-slate-900/40 hover:bg-slate-900"
+                    }`}>
                       <div className="w-10 h-10 rounded-full bg-pink-500/10 flex items-center justify-center text-pink-400 group-hover:scale-110 transition-transform">
                         <UploadCloud className="w-5 h-5" />
                       </div>
@@ -804,8 +856,14 @@ export default function RegistrationForm() {
                               (base64, filename) => {
                                 setPrimaryIdCard(base64);
                                 setPrimaryIdCardName(filename);
+                                setMissingIdError(null);
+                                setErrorMessage("");
+                                setToastMessage(null);
                               },
-                              (err) => setErrorMessage(err)
+                              (err) => {
+                                setErrorMessage(err);
+                                showPromptToast(err);
+                              }
                             );
                           }
                         }}
@@ -861,6 +919,13 @@ export default function RegistrationForm() {
                       </div>
                     </div>
                   )}
+
+                  {(!primaryIdCard && (missingIdError === 1 || (errorMessage.includes("Attendee 1") && errorMessage.includes("ID")))) && (
+                    <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2 text-rose-300 text-xs font-semibold animate-in fade-in duration-200">
+                      <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                      <span>Please attach Attendee 1&apos;s Namaste BHU ID or Aadhar Card screenshot to continue.</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -905,6 +970,7 @@ export default function RegistrationForm() {
                             </label>
                             <input
                               type="text"
+                              id={`extra-attendee-${idx}-name`}
                               required
                               placeholder={`e.g. Guest ${idx + 2} Full Name`}
                               value={att.name}
@@ -934,14 +1000,18 @@ export default function RegistrationForm() {
                         </div>
 
                         {/* ID Card for Extra Attendee */}
-                        <div className="space-y-1.5 pt-2 border-t border-slate-800">
+                        <div id={`attendee-${idx + 2}-id-section`} className="space-y-1.5 pt-2 border-t border-slate-800">
                           <label className="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1">
                             <UploadCloud className="w-3 h-3 text-pink-400" />
                             Namaste BHU ID Card or Aadhar Card <span className="text-pink-500">*</span>
                           </label>
 
                           {!att.idCard ? (
-                            <label className="border border-dashed border-slate-700/80 hover:border-pink-500/60 rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-slate-900/40 hover:bg-slate-900 transition-all group">
+                            <label className={`border border-dashed rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all group ${
+                              missingIdError === idx + 2 || (errorMessage.includes(`Attendee ${idx + 2}`) && errorMessage.includes("ID"))
+                                ? "border-rose-500 bg-rose-950/20 ring-2 ring-rose-500/40 animate-pulse"
+                                : "border-slate-700/80 hover:border-pink-500/60 bg-slate-900/40 hover:bg-slate-900"
+                            }`}>
                               <UploadCloud className="w-4 h-4 text-pink-400 group-hover:scale-110 transition-transform" />
                               <span className="text-[11px] font-semibold text-slate-300">
                                 Upload Attendee {idx + 2}&apos;s Namaste BHU ID or Aadhar Card
@@ -961,8 +1031,14 @@ export default function RegistrationForm() {
                                       (base64, filename) => {
                                         handleExtraAttendeeChange(idx, "idCard", base64);
                                         handleExtraAttendeeChange(idx, "idCardName", filename);
+                                        setMissingIdError(null);
+                                        setErrorMessage("");
+                                        setToastMessage(null);
                                       },
-                                      (err) => setErrorMessage(err)
+                                      (err) => {
+                                        setErrorMessage(err);
+                                        showPromptToast(err);
+                                      }
                                     );
                                   }
                                 }}
@@ -1015,6 +1091,13 @@ export default function RegistrationForm() {
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                               </div>
+                            </div>
+                          )}
+
+                          {(!att.idCard && (missingIdError === idx + 2 || (errorMessage.includes(`Attendee ${idx + 2}`) && errorMessage.includes("ID")))) && (
+                            <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2 text-rose-300 text-xs font-semibold animate-in fade-in duration-200">
+                              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                              <span>Please attach Attendee {idx + 2}&apos;s Namaste BHU ID or Aadhar Card screenshot to continue.</span>
                             </div>
                           )}
                         </div>
@@ -1071,15 +1154,28 @@ export default function RegistrationForm() {
               </div>
 
               {/* Terms and Conditions Consent Checkbox (Clause 1.1) */}
-              <div className="p-3.5 rounded-2xl bg-[#070b13] border border-white/[0.08] hover:border-slate-700 transition-colors">
+              <div
+                id="terms-consent-box"
+                className={`p-3.5 rounded-2xl transition-all duration-200 ${
+                  termsError || errorMessage.includes("Terms and Conditions")
+                    ? "bg-rose-950/30 border-2 border-rose-500 ring-2 ring-rose-500/40 animate-pulse"
+                    : "bg-[#070b13] border border-white/[0.08] hover:border-slate-700"
+                }`}
+              >
                 <label className="flex items-start gap-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={agreedToTerms}
                     onChange={(e) => {
                       setAgreedToTerms(e.target.checked);
-                      if (errorMessage.includes("Terms and Conditions")) {
-                        setErrorMessage("");
+                      if (e.target.checked) {
+                        setTermsError(false);
+                        if (errorMessage.includes("Terms and Conditions")) {
+                          setErrorMessage("");
+                        }
+                        if (toastMessage?.includes("Terms and Conditions")) {
+                          setToastMessage(null);
+                        }
                       }
                     }}
                     className="mt-0.5 w-4 h-4 rounded border-slate-700 bg-slate-900 text-pink-500 focus:ring-pink-500/20 focus:ring-offset-0 cursor-pointer shrink-0 accent-pink-500"
@@ -1099,7 +1195,27 @@ export default function RegistrationForm() {
                     , including mandatory valid ID card (Namaste BHU ID or Aadhar Card) verification at gate, strict single entry rules, and conduct guidelines under Dean of Students, BHU.
                   </span>
                 </label>
+                {(termsError || errorMessage.includes("Terms and Conditions")) && (
+                  <p className="text-xs text-rose-400 font-bold flex items-center gap-1.5 mt-2.5 pt-2 border-t border-rose-800/40 animate-in fade-in">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                    Please check the box above to accept the Terms and Conditions before proceeding.
+                  </p>
+                )}
               </div>
+
+              {/* Bottom Prominent Error Banner above Submit Button */}
+              {errorMessage && (
+                <div
+                  id="submit-error-banner"
+                  className="p-4 rounded-2xl bg-rose-500/15 border-2 border-rose-500/60 flex items-start gap-3 text-rose-200 text-xs sm:text-sm animate-in fade-in slide-in-from-bottom-2 duration-200 shadow-xl shadow-rose-950/60"
+                >
+                  <AlertCircle className="w-5 h-5 shrink-0 text-rose-400 mt-0.5 animate-bounce" />
+                  <div className="flex-1">
+                    <p className="font-extrabold text-rose-300 text-sm">Action Required to Proceed:</p>
+                    <p className="text-white font-medium mt-0.5 leading-relaxed">{errorMessage}</p>
+                  </div>
+                </div>
+              )}
 
               {/* Submit CTA Button */}
               <button
@@ -1179,11 +1295,37 @@ export default function RegistrationForm() {
         onClose={() => setShowTermsModal(false)}
         onAccept={() => {
           setAgreedToTerms(true);
+          setTermsError(false);
           if (errorMessage.includes("Terms and Conditions")) {
             setErrorMessage("");
           }
+          if (toastMessage?.includes("Terms and Conditions")) {
+            setToastMessage(null);
+          }
         }}
       />
+
+      {/* Floating Prompt Toast notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-md w-[92%] sm:w-auto min-w-[320px] bg-slate-900/95 border-2 border-rose-500 text-white p-4 rounded-2xl shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-5 h-5 text-rose-400 animate-pulse" />
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-wider text-rose-400">Action Required</p>
+              <p className="text-xs sm:text-sm font-semibold text-white mt-0.5">{toastMessage}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setToastMessage(null)}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </section>
   );
 }
