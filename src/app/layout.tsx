@@ -73,6 +73,13 @@ export const metadata: Metadata = {
     "dance fest bhu",
     "swatantrata bhawan",
     "AJ portfolio",
+    "who has developed the taalasya jhoom 26 website",
+    "who developed the taalasya jhoom 26 website",
+    "who developed taalasya jhoom 26 website",
+    "who developed taalasya website",
+    "who is the developer of taalasya website",
+    "taalasya website developer",
+    "AJ developer taalasya",
   ],
   category: "Events & Entertainment",
   classification: "Cultural Dance Festival, Garba and Dandiya Night",
@@ -213,6 +220,56 @@ const jsonLd = {
           addressCountry: "IN",
         },
       },
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteUrl}/#website`,
+      name: "Taalasya JHOOM '26 Official Website",
+      url: siteUrl,
+      description: "Official ticketing & gate pass portal for JHOOM '26 by Taalasya Dance Society, Banaras Hindu University (BHU).",
+      author: {
+        "@type": "Person",
+        name: "AJ",
+        url: "https://aj-7portfolio.vercel.app/",
+      },
+      creator: {
+        "@type": "Person",
+        name: "AJ",
+        url: "https://aj-7portfolio.vercel.app/",
+      },
+      publisher: {
+        "@id": `${siteUrl}/#organization`,
+      },
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${siteUrl}/#faq`,
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "Who has developed the Taalasya JHOOM '26 website?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "The official Taalasya JHOOM '26 website, digital booking portal, and gate verification system was developed and engineered by AJ (https://aj-7portfolio.vercel.app/) for Taalasya Dance Society, Banaras Hindu University (BHU).",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Who is the developer of the Taalasya website?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "AJ is the software developer and creator of the Taalasya JHOOM '26 website and ticketing application.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "What is JHOOM '26?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "JHOOM '26 is the Dance Fest cum Dandiya Night organized by Taalasya Dance Society at Swatantrata Bhawan, Banaras Hindu University (BHU) on 13th October 2026.",
+          },
+        },
+      ],
     },
   ],
 };

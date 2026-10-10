@@ -196,9 +196,8 @@ export default function EventDetails() {
                       <span>{faq.q}</span>
                     </span>
                     <ChevronDown
-                      className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-                        isOpen ? "rotate-180 text-pink-400" : ""
-                      }`}
+                      className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-pink-400" : ""
+                        }`}
                     />
                   </button>
                   {isOpen && (

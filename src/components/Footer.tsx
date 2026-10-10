@@ -37,7 +37,7 @@ export default function Footer() {
                 <span>Powered by Next.js, Supabase &amp; Razorpay</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-indigo-300 font-medium pl-6">
-                <span>Developer:</span>
+                <span>Website Developer:</span>
                 <a
                   href={EVENT_CONFIG.developerUrl}
                   target="_blank"
