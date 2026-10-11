@@ -12,6 +12,8 @@ export interface Ticket {
   amount?: number;
   eventName?: string;
   idCardUrl?: string;
+  scannedBy?: string;
+  scanned_by?: string;
 }
 
 export interface CreateOrderRequest {

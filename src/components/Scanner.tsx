@@ -1307,12 +1307,45 @@ export default function Scanner() {
                   ALREADY SCANNED!
                 </h3>
                 <p className="text-sm font-semibold text-rose-300 mt-1">
-                  Access Denied • Pass Was Previously Redeemed
+                  Access Denied • Duplicate Entry Detected
                 </p>
+                {scanResult.message && (
+                  <p className="text-xs text-rose-200/90 bg-rose-900/60 border border-rose-500/30 rounded-xl px-3 py-1.5 mt-2 max-w-xs mx-auto font-medium">
+                    {scanResult.message}
+                  </p>
+                )}
               </div>
 
               {scanResult.ticket && (
                 <div className="mt-3 p-3.5 rounded-2xl bg-rose-900/40 border border-rose-500/30 text-left text-xs space-y-2 max-w-xs mx-auto text-rose-100">
+                  <div className="p-2 rounded-xl bg-rose-950/80 border border-rose-500/40 text-[11px] space-y-1">
+                    <div className="flex items-center justify-between text-rose-300 font-bold">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-rose-400" />
+                        First Redeemed:
+                      </span>
+                      <span className="text-white font-mono">
+                        {scanResult.ticket.usedAt
+                          ? new Date(scanResult.ticket.usedAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "Earlier"}
+                      </span>
+                    </div>
+                    {Boolean(scanResult.ticket.scannedBy || scanResult.ticket.scanned_by) && (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-rose-300 flex items-center gap-1">
+                          <UserCheck className="w-3.5 h-3.5 text-rose-400" />
+                          Checked In By:
+                        </span>
+                        <span className="font-bold text-white bg-rose-900/80 px-2 py-0.5 rounded">
+                          {scanResult.ticket.scannedBy || scanResult.ticket.scanned_by}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
                   <p className="font-bold text-white text-sm">
                     Owner: {scanResult.ticket.name}
                   </p>
@@ -1355,9 +1388,8 @@ export default function Scanner() {
                     );
                   })()}
 
-                  <p className="text-rose-300/90 text-[11px] flex items-center gap-1 mt-1">
-                    <Clock className="w-3.5 h-3.5 text-rose-400" />
-                    Status: Marked as Used
+                  <p className="text-rose-300/90 text-[11px] flex items-center gap-1 mt-1 font-mono">
+                    Pass ID: {scanResult.ticket.ticketId.slice(0, 16)}...
                   </p>
                 </div>
               )}

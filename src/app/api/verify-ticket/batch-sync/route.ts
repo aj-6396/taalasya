@@ -94,6 +94,18 @@ export async function POST(req: NextRequest) {
         // Check if already used
         if (Boolean(currentUsedAt) && currentStatus === "used") {
           duplicateCount++;
+          try {
+            await supabase.from("scan_logs").insert({
+              ticketId: targetId,
+              marshalName: activeMarshal,
+              marshalPin: cleanPin,
+              scanStatus: "Duplicate Attempt (Offline Conflict)",
+              attendeeName: ticketData.name || "Attendee",
+              scannedAt: scan.scannedAt || new Date().toISOString(),
+            });
+          } catch {
+            // ignore
+          }
           continue;
         }
 
