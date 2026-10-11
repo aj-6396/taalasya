@@ -76,25 +76,21 @@ export async function POST(req: NextRequest) {
       ticket.passType ||
       ticket.pass_type ||
       (typeof ticket.paymentId === "string" && ticket.paymentId.replace("SPECIAL_PASS:", "")) ||
-      "volunteer";
+      (String(ticket.ticketId || ticket.ticket_id || "").startsWith("SP-MED") ? "media_influencer" : "special_pass");
 
     const resolvedCategory: SpecialPassCategory =
-      getSpecialPassCategory(rawCat) || "volunteer";
+      getSpecialPassCategory(rawCat);
     const cfg = SPECIAL_PASS_CATEGORIES[resolvedCategory];
 
     const currentTicketId =
-      ticket.ticketId || ticket.ticket_id || ticket.ticketid || "SP-PASS-00000";
+      ticket.ticketId || ticket.ticket_id || ticket.ticketid || "SP-SPL-00000";
     const recipientName = (ticket.name || "Special Guest").trim();
     const designation =
       ticket.designation ||
       ticket.role ||
-      (resolvedCategory === "volunteer"
-        ? "Volunteer & Event Marshal"
-        : resolvedCategory === "special_guest"
-        ? "Special Guest / Dignitary"
-        : resolvedCategory === "core_committee"
-        ? "Core Committee Member"
-        : "Organizer / Faculty Coordinator");
+      (resolvedCategory === "media_influencer"
+        ? "Media & Influencer Partner"
+        : "Special Guest / Dignitary");
     const college =
       ticket.college || ticket.institute || "Banaras Hindu University (BHU)";
     const email = ticket.email || "";

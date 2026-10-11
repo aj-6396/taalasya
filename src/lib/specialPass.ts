@@ -1,8 +1,6 @@
 export type SpecialPassCategory =
-  | "volunteer"
-  | "special_guest"
-  | "core_committee"
-  | "organizer";
+  | "special_pass"
+  | "media_influencer";
 
 export interface SpecialPassConfig {
   key: SpecialPassCategory;
@@ -25,31 +23,12 @@ export interface SpecialPassConfig {
 }
 
 export const SPECIAL_PASS_CATEGORIES: Record<SpecialPassCategory, SpecialPassConfig> = {
-  volunteer: {
-    key: "volunteer",
-    label: "Volunteer",
-    badgeTitle: "OFFICIAL VOLUNTEER PASS",
-    shortPrefix: "VOL",
-    accentHex: "#10b981", // Emerald 500
-    darkHex: "#064e3b",   // Emerald 900
-    lightHex: "#ecfdf5",  // Emerald 50
-    borderHex: "#059669", // Emerald 600
-    rgb: [16, 185, 129],
-    darkRgb: [6, 78, 59],
-    badgeBgHex: "#d1fae5",
-    badgeTextHex: "#065f46",
-    tailwindBorder: "border-emerald-500/30",
-    tailwindBg: "bg-emerald-500/10",
-    tailwindText: "text-emerald-400",
-    tailwindRing: "focus:ring-emerald-500",
-    description: "Event operations, stage management, crowd marshals & technical crew",
-  },
-  special_guest: {
-    key: "special_guest",
-    label: "Special Guest / VIP",
-    badgeTitle: "SPECIAL GUEST & VIP PASS",
-    shortPrefix: "GST",
-    accentHex: "#f59e0b", // Amber 500
+  special_pass: {
+    key: "special_pass",
+    label: "Special Pass",
+    badgeTitle: "OFFICIAL SPECIAL PASS",
+    shortPrefix: "SPL",
+    accentHex: "#f59e0b", // Amber / Gold 500
     darkHex: "#78350f",   // Amber 900
     lightHex: "#fffbeb",  // Amber 50
     borderHex: "#d97706", // Amber 600
@@ -61,60 +40,51 @@ export const SPECIAL_PASS_CATEGORIES: Record<SpecialPassCategory, SpecialPassCon
     tailwindBg: "bg-amber-500/10",
     tailwindText: "text-amber-400",
     tailwindRing: "focus:ring-amber-500",
-    description: "Dignitaries, guest performers, university professors & invited guests",
+    description: "Dignitaries, VIP guests, performers & special access invitees",
   },
-  core_committee: {
-    key: "core_committee",
-    label: "Core Committee Member",
-    badgeTitle: "CORE COMMITTEE PASS",
-    shortPrefix: "COR",
-    accentHex: "#f43f5e", // Rose 500 / Crimson
-    darkHex: "#881337",   // Rose 900
-    lightHex: "#fff1f2",  // Rose 50
-    borderHex: "#e11d48", // Rose 600
-    rgb: [244, 63, 94],
-    darkRgb: [136, 19, 55],
-    badgeBgHex: "#ffe4e6",
-    badgeTextHex: "#9f1239",
-    tailwindBorder: "border-rose-500/30",
-    tailwindBg: "bg-rose-500/10",
-    tailwindText: "text-rose-400",
-    tailwindRing: "focus:ring-rose-500",
-    description: "Taalasya executive leadership, core organizing leads & club heads",
-  },
-  organizer: {
-    key: "organizer",
-    label: "Organizer / Faculty Coordinator",
-    badgeTitle: "ORGANIZER & FACULTY PASS",
-    shortPrefix: "ORG",
-    accentHex: "#8b5cf6", // Purple 500
-    darkHex: "#4c1d95",   // Purple 900
-    lightHex: "#f5f3ff",  // Purple 50
-    borderHex: "#7c3aed", // Purple 600
-    rgb: [139, 92, 246],
-    darkRgb: [76, 29, 149],
-    badgeBgHex: "#ede9fe",
-    badgeTextHex: "#5b21b6",
-    tailwindBorder: "border-purple-500/30",
-    tailwindBg: "bg-purple-500/10",
-    tailwindText: "text-purple-400",
-    tailwindRing: "focus:ring-purple-500",
-    description: "Faculty advisors, chief patrons & society coordinators",
+  media_influencer: {
+    key: "media_influencer",
+    label: "Media and Influencers",
+    badgeTitle: "OFFICIAL MEDIA & INFLUENCER PASS",
+    shortPrefix: "MED",
+    accentHex: "#06b6d4", // Electric Cyan 500
+    darkHex: "#164e63",   // Cyan 900
+    lightHex: "#ecfeff",  // Cyan 50
+    borderHex: "#0891b2", // Cyan 600
+    rgb: [6, 182, 212],
+    darkRgb: [22, 78, 99],
+    badgeBgHex: "#cffafe",
+    badgeTextHex: "#155e75",
+    tailwindBorder: "border-cyan-500/30",
+    tailwindBg: "bg-cyan-500/10",
+    tailwindText: "text-cyan-400",
+    tailwindRing: "focus:ring-cyan-500",
+    description: "Press, photographers, videographers, journalists & content creators",
   },
 };
 
-export function getSpecialPassCategory(val?: string | null): SpecialPassCategory | null {
-  if (!val) return null;
-  const clean = val.toLowerCase().trim();
-  if (clean.includes("volunteer") || clean === "vol") return "volunteer";
-  if (clean.includes("guest") || clean.includes("vip") || clean === "gst") return "special_guest";
-  if (clean.includes("core") || clean.includes("committee") || clean === "cor") return "core_committee";
-  if (clean.includes("organizer") || clean.includes("faculty") || clean === "org") return "organizer";
-  return null;
+export function getSpecialPassCategory(val?: string | null): SpecialPassCategory {
+  if (!val) return "special_pass";
+  const clean = String(val).toLowerCase().trim();
+  if (
+    clean.includes("media") ||
+    clean.includes("influencer") ||
+    clean.includes("press") ||
+    clean === "med" ||
+    clean === "inf"
+  ) {
+    return "media_influencer";
+  }
+  return "special_pass";
+}
+
+export function getSpecialPassConfig(val?: string | null): SpecialPassConfig {
+  const cat = getSpecialPassCategory(val);
+  return SPECIAL_PASS_CATEGORIES[cat] || SPECIAL_PASS_CATEGORIES.special_pass;
 }
 
 export function generateSpecialTicketId(category: SpecialPassCategory): string {
-  const cfg = SPECIAL_PASS_CATEGORIES[category] || SPECIAL_PASS_CATEGORIES.volunteer;
+  const cfg = SPECIAL_PASS_CATEGORIES[category] || SPECIAL_PASS_CATEGORIES.special_pass;
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let randomCode = "";
   for (let i = 0; i < 5; i++) {

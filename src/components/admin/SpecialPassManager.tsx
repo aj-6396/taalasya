@@ -51,7 +51,7 @@ interface SpecialPassRecord {
 export default function SpecialPassManager({ adminPin }: SpecialPassManagerProps) {
   // Form State
   const [name, setName] = useState("");
-  const [category, setCategory] = useState<SpecialPassCategory>("volunteer");
+  const [category, setCategory] = useState<SpecialPassCategory>("special_pass");
   const [designation, setDesignation] = useState("");
   const [college, setCollege] = useState("Banaras Hindu University (BHU)");
   const [email, setEmail] = useState("");
@@ -70,10 +70,8 @@ export default function SpecialPassManager({ adminPin }: SpecialPassManagerProps
     total: 0,
     scanned: 0,
     pending: 0,
-    volunteers: 0,
-    specialGuests: 0,
-    coreCommittee: 0,
-    organizers: 0,
+    specialPasses: 0,
+    mediaInfluencers: 0,
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -228,46 +226,46 @@ export default function SpecialPassManager({ adminPin }: SpecialPassManagerProps
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Category Overview Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        {/* Volunteers */}
-        <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/20 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-emerald-400 text-xs font-bold mb-1">
-            <span>Volunteers</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-          </div>
-          <p className="text-2xl font-black text-white font-mono">{stats.volunteers}</p>
-          <p className="text-[11px] text-emerald-300/70 mt-0.5">Crew & Marshals</p>
-        </div>
-
-        {/* Special Guests */}
+        {/* Special Passes */}
         <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/20 backdrop-blur-sm">
           <div className="flex items-center justify-between text-amber-400 text-xs font-bold mb-1">
-            <span>Special Guests</span>
+            <span>Special Passes</span>
             <span className="w-2 h-2 rounded-full bg-amber-400" />
           </div>
-          <p className="text-2xl font-black text-white font-mono">{stats.specialGuests}</p>
+          <p className="text-2xl font-black text-white font-mono">{stats.specialPasses}</p>
           <p className="text-[11px] text-amber-300/70 mt-0.5">VIPs & Dignitaries</p>
         </div>
 
-        {/* Core Committee */}
-        <div className="p-4 rounded-2xl bg-rose-950/30 border border-rose-500/20 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-rose-400 text-xs font-bold mb-1">
-            <span>Core Committee</span>
-            <span className="w-2 h-2 rounded-full bg-rose-400" />
+        {/* Media & Influencers */}
+        <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/20 backdrop-blur-sm">
+          <div className="flex items-center justify-between text-cyan-400 text-xs font-bold mb-1">
+            <span>Media & Influencers</span>
+            <span className="w-2 h-2 rounded-full bg-cyan-400" />
           </div>
-          <p className="text-2xl font-black text-white font-mono">{stats.coreCommittee}</p>
-          <p className="text-[11px] text-rose-300/70 mt-0.5">Taalasya Leadership</p>
+          <p className="text-2xl font-black text-white font-mono">{stats.mediaInfluencers}</p>
+          <p className="text-[11px] text-cyan-300/70 mt-0.5">Press & Creators</p>
         </div>
 
-        {/* Gate Redeemed */}
-        <div className="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/20 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-purple-400 text-xs font-bold mb-1">
+        {/* Total Allocated */}
+        <div className="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-500/20 backdrop-blur-sm">
+          <div className="flex items-center justify-between text-indigo-400 text-xs font-bold mb-1">
+            <span>Total Issued</span>
+            <span className="w-2 h-2 rounded-full bg-indigo-400" />
+          </div>
+          <p className="text-2xl font-black text-white font-mono">{stats.total}</p>
+          <p className="text-[11px] text-indigo-300/70 mt-0.5">Active Special Passes</p>
+        </div>
+
+        {/* Scanned at Gate */}
+        <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/20 backdrop-blur-sm">
+          <div className="flex items-center justify-between text-emerald-400 text-xs font-bold mb-1">
             <span>Scanned at Gate</span>
-            <span className="w-2 h-2 rounded-full bg-purple-400" />
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
           </div>
           <p className="text-2xl font-black text-white font-mono">
             {stats.scanned} / {stats.total}
           </p>
-          <p className="text-[11px] text-purple-300/70 mt-0.5">
+          <p className="text-[11px] text-emerald-300/70 mt-0.5">
             {stats.pending} passes pending
           </p>
         </div>
@@ -292,7 +290,7 @@ export default function SpecialPassManager({ adminPin }: SpecialPassManagerProps
                 }}
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>★ SPECIAL ACCESS GENERATOR ★</span>
+                <span>SPECIAL ACCESS GENERATOR</span>
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
                 Create & Download Special Pass
@@ -324,7 +322,7 @@ export default function SpecialPassManager({ adminPin }: SpecialPassManagerProps
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2.5">
                 Select Pass Category & Color Theme *
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(Object.keys(SPECIAL_PASS_CATEGORIES) as SpecialPassCategory[]).map((catKey) => {
                   const cfg = SPECIAL_PASS_CATEGORIES[catKey];
                   const isSelected = category === catKey;
@@ -633,7 +631,7 @@ export default function SpecialPassManager({ adminPin }: SpecialPassManagerProps
               </thead>
               <tbody className="divide-y divide-slate-800/60 font-medium">
                 {filteredPasses.map((p) => {
-                  const cfg = SPECIAL_PASS_CATEGORIES[p.category] || SPECIAL_PASS_CATEGORIES.volunteer;
+                  const cfg = SPECIAL_PASS_CATEGORIES[p.category] || SPECIAL_PASS_CATEGORIES.special_pass;
                   const isUsed = p.status === "Used";
 
                   return (

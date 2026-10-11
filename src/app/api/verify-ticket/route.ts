@@ -236,8 +236,8 @@ export async function POST(req: NextRequest) {
           const rawCat =
             pType ||
             (pId.startsWith("SPECIAL_PASS:") ? pId.replace("SPECIAL_PASS:", "") : null) ||
-            (tId.startsWith("SP-VOL") ? "volunteer" : tId.startsWith("SP-GST") ? "special_guest" : tId.startsWith("SP-COR") ? "core_committee" : "volunteer");
-          const resolved = getSpecialPassCategory(rawCat) || "volunteer";
+            (tId.startsWith("SP-MED") ? "media_influencer" : "special_pass");
+          const resolved = getSpecialPassCategory(rawCat);
           const cfg = SPECIAL_PASS_CATEGORIES[resolved];
           specialInfo = {
             isSpecialPass: true,
@@ -320,8 +320,8 @@ export async function POST(req: NextRequest) {
         const rawCat =
           pType ||
           (pId.startsWith("SPECIAL_PASS:") ? pId.replace("SPECIAL_PASS:", "") : null) ||
-          (tId.startsWith("SP-VOL") ? "volunteer" : tId.startsWith("SP-GST") ? "special_guest" : tId.startsWith("SP-COR") ? "core_committee" : "volunteer");
-        const resolved = getSpecialPassCategory(rawCat) || "volunteer";
+          (tId.startsWith("SP-MED") ? "media_influencer" : "special_pass");
+        const resolved = getSpecialPassCategory(rawCat);
         const cfg = SPECIAL_PASS_CATEGORIES[resolved];
         specialInfo = {
           isSpecialPass: true,

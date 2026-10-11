@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     if (action === "create") {
       const {
         name,
-        category = "volunteer",
+        category = "special_pass",
         designation = "",
         college = "Banaras Hindu University (BHU)",
         email = "",
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       }
 
       const resolvedCategory: SpecialPassCategory =
-        getSpecialPassCategory(category) || "volunteer";
+        getSpecialPassCategory(category);
       const cfg = SPECIAL_PASS_CATEGORIES[resolvedCategory];
 
       const cleanTicketId =
@@ -74,13 +74,9 @@ export async function POST(req: NextRequest) {
 
       const resolvedDesignation =
         designation.trim() ||
-        (resolvedCategory === "volunteer"
-          ? "Event Volunteer"
-          : resolvedCategory === "special_guest"
-          ? "Special Guest"
-          : resolvedCategory === "core_committee"
-          ? "Core Committee Member"
-          : "Organizer");
+        (resolvedCategory === "media_influencer"
+          ? "Media & Influencer Partner"
+          : "Special Guest / Dignitary");
 
       const nowIso = new Date().toISOString();
       const paymentIdentifier = `SPECIAL_PASS:${resolvedCategory}`;
@@ -225,13 +221,14 @@ export async function POST(req: NextRequest) {
       })
       .map((t) => {
         const pId = String(t.paymentId || t.payment_id || "");
+        const tId = String(t.ticketId || t.ticket_id || "");
         const rawCategory =
           t.passType ||
           t.pass_type ||
           (pId.startsWith("SPECIAL_PASS:") ? pId.replace("SPECIAL_PASS:", "") : null) ||
-          "volunteer";
+          (tId.startsWith("SP-MED") ? "media_influencer" : "special_pass");
 
-        const category = getSpecialPassCategory(rawCategory) || "volunteer";
+        const category = getSpecialPassCategory(rawCategory);
         const cfg = SPECIAL_PASS_CATEGORIES[category];
 
         const isUsed =
@@ -261,10 +258,8 @@ export async function POST(req: NextRequest) {
       total: specialPasses.length,
       scanned: specialPasses.filter((p) => p.status === "Used").length,
       pending: specialPasses.filter((p) => p.status !== "Used").length,
-      volunteers: specialPasses.filter((p) => p.category === "volunteer").length,
-      specialGuests: specialPasses.filter((p) => p.category === "special_guest").length,
-      coreCommittee: specialPasses.filter((p) => p.category === "core_committee").length,
-      organizers: specialPasses.filter((p) => p.category === "organizer").length,
+      specialPasses: specialPasses.filter((p) => p.category === "special_pass").length,
+      mediaInfluencers: specialPasses.filter((p) => p.category === "media_influencer").length,
     };
 
     return NextResponse.json({
