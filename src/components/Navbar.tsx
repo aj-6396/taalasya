@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Sparkles, Ticket } from "lucide-react";
-import { EVENT_CONFIG } from "@/lib/constants";
+import { EVENT_CONFIG, FEATURE_FLAGS } from "@/lib/constants";
 
 export default function Navbar() {
   return (
@@ -35,13 +35,15 @@ export default function Navbar() {
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/success"
-              className="text-xs font-semibold text-slate-300 hover:text-pink-400 transition-colors hidden sm:inline-flex items-center gap-1.5"
-            >
-              <Ticket className="w-3.5 h-3.5 text-pink-400" />
-              <span>Download Pass</span>
-            </Link>
+            {FEATURE_FLAGS.enablePublicPassRetrieval && (
+              <Link
+                href="/success"
+                className="text-xs font-semibold text-slate-300 hover:text-pink-400 transition-colors hidden sm:inline-flex items-center gap-1.5"
+              >
+                <Ticket className="w-3.5 h-3.5 text-pink-400" />
+                <span>Download Pass</span>
+              </Link>
+            )}
             <a
               href={EVENT_CONFIG.instagramUrl}
               target="_blank"

@@ -20,7 +20,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TicketCard from "@/components/TicketCard";
-import { EVENT_CONFIG } from "@/lib/constants";
+import { EVENT_CONFIG, FEATURE_FLAGS } from "@/lib/constants";
 import { generateShortTicketId } from "@/lib/ticketId";
 
 function SuccessContent() {
@@ -318,6 +318,29 @@ function SuccessContent() {
   }
 
   if (error || !ticketData) {
+    if (!FEATURE_FLAGS.enablePublicPassRetrieval) {
+      return (
+        <div className="max-w-md mx-auto px-4 py-24 text-center space-y-6">
+          <div className="w-16 h-16 rounded-full bg-rose-500/20 text-rose-400 mx-auto flex items-center justify-center border border-rose-500/30">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-white">Payment Verification Required</h2>
+            <p className="text-xs text-slate-400">
+              {error || "Only confirmed and verified Razorpay payments generate an official QR admission ticket."}
+            </p>
+          </div>
+          <Link
+            href="/#register"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Go to Booking &amp; Registration</span>
+          </Link>
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center space-y-6">
         <div className="w-16 h-16 rounded-full bg-pink-500/20 text-pink-400 mx-auto flex items-center justify-center border border-pink-500/30">
@@ -330,7 +353,7 @@ function SuccessContent() {
           </p>
         </div>
 
-        {/* Interactive Lookup Form */}
+        {/* Interactive Lookup Form (Preserved for activation) */}
         <form onSubmit={handleManualLookup} className="space-y-3 max-w-sm mx-auto">
           <div className="flex gap-2">
             <input

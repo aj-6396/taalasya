@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Heart, Shield, Code2, ExternalLink } from "lucide-react";
-import { EVENT_CONFIG } from "@/lib/constants";
+import { EVENT_CONFIG, FEATURE_FLAGS } from "@/lib/constants";
 
 export default function Footer() {
   return (
@@ -72,11 +72,13 @@ export default function Footer() {
                   Dandiya Night &amp; Venue
                 </a>
               </li>
-              <li>
-                <Link href="/success" className="text-pink-400 hover:text-pink-300 transition-colors font-medium">
-                  Download / Retrieve Pass
-                </Link>
-              </li>
+              {FEATURE_FLAGS.enablePublicPassRetrieval && (
+                <li>
+                  <Link href="/success" className="text-pink-400 hover:text-pink-300 transition-colors font-medium">
+                    Download / Retrieve Pass
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link href="/terms" className="hover:text-white transition-colors">
                   Terms &amp; Conditions

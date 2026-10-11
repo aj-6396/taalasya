@@ -94,3 +94,10 @@ export const DEFAULT_MARSHALS: GateMarshal[] = [
   { id: "admin", name: "Lead Supervisor", pin: process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || process.env.ADMIN_SCAN_PIN || "", gate: "All Gates (Supervisor)" },
 ];
 
+export const FEATURE_FLAGS = {
+  // Public pass retrieval & re-download lookup on frontend (Navbar, Footer, /success)
+  // Set to true to activate, false to deactivate without deleting code
+  enablePublicPassRetrieval: false,
+};
+
+
