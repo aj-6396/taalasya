@@ -229,9 +229,10 @@ export default function Scanner() {
         fetchLiveStats();
       } else {
         // Safe offline / fallback check
+        const adminPin = process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "";
         const fallback =
-          DEFAULT_MARSHALS.find((m) => m.pin === pinToTest) ||
-          (pinToTest === (process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "6028")
+          DEFAULT_MARSHALS.find((m) => Boolean(m.pin && m.pin === pinToTest)) ||
+          (adminPin && pinToTest === adminPin
             ? { id: "admin", name: "Lead Supervisor", pin: pinToTest, gate: "All Gates (Supervisor)" }
             : null);
 
@@ -252,9 +253,10 @@ export default function Scanner() {
       }
     } catch {
       // Offline fallback
+      const adminPin = process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "";
       const fallback =
-        DEFAULT_MARSHALS.find((m) => m.pin === pinToTest) ||
-        (pinToTest === (process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "6028")
+        DEFAULT_MARSHALS.find((m) => Boolean(m.pin && m.pin === pinToTest)) ||
+        (adminPin && pinToTest === adminPin
           ? { id: "admin", name: "Lead Supervisor", pin: pinToTest, gate: "All Gates (Supervisor)" }
           : null);
 
@@ -405,7 +407,7 @@ export default function Scanner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ticketId,
-          pin: currentMarshal?.pin || "6028",
+          pin: currentMarshal?.pin || "",
           marshalName: currentMarshal?.name || "Gate Marshal",
         }),
       });

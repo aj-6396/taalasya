@@ -359,8 +359,10 @@ Create a [`.env.local`](file:///d:/taalsya/.env.local) file in the root director
 NEXT_PUBLIC_APP_URL=https://taalasya-jhoom-26.vercel.app
 NEXT_PUBLIC_EVENT_NAME="JHOOM '26 — Dance Fest cum Dandiya Night"
 NEXT_PUBLIC_EVENT_PRICE=299
-NEXT_PUBLIC_ADMIN_SCAN_PIN=6028
-ADMIN_SCAN_PIN=6028
+NEXT_PUBLIC_ADMIN_SCAN_PIN=your_admin_pin
+ADMIN_SCAN_PIN=your_admin_pin
+SPECIAL_PASS_PIN=your_special_pass_pin
+NEXT_PUBLIC_SPECIAL_PASS_PIN=your_special_pass_pin
 NEXT_PUBLIC_SUPPORT_EMAIL=taalasyadancesociety.bhu@gmail.com
 
 # ==============================================================================

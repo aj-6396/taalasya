@@ -6,7 +6,6 @@ import {
   Lock,
   Unlock,
   ArrowLeft,
-  ShieldCheck,
   AlertCircle,
   Loader2,
   Award,
@@ -15,19 +14,19 @@ import {
 import Navbar from "@/components/Navbar";
 import SpecialPassManager from "@/components/admin/SpecialPassManager";
 
-export default function AdminSpecialPassPage() {
+export default function SpecialPassPortalPage() {
   const [pinInput, setPinInput] = useState("");
-  const [adminPin, setAdminPin] = useState("");
+  const [specialPin, setSpecialPin] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [pinError, setPinError] = useState("");
 
   // Restore authenticated session from sessionStorage
   useEffect(() => {
-    const savedAuth = sessionStorage.getItem("taalsya_admin_auth");
-    const savedPin = sessionStorage.getItem("taalsya_admin_pin");
+    const savedAuth = sessionStorage.getItem("taalsya_special_pass_auth");
+    const savedPin = sessionStorage.getItem("taalsya_special_pass_pin");
     if (savedAuth === "true" && savedPin) {
-      setAdminPin(savedPin);
+      setSpecialPin(savedPin);
       setIsAuthenticated(true);
     }
   }, []);
@@ -41,20 +40,20 @@ export default function AdminSpecialPassPage() {
     setPinError("");
 
     try {
-      const res = await fetch("/api/admin/tickets", {
+      const res = await fetch("/api/admin/special-pass", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: cleanPin }),
+        body: JSON.stringify({ pin: cleanPin, action: "verify" }),
       });
 
       const data = await res.json();
       if (res.ok && data.success) {
-        setAdminPin(cleanPin);
+        setSpecialPin(cleanPin);
         setIsAuthenticated(true);
-        sessionStorage.setItem("taalsya_admin_auth", "true");
-        sessionStorage.setItem("taalsya_admin_pin", cleanPin);
+        sessionStorage.setItem("taalsya_special_pass_auth", "true");
+        sessionStorage.setItem("taalsya_special_pass_pin", cleanPin);
       } else {
-        setPinError(data.message || "Invalid Admin PIN. Access Denied.");
+        setPinError(data.message || "Invalid Passcode. Access Denied.");
       }
     } catch {
       setPinError("Connection error while verifying credentials");
@@ -64,10 +63,10 @@ export default function AdminSpecialPassPage() {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem("taalsya_admin_auth");
-    sessionStorage.removeItem("taalsya_admin_pin");
+    sessionStorage.removeItem("taalsya_special_pass_auth");
+    sessionStorage.removeItem("taalsya_special_pass_pin");
     setIsAuthenticated(false);
-    setAdminPin("");
+    setSpecialPin("");
     setPinInput("");
   };
 
@@ -78,22 +77,13 @@ export default function AdminSpecialPassPage() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-10">
         {/* Navigation header */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>General Admin Portal</span>
-            </Link>
-            <span className="text-slate-700">•</span>
-            <Link
-              href="/"
-              className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
-            >
-              Homepage
-            </Link>
-          </div>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Homepage</span>
+          </Link>
 
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
@@ -122,13 +112,13 @@ export default function AdminSpecialPassPage() {
               <div className="space-y-1.5">
                 <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-1">
                   <Sparkles className="w-3 h-3" />
-                  <span>INTERNAL BACKEND ONLY</span>
+                  <span>INTERNAL PORTAL</span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
                   Special Pass Portal
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                  Enter Lead Supervisor PIN to issue Volunteers, Special Guests, and Core Committee passes.
+                  Enter Special Pass passcode to issue and manage Volunteers, VIP Guests, and Core Committee passes.
                 </p>
               </div>
 
@@ -137,7 +127,7 @@ export default function AdminSpecialPassPage() {
                   <input
                     type="password"
                     inputMode="numeric"
-                    placeholder="Enter Admin PIN"
+                    placeholder="Enter Passcode"
                     value={pinInput}
                     onChange={(e) => {
                       setPinInput(e.target.value);
@@ -162,12 +152,12 @@ export default function AdminSpecialPassPage() {
                   {isVerifying ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Verifying PIN...</span>
+                      <span>Verifying Passcode...</span>
                     </>
                   ) : (
                     <>
                       <Unlock className="w-4 h-4" />
-                      <span>Unlock Special Pass Portal</span>
+                      <span>Unlock Portal</span>
                     </>
                   )}
                 </button>
@@ -180,7 +170,7 @@ export default function AdminSpecialPassPage() {
           </div>
         ) : (
           /* AUTHENTICATED SPECIAL PASS MANAGER */
-          <SpecialPassManager adminPin={adminPin} />
+          <SpecialPassManager adminPin={specialPin} />
         )}
       </main>
     </div>

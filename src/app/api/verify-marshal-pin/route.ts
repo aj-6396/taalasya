@@ -16,10 +16,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const adminPin = process.env.ADMIN_SCAN_PIN || process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "6028";
+    const adminPin = process.env.ADMIN_SCAN_PIN || process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "";
 
     // 1. Check Lead Supervisor Admin PIN
-    if (cleanPin === adminPin) {
+    if (adminPin && cleanPin === adminPin) {
       return NextResponse.json({
         success: true,
         marshal: {
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Fallback to DEFAULT_MARSHALS (server-side check)
-    const matched = DEFAULT_MARSHALS.find((m) => m.pin === cleanPin);
+    const matched = DEFAULT_MARSHALS.find((m) => Boolean(m.pin && m.pin === cleanPin));
     if (matched) {
       return NextResponse.json({
         success: true,

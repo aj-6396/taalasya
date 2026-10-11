@@ -13,13 +13,20 @@ import {
 
 export const dynamic = "force-dynamic";
 
-function verifyAdminPin(pin?: string | null): boolean {
+function verifySpecialPassPin(pin?: string | null): boolean {
   const cleanPin = String(pin || "").trim();
+  const validSpecialPin =
+    process.env.SPECIAL_PASS_PIN ||
+    process.env.NEXT_PUBLIC_SPECIAL_PASS_PIN ||
+    "6396";
   const validAdminPin =
     process.env.ADMIN_SCAN_PIN ||
-    process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN ||
-    "6028";
-  return cleanPin === validAdminPin;
+    process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN;
+
+  return (
+    cleanPin === validSpecialPin ||
+    Boolean(validAdminPin && cleanPin === validAdminPin)
+  );
 }
 
 export async function POST(req: NextRequest) {
@@ -28,9 +35,9 @@ export async function POST(req: NextRequest) {
     const { ticketId, pin, passData } = body;
 
     // Check PIN authorization
-    if (!verifyAdminPin(pin)) {
+    if (!verifySpecialPassPin(pin)) {
       return NextResponse.json(
-        { success: false, message: "Unauthorized. Valid Admin PIN required." },
+        { success: false, message: "Unauthorized. Valid Passcode required." },
         { status: 401 }
       );
     }

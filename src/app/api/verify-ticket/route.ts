@@ -19,10 +19,10 @@ export async function POST(req: NextRequest) {
 
     // Marshal & PIN resolution:
     // Check DEFAULT_MARSHALS or ADMIN_SCAN_PIN or Supabase gate_marshals table
-    let matchedMarshal = DEFAULT_MARSHALS.find((m) => m.pin === cleanPin);
-    const requiredAdminPin = process.env.ADMIN_SCAN_PIN || process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "6028";
+    let matchedMarshal = DEFAULT_MARSHALS.find((m) => Boolean(m.pin && m.pin === cleanPin));
+    const requiredAdminPin = process.env.ADMIN_SCAN_PIN || process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "";
 
-    if (!matchedMarshal && cleanPin === requiredAdminPin) {
+    if (!matchedMarshal && requiredAdminPin && cleanPin === requiredAdminPin) {
       matchedMarshal = {
         id: "admin",
         name: "Lead Supervisor",

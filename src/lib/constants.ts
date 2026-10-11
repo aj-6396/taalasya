@@ -87,10 +87,10 @@ export interface GateMarshal {
 }
 
 export const DEFAULT_MARSHALS: GateMarshal[] = [
-  { id: "marshal_1", name: "Marshal 1", pin: "4821", gate: "Gate A (Lane 1)" },
-  { id: "marshal_2", name: "Marshal 2", pin: "7395", gate: "Gate A (Lane 2)" },
-  { id: "marshal_3", name: "Marshal 3", pin: "2964", gate: "Gate B (Lane 1)" },
-  { id: "marshal_4", name: "Marshal 4", pin: "8153", gate: "Gate B (Lane 2)" },
-  { id: "admin", name: "Lead Supervisor", pin: process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || process.env.ADMIN_SCAN_PIN || "6028", gate: "All Gates (Supervisor)" },
+  { id: "marshal_1", name: "Marshal 1", pin: process.env.MARSHAL_1_PIN || "", gate: "Gate A (Lane 1)" },
+  { id: "marshal_2", name: "Marshal 2", pin: process.env.MARSHAL_2_PIN || "", gate: "Gate A (Lane 2)" },
+  { id: "marshal_3", name: "Marshal 3", pin: process.env.MARSHAL_3_PIN || "", gate: "Gate B (Lane 1)" },
+  { id: "marshal_4", name: "Marshal 4", pin: process.env.MARSHAL_4_PIN || "", gate: "Gate B (Lane 2)" },
+  { id: "admin", name: "Lead Supervisor", pin: process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || process.env.ADMIN_SCAN_PIN || "", gate: "All Gates (Supervisor)" },
 ];
 

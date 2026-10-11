@@ -9,9 +9,8 @@ function verifyAdminPin(pin: string): boolean {
   const cleanPin = String(pin || "").trim();
   const validAdminPin =
     process.env.ADMIN_SCAN_PIN ||
-    process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN ||
-    "6028";
-  return cleanPin === validAdminPin;
+    process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN;
+  return Boolean(validAdminPin && cleanPin === validAdminPin);
 }
 
 export async function GET(req: NextRequest) {
@@ -50,8 +49,19 @@ export async function GET(req: NextRequest) {
       console.warn("[Admin Export] Error fetching tickets:", err);
     }
 
-    // Filter out test / simulated tickets
-    const genuineTickets = rawTickets.filter((t) => !isTestTicket(t));
+    // Filter out test / simulated tickets AND special passes
+    const genuineTickets = rawTickets.filter((t) => {
+      if (isTestTicket(t)) return false;
+      const pId = String(t.paymentId || t.payment_id || "");
+      const tId = String(t.ticketId || t.ticket_id || "");
+      const pType = String(t.passType || t.pass_type || "");
+      const isSpecial =
+        pId.startsWith("SPECIAL_PASS:") ||
+        tId.startsWith("SP-") ||
+        Boolean(pType && pType !== "regular") ||
+        (Number(t.amount) === 0 && (pId.includes("PASS") || tId.startsWith("SP")));
+      return !isSpecial;
+    });
 
     // Filter if needed
     let filtered = genuineTickets.map((t, idx) => {
