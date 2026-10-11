@@ -101,43 +101,55 @@ export async function POST(req: NextRequest) {
         createdAt: nowIso,
       };
 
-      // Try inserting with passType if table has column
-      let insertResult: any = null;
-      try {
-        const resWithPassType = await supabase
-          .from("tickets")
-          .insert({
-            ...newTicketPayload,
-            passType: resolvedCategory,
-          })
-          .select()
-          .maybeSingle();
+      // Check if Supabase credentials are configured
+      const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+      const isDbConfigured = Boolean(
+        supabaseUrl &&
+        !supabaseUrl.includes("placeholder") &&
+        (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+      );
 
-        if (resWithPassType.error) {
-          // If error is about missing column "passType", retry without it
-          console.warn("[special-pass] Insert with passType note:", resWithPassType.error.message);
-          const resFallback = await supabase
+      let insertResult: any = null;
+      let isSavedToDb = false;
+      let dbWarningNote: string | null = null;
+
+      if (!isDbConfigured) {
+        dbWarningNote = "Supabase not connected. Please add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to .env.local.";
+        console.warn("[special-pass]", dbWarningNote);
+      } else {
+        try {
+          const resWithPassType = await supabase
             .from("tickets")
-            .insert(newTicketPayload)
+            .insert({
+              ...newTicketPayload,
+              passType: resolvedCategory,
+            })
             .select()
             .maybeSingle();
 
-          if (resFallback.error) {
-            throw resFallback.error;
+          if (resWithPassType.error) {
+            console.warn("[special-pass] Insert with passType note:", resWithPassType.error.message);
+            const resFallback = await supabase
+              .from("tickets")
+              .insert(newTicketPayload)
+              .select()
+              .maybeSingle();
+
+            if (resFallback.error) {
+              console.warn("[special-pass] Fallback insert warning:", resFallback.error.message);
+              dbWarningNote = `Database insert notice: ${resFallback.error.message}`;
+            } else {
+              insertResult = resFallback.data;
+              isSavedToDb = true;
+            }
+          } else {
+            insertResult = resWithPassType.data;
+            isSavedToDb = true;
           }
-          insertResult = resFallback.data;
-        } else {
-          insertResult = resWithPassType.data;
+        } catch (insertErr: any) {
+          console.warn("[special-pass] Network/Database insert warning:", insertErr);
+          dbWarningNote = `Database network error (${insertErr.message || "fetch failed"}). Pass generated in local mode.`;
         }
-      } catch (insertErr: any) {
-        console.error("[special-pass] Insert error:", insertErr);
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Failed to insert special pass into database: ${insertErr.message || "Unknown error"}`,
-          },
-          { status: 500 }
-        );
       }
 
       const createdTicket = {
@@ -155,8 +167,11 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: `Special Pass for ${name.trim()} (${cfg.label}) created successfully!`,
+        message: isSavedToDb
+          ? `Special Pass for ${name.trim()} (${cfg.label}) created and saved to database!`
+          : `Special Pass for ${name.trim()} (${cfg.label}) generated successfully! ${dbWarningNote ? `(${dbWarningNote})` : ""}`,
         ticket: createdTicket,
+        savedToDb: isSavedToDb,
       });
     }
 
@@ -165,23 +180,32 @@ export async function POST(req: NextRequest) {
     // =========================================================================
     // Fetch all tickets that match special pass criteria
     let rawTickets: any[] = [];
-    try {
-      const { data, error } = await supabase
-        .from("tickets")
-        .select("*")
-        .order("createdAt", { ascending: false });
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const isDbConfigured = Boolean(
+      supabaseUrl &&
+      !supabaseUrl.includes("placeholder") &&
+      (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+    );
 
-      if (error) {
-        const fallback = await supabase
+    if (isDbConfigured) {
+      try {
+        const { data, error } = await supabase
           .from("tickets")
           .select("*")
-          .order("created_at", { ascending: false });
-        rawTickets = fallback.data || [];
-      } else {
-        rawTickets = data || [];
+          .order("createdAt", { ascending: false });
+
+        if (error) {
+          const fallback = await supabase
+            .from("tickets")
+            .select("*")
+            .order("created_at", { ascending: false });
+          rawTickets = fallback.data || [];
+        } else {
+          rawTickets = data || [];
+        }
+      } catch (dbErr) {
+        console.warn("[special-pass] DB query warning:", dbErr);
       }
-    } catch (dbErr) {
-      console.warn("[special-pass] DB query warning:", dbErr);
     }
 
     // Filter only special passes

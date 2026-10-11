@@ -179,10 +179,11 @@ export default function SpecialPassManager({ adminPin }: SpecialPassManagerProps
         return;
       }
 
-      setFormSuccess(`Pass created successfully for ${name}! Downloading PDF...`);
+      setFormSuccess(data.message || `Pass created successfully for ${name}! Downloading PDF...`);
 
       // Trigger instant PDF download for this newly created pass
       if (data.ticket) {
+        setPasses((prev) => [data.ticket, ...prev.filter((p) => p.ticketId !== data.ticket.ticketId)]);
         await handleDownloadPdf(data.ticket);
       }
 
