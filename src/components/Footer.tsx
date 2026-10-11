@@ -73,6 +73,11 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <Link href="/success" className="text-pink-400 hover:text-pink-300 transition-colors font-medium">
+                  Download / Retrieve Pass
+                </Link>
+              </li>
+              <li>
                 <Link href="/terms" className="hover:text-white transition-colors">
                   Terms &amp; Conditions
                 </Link>

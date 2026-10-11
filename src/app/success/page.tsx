@@ -14,6 +14,8 @@ import {
   AlertTriangle,
   X,
   Loader2,
+  Search,
+  Ticket,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -39,6 +41,68 @@ function SuccessContent() {
   const [error, setError] = useState<string | null>(null);
   const [showPdfPrompt, setShowPdfPrompt] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [manualLookup, setManualLookup] = useState("");
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+
+  const triggerSuccessEffects = () => {
+    // Show PDF prompt modal shortly after load
+    setTimeout(() => {
+      setShowPdfPrompt(true);
+    }, 700);
+
+    // Fire celebratory confetti on mount
+    try {
+      const end = Date.now() + 2.5 * 1000;
+      const colors = ["#6366f1", "#a855f7", "#ec4899", "#10b981"];
+
+      (function frame() {
+        confetti({
+          particleCount: 3,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: colors,
+        });
+        confetti({
+          particleCount: 3,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: colors,
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      })();
+    } catch (e) {
+      console.warn("Confetti error:", e);
+    }
+  };
+
+  const handleManualLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = manualLookup.trim();
+    if (!clean) return;
+    setLookupLoading(true);
+    setLookupError(null);
+    try {
+      const res = await fetch(`/api/ticket/${encodeURIComponent(clean)}`);
+      const data = await res.json();
+      if (res.ok && data.ticket) {
+        setTicketData(data.ticket);
+        setError(null);
+        triggerSuccessEffects();
+      } else {
+        setLookupError(data.error || "No confirmed pass found for this reference. Please check your phone number or payment ID.");
+      }
+    } catch (err: any) {
+      setLookupError(err.message || "Failed to lookup pass.");
+    } finally {
+      setLookupLoading(false);
+    }
+  };
 
   useEffect(() => {
     const idToLookup = directTicketId || paramPaymentId || paramOrderId;
@@ -98,42 +162,6 @@ function SuccessContent() {
         }
       } finally {
         setLoading(false);
-      }
-    }
-
-    function triggerSuccessEffects() {
-      // Show PDF prompt modal shortly after load
-      setTimeout(() => {
-        setShowPdfPrompt(true);
-      }, 700);
-
-      // Fire celebratory confetti on mount
-      try {
-        const end = Date.now() + 2.5 * 1000;
-        const colors = ["#6366f1", "#a855f7", "#ec4899", "#10b981"];
-
-        (function frame() {
-          confetti({
-            particleCount: 3,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0 },
-            colors: colors,
-          });
-          confetti({
-            particleCount: 3,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1 },
-            colors: colors,
-          });
-
-          if (Date.now() < end) {
-            requestAnimationFrame(frame);
-          }
-        })();
-      } catch (e) {
-        console.warn("Confetti error:", e);
       }
     }
 
@@ -291,23 +319,50 @@ function SuccessContent() {
 
   if (error || !ticketData) {
     return (
-      <div className="max-w-md mx-auto px-4 py-24 text-center space-y-6">
-        <div className="w-16 h-16 rounded-full bg-rose-500/20 text-rose-400 mx-auto flex items-center justify-center border border-rose-500/30">
-          <AlertTriangle className="w-8 h-8" />
+      <div className="max-w-md mx-auto px-4 py-20 text-center space-y-6">
+        <div className="w-16 h-16 rounded-full bg-pink-500/20 text-pink-400 mx-auto flex items-center justify-center border border-pink-500/30">
+          <Ticket className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-black text-white">Payment Verification Required</h2>
+          <h2 className="text-2xl font-black text-white">Find &amp; Download Your Pass</h2>
           <p className="text-xs text-slate-400">
-            {error || "Only confirmed and verified Razorpay payments generate an official QR admission ticket."}
+            Already registered? Enter your 10-digit Phone Number, Email, Ticket ID, or Razorpay Payment ID to retrieve and download your official pass.
           </p>
         </div>
-        <Link
-          href="/#register"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Go to Booking &amp; Registration</span>
-        </Link>
+
+        {/* Interactive Lookup Form */}
+        <form onSubmit={handleManualLookup} className="space-y-3 max-w-sm mx-auto">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Phone / Ticket ID / Payment ID..."
+              value={manualLookup}
+              onChange={(e) => setManualLookup(e.target.value)}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-pink-500"
+            />
+            <button
+              type="submit"
+              disabled={lookupLoading}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold text-xs hover:opacity-95 disabled:opacity-50 transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+            >
+              {lookupLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+              <span>Find</span>
+            </button>
+          </div>
+          {lookupError && (
+            <p className="text-xs text-rose-400 font-medium text-left">{lookupError}</p>
+          )}
+        </form>
+
+        <div className="pt-4 border-t border-slate-800/80 flex justify-center">
+          <Link
+            href="/#register"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Go to Booking &amp; Registration</span>
+          </Link>
+        </div>
       </div>
     );
   }

@@ -449,19 +449,20 @@ export default function AdminPage() {
                       <th className="py-3 px-3.5">Entry Status</th>
                       <th className="py-3 px-3.5">Scanned Info</th>
                       <th className="py-3 px-3.5 text-center">ID Card</th>
+                      <th className="py-3 px-3.5 text-center">Pass PDF</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 text-slate-300">
                     {loadingData ? (
                       <tr>
-                        <td colSpan={8} className="py-12 text-center text-slate-400">
+                        <td colSpan={9} className="py-12 text-center text-slate-400">
                           <Loader2 className="w-6 h-6 animate-spin text-pink-400 mx-auto mb-2" />
                           <span>Loading Supabase records...</span>
                         </td>
                       </tr>
                     ) : filteredTickets.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="py-12 text-center text-slate-500">
+                        <td colSpan={9} className="py-12 text-center text-slate-500">
                           No attendee records matching your search/filter criteria.
                         </td>
                       </tr>
@@ -537,6 +538,30 @@ export default function AdminPage() {
                               ) : (
                                 <span className="text-[11px] text-slate-600">-</span>
                               )}
+                            </td>
+                            <td className="py-3 px-3.5 text-center">
+                              <div className="flex items-center justify-center gap-1.5">
+                                <a
+                                  href={`/api/download-tickets?ticket_id=${encodeURIComponent(t.ticketId)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  download
+                                  className="px-2 py-1 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 border border-pink-500/30 transition-all font-semibold flex items-center gap-1 cursor-pointer text-[11px]"
+                                  title="Download Official Pass PDF"
+                                >
+                                  <Download className="w-3 h-3" />
+                                  <span>PDF</span>
+                                </a>
+                                <a
+                                  href={`/success?ticket_id=${encodeURIComponent(t.ticketId)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="p-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 transition-all cursor-pointer"
+                                  title="Open Pass View"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </a>
+                              </div>
                             </td>
                           </tr>
                         );

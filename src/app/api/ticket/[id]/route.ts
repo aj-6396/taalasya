@@ -15,11 +15,21 @@ export async function GET(
     try {
       const supabase = getAdminSupabase();
       const candidateIds = normalizeTicketLookup(id);
-      const orClauses = [
+      const cleanPhone = id.replace(/[^0-9]/g, "").slice(-10);
+      const clauses = [
         ...candidateIds.map((cid) => `ticketId.eq.${cid}`),
         `paymentId.eq.${id}`,
         `orderId.eq.${id}`,
-      ].join(",");
+      ];
+
+      if (cleanPhone.length === 10) {
+        clauses.push(`phone.ilike.%${cleanPhone}%`);
+      }
+      if (id.includes("@")) {
+        clauses.push(`email.ilike.${id.trim()}`);
+      }
+
+      const orClauses = clauses.join(",");
 
       const { data: ticket, error } = await supabase
         .from("tickets")
