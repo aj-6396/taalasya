@@ -13,8 +13,7 @@ function verifySpecialPassPin(pin?: string | null): boolean {
   const cleanPin = String(pin || "").trim();
   const validSpecialPin =
     process.env.SPECIAL_PASS_PIN ||
-    process.env.NEXT_PUBLIC_SPECIAL_PASS_PIN ||
-    "6396";
+    process.env.NEXT_PUBLIC_SPECIAL_PASS_PIN;
   const validAdminPin =
     process.env.ADMIN_SCAN_PIN ||
     process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN;

@@ -17,8 +17,7 @@ function verifySpecialPassPin(pin?: string | null): boolean {
   const cleanPin = String(pin || "").trim();
   const validSpecialPin =
     process.env.SPECIAL_PASS_PIN ||
-    process.env.NEXT_PUBLIC_SPECIAL_PASS_PIN ||
-    "6396";
+    process.env.NEXT_PUBLIC_SPECIAL_PASS_PIN;
   const validAdminPin =
     process.env.ADMIN_SCAN_PIN ||
     process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN;
@@ -168,12 +167,12 @@ export async function POST(req: NextRequest) {
 
       doc
         .fillColor("#FFFFFF")
-        .fontSize(10.5)
+        .fontSize(11)
         .font("Helvetica-Bold")
-        .text("★   OFFICIAL SPECIAL ACCESS PASS   ★", 36, ribbonY + 9, {
+        .text("OFFICIAL SPECIAL ACCESS PASS", 36, ribbonY + 9, {
           align: "center",
           width: 523.28,
-          characterSpacing: 1.5,
+          characterSpacing: 2,
         });
 
       // 4. Header Box (Deep Dark slate box with category ambient glow)
