@@ -26,9 +26,12 @@ import {
   ChevronDown,
   Loader2,
   AlertCircle,
+  Award,
+  Sparkles,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { isTestTicket } from "@/lib/isTestTicket";
+import SpecialPassManager from "@/components/admin/SpecialPassManager";
 
 type TicketRecord = {
   ticketId: string;
@@ -72,6 +75,7 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "scanned" | "pending">("all");
   const [previewIdUrl, setPreviewIdUrl] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"bookings" | "special_pass">("bookings");
 
   // Restore authenticated session
   useEffect(() => {
@@ -296,19 +300,52 @@ export default function AdminPage() {
         ) : (
           /* AUTHENTICATED ADMIN DASHBOARD */
           <div className="space-y-6">
-            {/* Page Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800/80">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2.5">
-                  <span>Supabase Registrations</span>
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 font-semibold">
-                    Live Data
-                  </span>
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-                  Export complete attendee records, verify gate check-in status, and monitor ticket sales.
-                </p>
-              </div>
+            {/* Top Section Tab Navigation */}
+            <div className="flex flex-wrap items-center gap-2.5 p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800">
+              <button
+                type="button"
+                onClick={() => setActiveTab("bookings")}
+                className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                  activeTab === "bookings"
+                    ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg shadow-pink-500/20"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                }`}
+              >
+                <Ticket className="w-4 h-4" />
+                <span>General Registrations ({tickets.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("special_pass")}
+                className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                  activeTab === "special_pass"
+                    ? "bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 text-white shadow-lg shadow-rose-500/25"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                }`}
+              >
+                <Award className="w-4 h-4 text-amber-400" />
+                <span>★ Special Passes (Volunteers / VIPs)</span>
+              </button>
+            </div>
+
+            {activeTab === "special_pass" ? (
+              <SpecialPassManager adminPin={adminPin} />
+            ) : (
+              <div className="space-y-6">
+                {/* Page Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800/80">
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2.5">
+                      <span>Supabase Registrations</span>
+                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 font-semibold">
+                        Live Data
+                      </span>
+                    </h1>
+                    <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+                      Export complete attendee records, verify gate check-in status, and monitor ticket sales.
+                    </p>
+                  </div>
 
               {/* Excel & CSV Export Buttons */}
               <div className="flex flex-wrap items-center gap-2.5">
@@ -556,6 +593,8 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+      </div>
+    )}
       </main>
 
       {/* Lightbox Modal for ID Card Screenshot */}

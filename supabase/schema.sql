@@ -85,9 +85,10 @@ FOR SELECT TO anon, authenticated USING (bucket_id = 'id-cards');
 CREATE POLICY "Allow service role upload id-cards" ON storage.objects
 FOR ALL TO service_role USING (bucket_id = 'id-cards') WITH CHECK (bucket_id = 'id-cards');
 
--- Ensure columns for marshal tracking exist in tickets table
+-- Ensure columns for marshal tracking and special passes exist in tickets table
 ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS "scannedBy" TEXT;
 ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS "marshalPin" TEXT;
+ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS "passType" TEXT;
 
 -- 7. Gate Marshals Table (Track all 4 gate volunteers + supervisors)
 CREATE TABLE IF NOT EXISTS public.gate_marshals (

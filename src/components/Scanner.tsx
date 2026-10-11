@@ -25,6 +25,7 @@ import {
   FileText,
   UserCheck,
   GraduationCap,
+  Award,
 } from "lucide-react";
 import { playSuccessChime, playWarningBuzzer, playErrorBeep } from "@/lib/audio";
 import { Ticket } from "@/types";
@@ -767,6 +768,19 @@ export default function Scanner() {
                   Ticket Valid • Status Updated to &apos;Used&apos;
                 </p>
               </div>
+
+              {(scanResult.ticket as any)?.isSpecialPass && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-wide border shadow-lg animate-pulse"
+                  style={{
+                    backgroundColor: (scanResult.ticket as any)?.badgeBgHex || "#fef3c7",
+                    color: (scanResult.ticket as any)?.badgeTextHex || "#92400e",
+                    borderColor: (scanResult.ticket as any)?.accentHex || "#f59e0b",
+                  }}
+                >
+                  <Award className="w-3.5 h-3.5 shrink-0" />
+                  <span>★ {(scanResult.ticket as any)?.badgeTitle || "SPECIAL PASS"} ★</span>
+                </div>
+              )}
 
               {scanResult.ticket && (
                 <div className="mt-3 p-3.5 rounded-2xl bg-emerald-900/40 border border-emerald-500/30 text-left text-xs space-y-2 max-w-xs mx-auto text-emerald-100">

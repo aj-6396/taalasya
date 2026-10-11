@@ -1,0 +1,248 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getAdminSupabase } from "@/lib/supabase/admin";
+import {
+  SPECIAL_PASS_CATEGORIES,
+  SpecialPassCategory,
+  generateSpecialTicketId,
+  getSpecialPassCategory,
+} from "@/lib/specialPass";
+
+export const dynamic = "force-dynamic";
+
+function verifyAdminPin(pin?: string | null): boolean {
+  const cleanPin = String(pin || "").trim();
+  const validAdminPin =
+    process.env.ADMIN_SCAN_PIN ||
+    process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN ||
+    "6028";
+  return cleanPin === validAdminPin;
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json().catch(() => ({}));
+    const { pin, action = "list" } = body;
+
+    if (!verifyAdminPin(pin)) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized. Valid Admin PIN required." },
+        { status: 401 }
+      );
+    }
+
+    const supabase = getAdminSupabase();
+
+    // =========================================================================
+    // 1. ACTION: CREATE SPECIAL PASS
+    // =========================================================================
+    if (action === "create") {
+      const {
+        name,
+        category = "volunteer",
+        designation = "",
+        college = "Banaras Hindu University (BHU)",
+        email = "",
+        phone = "",
+        customTicketId = "",
+      } = body;
+
+      if (!name || typeof name !== "string" || !name.trim()) {
+        return NextResponse.json(
+          { success: false, message: "Recipient name is required." },
+          { status: 400 }
+        );
+      }
+
+      const resolvedCategory: SpecialPassCategory =
+        getSpecialPassCategory(category) || "volunteer";
+      const cfg = SPECIAL_PASS_CATEGORIES[resolvedCategory];
+
+      const cleanTicketId =
+        customTicketId && typeof customTicketId === "string" && customTicketId.trim()
+          ? customTicketId.trim().toUpperCase()
+          : generateSpecialTicketId(resolvedCategory);
+
+      const resolvedDesignation =
+        designation.trim() ||
+        (resolvedCategory === "volunteer"
+          ? "Event Volunteer"
+          : resolvedCategory === "special_guest"
+          ? "Special Guest"
+          : resolvedCategory === "core_committee"
+          ? "Core Committee Member"
+          : "Organizer");
+
+      const nowIso = new Date().toISOString();
+      const paymentIdentifier = `SPECIAL_PASS:${resolvedCategory}`;
+      const orderIdentifier = `SP_${cfg.shortPrefix}_${Date.now()}`;
+
+      // Insert object - include both camelCase and fallback fields
+      const newTicketPayload: Record<string, any> = {
+        ticketId: cleanTicketId,
+        name: name.trim(),
+        email: email.trim() || `${cleanTicketId.toLowerCase()}@specialpass.taalasya`,
+        phone: phone.trim() || "N/A",
+        college: college.trim() || "Banaras Hindu University (BHU)",
+        paymentId: paymentIdentifier,
+        orderId: orderIdentifier,
+        amount: 0,
+        status: "Valid",
+        eventName: "JHOOM '26 — Dance Fest cum Dandiya Night",
+        createdAt: nowIso,
+      };
+
+      // Try inserting with passType if table has column
+      let insertResult: any = null;
+      try {
+        const resWithPassType = await supabase
+          .from("tickets")
+          .insert({
+            ...newTicketPayload,
+            passType: resolvedCategory,
+          })
+          .select()
+          .maybeSingle();
+
+        if (resWithPassType.error) {
+          // If error is about missing column "passType", retry without it
+          console.warn("[special-pass] Insert with passType note:", resWithPassType.error.message);
+          const resFallback = await supabase
+            .from("tickets")
+            .insert(newTicketPayload)
+            .select()
+            .maybeSingle();
+
+          if (resFallback.error) {
+            throw resFallback.error;
+          }
+          insertResult = resFallback.data;
+        } else {
+          insertResult = resWithPassType.data;
+        }
+      } catch (insertErr: any) {
+        console.error("[special-pass] Insert error:", insertErr);
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Failed to insert special pass into database: ${insertErr.message || "Unknown error"}`,
+          },
+          { status: 500 }
+        );
+      }
+
+      const createdTicket = {
+        ...(insertResult || newTicketPayload),
+        ticketId: cleanTicketId,
+        name: name.trim(),
+        category: resolvedCategory,
+        designation: resolvedDesignation,
+        college: college.trim() || "Banaras Hindu University (BHU)",
+        email: email.trim(),
+        phone: phone.trim(),
+        status: "Valid",
+        createdAt: nowIso,
+      };
+
+      return NextResponse.json({
+        success: true,
+        message: `Special Pass for ${name.trim()} (${cfg.label}) created successfully!`,
+        ticket: createdTicket,
+      });
+    }
+
+    // =========================================================================
+    // 2. ACTION: LIST SPECIAL PASSES
+    // =========================================================================
+    // Fetch all tickets that match special pass criteria
+    let rawTickets: any[] = [];
+    try {
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("*")
+        .order("createdAt", { ascending: false });
+
+      if (error) {
+        const fallback = await supabase
+          .from("tickets")
+          .select("*")
+          .order("created_at", { ascending: false });
+        rawTickets = fallback.data || [];
+      } else {
+        rawTickets = data || [];
+      }
+    } catch (dbErr) {
+      console.warn("[special-pass] DB query warning:", dbErr);
+    }
+
+    // Filter only special passes
+    const specialPasses = rawTickets
+      .filter((t) => {
+        const pId = String(t.paymentId || t.payment_id || "");
+        const tId = String(t.ticketId || t.ticket_id || "");
+        const pType = String(t.passType || t.pass_type || "");
+        const amt = Number(t.amount);
+
+        return (
+          pId.startsWith("SPECIAL_PASS:") ||
+          tId.startsWith("SP-") ||
+          Boolean(pType && pType !== "regular") ||
+          (amt === 0 && (pId.includes("PASS") || pId.includes("COMP") || tId.startsWith("SP")))
+        );
+      })
+      .map((t) => {
+        const pId = String(t.paymentId || t.payment_id || "");
+        const rawCategory =
+          t.passType ||
+          t.pass_type ||
+          (pId.startsWith("SPECIAL_PASS:") ? pId.replace("SPECIAL_PASS:", "") : null) ||
+          "volunteer";
+
+        const category = getSpecialPassCategory(rawCategory) || "volunteer";
+        const cfg = SPECIAL_PASS_CATEGORIES[category];
+
+        const isUsed =
+          t.status === "Used" ||
+          Boolean(t.usedAt || t.used_at || t.scannedBy || t.scanned_by);
+
+        return {
+          ticketId: t.ticketId || t.ticket_id || "",
+          name: t.name || "Special Guest",
+          category,
+          categoryLabel: cfg.label,
+          badgeTitle: cfg.badgeTitle,
+          accentHex: cfg.accentHex,
+          email: t.email || "",
+          phone: t.phone || "",
+          college: t.college || "Banaras Hindu University (BHU)",
+          status: isUsed ? "Used" : (t.status || "Valid"),
+          usedAt: t.usedAt || t.used_at || null,
+          scannedBy: t.scannedBy || t.scanned_by || null,
+          createdAt: t.createdAt || t.created_at || null,
+          paymentId: pId,
+        };
+      });
+
+    // Calculate category breakdown stats
+    const stats = {
+      total: specialPasses.length,
+      scanned: specialPasses.filter((p) => p.status === "Used").length,
+      pending: specialPasses.filter((p) => p.status !== "Used").length,
+      volunteers: specialPasses.filter((p) => p.category === "volunteer").length,
+      specialGuests: specialPasses.filter((p) => p.category === "special_guest").length,
+      coreCommittee: specialPasses.filter((p) => p.category === "core_committee").length,
+      organizers: specialPasses.filter((p) => p.category === "organizer").length,
+    };
+
+    return NextResponse.json({
+      success: true,
+      stats,
+      passes: specialPasses,
+    });
+  } catch (err: any) {
+    console.error("[special-pass] Handler error:", err);
+    return NextResponse.json(
+      { success: false, message: err.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

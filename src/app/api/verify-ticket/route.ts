@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { normalizeTicketLookup } from "@/lib/ticketId";
 import { DEFAULT_MARSHALS } from "@/lib/constants";
+import { getSpecialPassCategory, SPECIAL_PASS_CATEGORIES } from "@/lib/specialPass";
 
 export async function POST(req: NextRequest) {
   try {
@@ -219,6 +220,34 @@ export async function POST(req: NextRequest) {
           // ignore if table not yet created
         }
 
+        // Enrich ticket data with Special Pass metadata if applicable
+        const pId = String(ticketData.paymentId || ticketData.payment_id || "");
+        const tId = String(targetId || "");
+        const pType = String(ticketData.passType || ticketData.pass_type || "");
+
+        const isSpecial =
+          pId.startsWith("SPECIAL_PASS:") ||
+          tId.startsWith("SP-") ||
+          Boolean(pType && pType !== "regular") ||
+          (Number(ticketData.amount) === 0 && (pId.includes("PASS") || tId.startsWith("SP")));
+
+        let specialInfo: any = null;
+        if (isSpecial) {
+          const rawCat =
+            pType ||
+            (pId.startsWith("SPECIAL_PASS:") ? pId.replace("SPECIAL_PASS:", "") : null) ||
+            (tId.startsWith("SP-VOL") ? "volunteer" : tId.startsWith("SP-GST") ? "special_guest" : tId.startsWith("SP-COR") ? "core_committee" : "volunteer");
+          const resolved = getSpecialPassCategory(rawCat) || "volunteer";
+          const cfg = SPECIAL_PASS_CATEGORIES[resolved];
+          specialInfo = {
+            isSpecialPass: true,
+            category: resolved,
+            categoryLabel: cfg.label,
+            badgeTitle: cfg.badgeTitle,
+            accentHex: cfg.accentHex,
+          };
+        }
+
         const scannerNotice = previousScanner ? ` (Checked in by ${previousScanner})` : "";
 
         return NextResponse.json(
@@ -228,6 +257,7 @@ export async function POST(req: NextRequest) {
             message: `Already Scanned! Pass was redeemed${timeFormatted !== "Invalid Date" ? ` at ${timeFormatted}` : ""}${scannerNotice}.`,
             ticket: {
               ...ticketData,
+              ...(specialInfo || {}),
               status: "Used",
               usedAt: currentUsedAt,
               scannedBy: previousScanner,
@@ -274,13 +304,44 @@ export async function POST(req: NextRequest) {
         console.warn("[verify-ticket] scan_logs insert warning:", logErr);
       }
 
+      // Enrich approved entry ticket with Special Pass metadata if applicable
+      const pId = String(ticketData.paymentId || ticketData.payment_id || "");
+      const tId = String(targetId || "");
+      const pType = String(ticketData.passType || ticketData.pass_type || "");
+
+      const isSpecial =
+        pId.startsWith("SPECIAL_PASS:") ||
+        tId.startsWith("SP-") ||
+        Boolean(pType && pType !== "regular") ||
+        (Number(ticketData.amount) === 0 && (pId.includes("PASS") || tId.startsWith("SP")));
+
+      let specialInfo: any = null;
+      if (isSpecial) {
+        const rawCat =
+          pType ||
+          (pId.startsWith("SPECIAL_PASS:") ? pId.replace("SPECIAL_PASS:", "") : null) ||
+          (tId.startsWith("SP-VOL") ? "volunteer" : tId.startsWith("SP-GST") ? "special_guest" : tId.startsWith("SP-COR") ? "core_committee" : "volunteer");
+        const resolved = getSpecialPassCategory(rawCat) || "volunteer";
+        const cfg = SPECIAL_PASS_CATEGORIES[resolved];
+        specialInfo = {
+          isSpecialPass: true,
+          category: resolved,
+          categoryLabel: cfg.label,
+          badgeTitle: cfg.badgeTitle,
+          accentHex: cfg.accentHex,
+        };
+      }
+
       return NextResponse.json(
         {
           success: true,
           status: "Valid",
-          message: `Entry Approved! Verified by ${activeMarshalName}.`,
+          message: isSpecial
+            ? `★ SPECIAL PASS APPROVED! (${specialInfo?.categoryLabel}) • Verified by ${activeMarshalName}.`
+            : `Entry Approved! Verified by ${activeMarshalName}.`,
           ticket: {
             ...ticketData,
+            ...(specialInfo || {}),
             status: "Used",
             usedAt: nowIso,
             scannedBy: activeMarshalName,
