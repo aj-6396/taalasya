@@ -26,10 +26,18 @@ import {
   UserCheck,
   GraduationCap,
   Award,
+  Wifi,
+  WifiOff,
+  CloudDownload,
+  CloudUpload,
+  Database,
+  Check,
+  Loader2,
 } from "lucide-react";
 import { playSuccessChime, playWarningBuzzer, playErrorBeep } from "@/lib/audio";
 import { Ticket } from "@/types";
 import { DEFAULT_MARSHALS, GateMarshal } from "@/lib/constants";
+import { normalizeTicketLookup } from "@/lib/ticketId";
 
 function normalizeIdCardUrl(url?: string | null): string | null {
   if (!url || typeof url !== "string") return null;
@@ -124,6 +132,15 @@ export default function Scanner() {
   const [manualTicketId, setManualTicketId] = useState("");
   const [showManualInput, setShowManualInput] = useState(false);
 
+  // Offline Mode & Auto-Sync Engine
+  const [isOnline, setIsOnline] = useState(true);
+  const [offlineCacheCount, setOfflineCacheCount] = useState<number>(0);
+  const [offlineCacheTime, setOfflineCacheTime] = useState<string>("");
+  const [isDownloadingCache, setIsDownloadingCache] = useState(false);
+  const [pendingSyncCount, setPendingSyncCount] = useState<number>(0);
+  const [isSyncingPending, setIsSyncingPending] = useState(false);
+  const [syncToastMessage, setSyncToastMessage] = useState<string | null>(null);
+
   // Persistent stats initialized from database
   const [stats, setStats] = useState({
     validCount: 0,
@@ -184,6 +201,154 @@ export default function Scanner() {
       fetchLiveStats();
     }
   }, []);
+
+  // Listen for online/offline events & initialize offline cache stats
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    setIsOnline(navigator.onLine);
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      autoSyncPendingScans();
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    // Read stored offline cache info
+    try {
+      const rawCache = localStorage.getItem("taalsya_offline_tickets_cache");
+      if (rawCache) {
+        const parsed = JSON.parse(rawCache);
+        if (Array.isArray(parsed)) setOfflineCacheCount(parsed.length);
+      }
+      const savedTime = localStorage.getItem("taalsya_offline_cache_time");
+      if (savedTime) setOfflineCacheTime(savedTime);
+
+      const rawPending = localStorage.getItem("taalsya_offline_pending_scans");
+      if (rawPending) {
+        const parsedPending = JSON.parse(rawPending);
+        if (Array.isArray(parsedPending)) setPendingSyncCount(parsedPending.length);
+      }
+    } catch {
+      // ignore
+    }
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  // Download all verified tickets into browser local storage for 100% offline scanning
+  const downloadOfflineCache = async (showNotification = true) => {
+    const pinToUse = currentMarshal?.pin || localStorage.getItem("taalsya_marshal_pin") || "";
+    if (!pinToUse) return;
+
+    setIsDownloadingCache(true);
+    try {
+      const res = await fetch("/api/scanner-cache", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: pinToUse }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && Array.isArray(data.tickets)) {
+        localStorage.setItem("taalsya_offline_tickets_cache", JSON.stringify(data.tickets));
+        const nowStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        localStorage.setItem("taalsya_offline_cache_time", nowStr);
+        setOfflineCacheCount(data.tickets.length);
+        setOfflineCacheTime(nowStr);
+
+        if (showNotification) {
+          setSyncToastMessage(`Pre-cached ${data.tickets.length} passes for 100% offline scanning!`);
+          setTimeout(() => setSyncToastMessage(null), 4000);
+        }
+      } else if (showNotification) {
+        alert(data.message || "Failed to download offline pass cache.");
+      }
+    } catch (err) {
+      console.warn("Offline cache download notice:", err);
+    } finally {
+      setIsDownloadingCache(false);
+    }
+  };
+
+  // Push pending offline scans to Supabase cloud
+  const autoSyncPendingScans = async () => {
+    if (isSyncingPending) return;
+    let pendingScans: any[] = [];
+    try {
+      const raw = localStorage.getItem("taalsya_offline_pending_scans");
+      if (raw) pendingScans = JSON.parse(raw);
+    } catch {
+      return;
+    }
+
+    if (!Array.isArray(pendingScans) || pendingScans.length === 0) {
+      setPendingSyncCount(0);
+      return;
+    }
+
+    setIsSyncingPending(true);
+    try {
+      const pinToUse = currentMarshal?.pin || localStorage.getItem("taalsya_marshal_pin") || "";
+      const nameToUse = currentMarshal?.name || localStorage.getItem("taalsya_marshal_name") || "Gate Marshal";
+
+      const res = await fetch("/api/verify-ticket/batch-sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pin: pinToUse,
+          marshalName: nameToUse,
+          scans: pendingScans,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        localStorage.setItem("taalsya_offline_pending_scans", JSON.stringify([]));
+        setPendingSyncCount(0);
+        setSyncToastMessage(`Synced ${data.synced ?? pendingScans.length} offline scans with cloud!`);
+        setTimeout(() => setSyncToastMessage(null), 5000);
+        fetchLiveStats();
+      }
+    } catch (err) {
+      console.warn("Auto-sync pending failed (network offline):", err);
+    } finally {
+      setIsSyncingPending(false);
+    }
+  };
+
+  // Auto-download offline cache on unlock & periodically sync pending scans
+  useEffect(() => {
+    if (!isUnlocked) return;
+
+    // Check if cache missing; auto-download once
+    try {
+      const rawCache = localStorage.getItem("taalsya_offline_tickets_cache");
+      if (!rawCache) {
+        downloadOfflineCache(false);
+      }
+    } catch {
+      // ignore
+    }
+
+    // Auto-sync pending scans every 25s
+    const syncInterval = setInterval(() => {
+      if (navigator.onLine) {
+        autoSyncPendingScans();
+      }
+    }, 25000);
+
+    return () => clearInterval(syncInterval);
+  }, [isUnlocked, currentMarshal]);
 
   // Poll database stats every 15s so all marshals see live progress across all 4 gates
   useEffect(() => {
@@ -397,20 +562,158 @@ export default function Scanner() {
     await verifyTicketId(ticketId);
   };
 
+  // Mark ticket as Used inside local cache map
+  const markLocalCacheUsed = (ticketId: string) => {
+    try {
+      const raw = localStorage.getItem("taalsya_offline_tickets_cache");
+      if (!raw) return;
+      const list = JSON.parse(raw);
+      if (!Array.isArray(list)) return;
+      const lookup = normalizeTicketLookup(ticketId).map((c) => c.toLowerCase());
+      const updated = list.map((t) => {
+        const tId = String(t.ticketId || "").toLowerCase();
+        return lookup.includes(tId) ? { ...t, status: "Used" } : t;
+      });
+      localStorage.setItem("taalsya_offline_tickets_cache", JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
+  };
+
+  // 100% Offline verification against device local cache
+  const verifyOfflineTicket = (ticketId: string) => {
+    const cleanId = ticketId.trim();
+    const lookupCandidates = normalizeTicketLookup(cleanId).map((c) => c.toLowerCase());
+
+    let localCache: any[] = [];
+    try {
+      const rawCache = localStorage.getItem("taalsya_offline_tickets_cache");
+      if (rawCache) localCache = JSON.parse(rawCache);
+    } catch {
+      localCache = [];
+    }
+
+    let pendingScans: any[] = [];
+    try {
+      const rawPending = localStorage.getItem("taalsya_offline_pending_scans");
+      if (rawPending) pendingScans = JSON.parse(rawPending);
+    } catch {
+      pendingScans = [];
+    }
+
+    // 1. Check if already scanned in offline pending queue on this terminal
+    const alreadyInPending = pendingScans.find((s) => {
+      const sId = String(s.ticketId || "").toLowerCase();
+      return lookupCandidates.includes(sId);
+    });
+
+    if (alreadyInPending) {
+      if (soundEnabled) playWarningBuzzer();
+      setStats((prev) => ({ ...prev, alreadyUsedCount: prev.alreadyUsedCount + 1 }));
+      setScanResult({
+        status: "Used",
+        message: `[OFFLINE MODE] Already Scanned on this terminal at ${new Date(alreadyInPending.scannedAt).toLocaleTimeString()}!`,
+        timestamp: new Date().toLocaleTimeString(),
+      });
+      return;
+    }
+
+    // 2. Find ticket in local offline cache
+    const matched = localCache.find((t) => {
+      const tId = String(t.ticketId || "").toLowerCase();
+      return lookupCandidates.includes(tId);
+    });
+
+    if (!matched) {
+      if (soundEnabled) playErrorBeep();
+      setStats((prev) => ({ ...prev, invalidCount: prev.invalidCount + 1 }));
+      setScanResult({
+        status: "Invalid",
+        message: `[OFFLINE MODE] Pass '${cleanId}' not found in cached pass list.`,
+        timestamp: new Date().toLocaleTimeString(),
+      });
+      return;
+    }
+
+    // 3. Check if cached ticket was already used
+    if (matched.status === "Used") {
+      if (soundEnabled) playWarningBuzzer();
+      setStats((prev) => ({ ...prev, alreadyUsedCount: prev.alreadyUsedCount + 1 }));
+      setScanResult({
+        status: "Used",
+        message: `[OFFLINE MODE] Already Used! Pass was previously redeemed.`,
+        ticket: matched,
+        timestamp: new Date().toLocaleTimeString(),
+      });
+      return;
+    }
+
+    // 4. Approve Entry in Offline Mode!
+    if (soundEnabled) playSuccessChime();
+    setStats((prev) => ({ ...prev, validCount: prev.validCount + 1 }));
+
+    const nowIso = new Date().toISOString();
+    const updatedPending = [
+      ...pendingScans,
+      {
+        ticketId: matched.ticketId,
+        scannedAt: nowIso,
+        marshalName: currentMarshal.name,
+      },
+    ];
+
+    try {
+      localStorage.setItem("taalsya_offline_pending_scans", JSON.stringify(updatedPending));
+      setPendingSyncCount(updatedPending.length);
+
+      const updatedCache = localCache.map((t) =>
+        t.ticketId === matched.ticketId ? { ...t, status: "Used" } : t
+      );
+      localStorage.setItem("taalsya_offline_tickets_cache", JSON.stringify(updatedCache));
+    } catch (saveErr) {
+      console.warn("Storage save note:", saveErr);
+    }
+
+    setScanResult({
+      status: "Valid",
+      message: `[OFFLINE MODE] Entry Approved! Stored on terminal (Auto-syncs to cloud).`,
+      ticket: {
+        ...matched,
+        status: "Used",
+        usedAt: nowIso,
+        scannedBy: currentMarshal.name,
+      },
+      timestamp: new Date().toLocaleTimeString(),
+    });
+  };
+
   const verifyTicketId = async (ticketId: string) => {
     setIsProcessing(true);
     setIdImageError(false);
 
+    // If device is explicitly offline, verify immediately against offline cache
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      verifyOfflineTicket(ticketId);
+      setIsProcessing(false);
+      return;
+    }
+
     try {
+      // 4-second timeout: if connection stalls or internet is jammed, auto-fallback to offline cache!
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+
       const response = await fetch("/api/verify-ticket", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           ticketId,
           pin: currentMarshal?.pin || "",
           marshalName: currentMarshal?.name || "Gate Marshal",
         }),
       });
+      clearTimeout(timeoutId);
 
       const data = await response.json();
       const status = data.status as "Valid" | "Used" | "Invalid" | "Error";
@@ -427,6 +730,7 @@ export default function Scanner() {
           ticket: data.ticket,
           timestamp: new Date().toLocaleTimeString(),
         });
+        markLocalCacheUsed(data.ticket?.ticketId || ticketId);
       } else if (status === "Used") {
         if (soundEnabled) playWarningBuzzer();
         setStats((prev) => ({
@@ -439,6 +743,7 @@ export default function Scanner() {
           ticket: data.ticket,
           timestamp: new Date().toLocaleTimeString(),
         });
+        markLocalCacheUsed(data.ticket?.ticketId || ticketId);
       } else {
         if (soundEnabled) playErrorBeep();
         setStats((prev) => ({ ...prev, invalidCount: prev.invalidCount + 1 }));
@@ -449,12 +754,9 @@ export default function Scanner() {
         });
       }
     } catch (err: any) {
-      if (soundEnabled) playErrorBeep();
-      setScanResult({
-        status: "Error",
-        message: err.message || "Network error communicating with gate server.",
-        timestamp: new Date().toLocaleTimeString(),
-      });
+      // Network drop, connection timeout, or no internet! Seamless fallback to offline cache!
+      console.warn("Server communication failed; using offline cache fallback:", err);
+      verifyOfflineTicket(ticketId);
     } finally {
       setIsProcessing(false);
     }
@@ -628,6 +930,89 @@ export default function Scanner() {
         </button>
       </div>
 
+      {/* Offline Mode & Cloud Sync Status Card */}
+      <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5 text-xs">
+        <div className="flex items-center justify-between gap-2">
+          {/* Network Indicator */}
+          <div className="flex items-center gap-1.5 font-bold">
+            {isOnline ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                <Wifi className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Cloud Online</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 animate-pulse">
+                <WifiOff className="w-3.5 h-3.5 text-amber-400" />
+                <span>Offline Mode (Active)</span>
+              </span>
+            )}
+          </div>
+
+          {/* Sync / Download Cache Action */}
+          <button
+            type="button"
+            onClick={() => downloadOfflineCache(true)}
+            disabled={isDownloadingCache}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] font-bold transition-all cursor-pointer disabled:opacity-50"
+            title="Download full attendee list to this device for scanning without internet"
+          >
+            {isDownloadingCache ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin text-pink-400" />
+                <span>Caching...</span>
+              </>
+            ) : (
+              <>
+                <CloudDownload className="w-3.5 h-3.5 text-indigo-400" />
+                <span>{offlineCacheCount > 0 ? "Update Cache" : "Pre-cache Passes"}</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Offline Cache Info Row */}
+        <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
+          <span className="flex items-center gap-1 text-slate-300">
+            <Database className="w-3 h-3 text-emerald-400" />
+            <span>
+              <strong>{offlineCacheCount}</strong> passes cached locally
+            </span>
+          </span>
+          <span className="text-slate-500 font-mono">
+            {offlineCacheTime ? `Synced at ${offlineCacheTime}` : "No offline cache"}
+          </span>
+        </div>
+
+        {/* Pending Sync Alert Bar (when offline scans have happened) */}
+        {pendingSyncCount > 0 && (
+          <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-2 text-[11px] text-amber-200 animate-in fade-in">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <CloudUpload className="w-4 h-4 text-amber-400 shrink-0 animate-bounce" />
+              <span className="truncate">
+                <strong>{pendingSyncCount}</strong> offline scan(s) stored on device
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={autoSyncPendingScans}
+              disabled={isSyncingPending}
+              className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-black text-[10px] shrink-0 cursor-pointer disabled:opacity-50 transition-all"
+            >
+              {isSyncingPending ? "Syncing..." : "Sync Cloud"}
+            </button>
+          </div>
+        )}
+
+        {/* Notification Toast */}
+        {syncToastMessage && (
+          <div className="p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold flex items-center gap-1.5 animate-in fade-in">
+            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span>{syncToastMessage}</span>
+          </div>
+        )}
+      </div>
+
       {/* Top Header & Live Counter Bar */}
       <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-900 border border-slate-800">
         <div className="flex items-center gap-3">
@@ -767,9 +1152,18 @@ export default function Scanner() {
                   ENTRY APPROVED
                 </h3>
                 <p className="text-sm font-semibold text-emerald-300 mt-1">
-                  Ticket Valid • Status Updated to &apos;Used&apos;
+                  {scanResult.message.includes("OFFLINE")
+                    ? "Offline Validated • Saved on Device for Cloud Sync"
+                    : "Ticket Valid • Status Updated to 'Used'"}
                 </p>
               </div>
+
+              {scanResult.message.includes("OFFLINE") && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <Database className="w-3.5 h-3.5 text-amber-400" />
+                  <span>OFFLINE CACHE VERIFIED</span>
+                </div>
+              )}
 
               {(scanResult.ticket as any)?.isSpecialPass && (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-wide border shadow-lg animate-pulse"
