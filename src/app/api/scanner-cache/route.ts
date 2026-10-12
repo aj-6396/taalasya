@@ -22,7 +22,11 @@ export async function POST(req: NextRequest) {
     }
 
     const adminPin = process.env.ADMIN_SCAN_PIN || process.env.NEXT_PUBLIC_ADMIN_SCAN_PIN || "";
-    let isAuthorized = Boolean(adminPin && cleanPin === adminPin);
+    const specialPin = process.env.SPECIAL_PASS_PIN || process.env.NEXT_PUBLIC_SPECIAL_PASS_PIN || "";
+    let isAuthorized = Boolean(
+      (adminPin && cleanPin === adminPin) ||
+      (specialPin && cleanPin === specialPin)
+    );
 
     // Also check DEFAULT_MARSHALS
     if (!isAuthorized) {
