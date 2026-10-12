@@ -26,6 +26,10 @@ import {
   ChevronDown,
   Loader2,
   AlertCircle,
+  Scale,
+  Database,
+  AlertTriangle,
+  CheckCheck,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { isTestTicket } from "@/lib/isTestTicket";
@@ -72,6 +76,12 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "scanned" | "pending">("all");
   const [previewIdUrl, setPreviewIdUrl] = useState<string | null>(null);
+
+  // Razorpay Reconciliation State
+  const [reconciling, setReconciling] = useState(false);
+  const [reconcileResult, setReconcileResult] = useState<any>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [showReconcileModal, setShowReconcileModal] = useState(false);
 
   // Restore authenticated session
   useEffect(() => {
@@ -172,6 +182,61 @@ export default function AdminPage() {
       alert(err.message || "Could not download export file.");
     } finally {
       setExportingFormat(null);
+    }
+  };
+
+  const handleCheckReconciliation = async () => {
+    if (!adminPin) return;
+    setReconciling(true);
+    try {
+      const res = await fetch("/api/admin/reconcile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: adminPin, action: "preview" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setReconcileResult(data);
+        setShowReconcileModal(true);
+      } else {
+        alert(data.message || "Failed to check reconciliation.");
+      }
+    } catch {
+      alert("Error checking Razorpay reconciliation.");
+    } finally {
+      setReconciling(false);
+    }
+  };
+
+  const handleSyncMissingTickets = async () => {
+    if (!adminPin) return;
+    if (
+      !confirm(
+        "Are you sure you want to sync and insert all missing tickets into the database?"
+      )
+    )
+      return;
+    setIsSyncing(true);
+    try {
+      const res = await fetch("/api/admin/reconcile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: adminPin, action: "sync" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(
+          `Successfully synced ${data.summary?.insertedCount || 0} missing tickets to Supabase!`
+        );
+        setReconcileResult(data);
+        loadAdminData(adminPin);
+      } else {
+        alert(data.message || "Failed to sync tickets.");
+      }
+    } catch {
+      alert("Error syncing missing tickets.");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -338,6 +403,20 @@ export default function AdminPage() {
                     <FileText className="w-4 h-4 text-slate-300" />
                   )}
                   <span>Export CSV</span>
+                </button>
+
+                <button
+                  onClick={handleCheckReconciliation}
+                  disabled={reconciling}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/20 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                  title="Compare with Razorpay live payments and auto-sync missing tickets"
+                >
+                  {reconciling ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Scale className="w-4 h-4 text-indigo-200" />
+                  )}
+                  <span>Razorpay Audit & Sync</span>
                 </button>
 
                 <button
@@ -612,6 +691,186 @@ export default function AdminPage() {
                 alt="ID Card Photo"
                 className="max-h-[62vh] w-auto object-contain rounded-xl shadow-lg"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Razorpay ⇄ Supabase Reconciliation Audit Modal */}
+      {showReconcileModal && reconcileResult && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200"
+          onClick={() => setShowReconcileModal(false)}
+        >
+          <div
+            className="relative max-w-3xl w-full max-h-[90vh] bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                  <Scale className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">Razorpay ⇄ Database Reconciliation</h3>
+                  <p className="text-xs text-slate-400">
+                    Live comparison between Razorpay payment gateway and Supabase tickets table.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowReconcileModal(false)}
+                className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="my-5 space-y-5 overflow-y-auto pr-1">
+              {/* Summary Stats Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase">Razorpay Sold</span>
+                  <p className="text-2xl font-black text-white mt-1">
+                    {reconcileResult.summary?.razorpayTotalTicketsSold || 0}
+                  </p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    {reconcileResult.summary?.razorpayCapturedPayments || 0} captured orders
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase">DB Genuine</span>
+                  <p className="text-2xl font-black text-white mt-1">
+                    {reconcileResult.summary?.supabaseGenuineTickets || 0}
+                  </p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    {reconcileResult.summary?.supabaseTotalRows || 0} total rows in DB
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase">Dummy / Test</span>
+                  <p className="text-2xl font-black text-amber-400 mt-1">
+                    {reconcileResult.summary?.supabaseDummyTickets || 0}
+                  </p>
+                  <p className="text-[10px] text-amber-400/70 mt-0.5">Demo passes in DB</p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase">Missing In DB</span>
+                  <p
+                    className={`text-2xl font-black mt-1 ${
+                      (reconcileResult.summary?.totalMissingTicketsCount || 0) > 0
+                        ? "text-rose-400"
+                        : "text-emerald-400"
+                    }`}
+                  >
+                    {reconcileResult.summary?.totalMissingTicketsCount || 0}
+                  </p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Unrecorded paid tickets</p>
+                </div>
+              </div>
+
+              {/* Status Alert & Sync Action */}
+              {(reconcileResult.summary?.totalMissingTicketsCount || 0) > 0 ? (
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-bold text-amber-200">
+                        {reconcileResult.summary.totalMissingTicketsCount} Paid Passes are Missing in Database!
+                      </h4>
+                      <p className="text-xs text-amber-300/80 mt-0.5">
+                        These attendees paid on Razorpay, but closed browser tabs before verification finished. Click below to safely generate their tickets in Supabase.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSyncMissingTickets}
+                    disabled={isSyncing}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-black text-xs shadow-lg shadow-amber-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 shrink-0 flex items-center justify-center gap-2"
+                  >
+                    {isSyncing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-black" />
+                        <span>Syncing to DB...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCheck className="w-4 h-4 text-black" />
+                        <span>Sync {reconcileResult.summary.totalMissingTicketsCount} Missing Tickets</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3">
+                  <CheckCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-bold text-emerald-200">
+                      100% Synchronized! Zero Missing Tickets.
+                    </h4>
+                    <p className="text-xs text-emerald-300/80 mt-0.5">
+                      Every captured Razorpay payment has its exact corresponding tickets in Supabase.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Missing Orders List */}
+              {reconcileResult.missingOrders && reconcileResult.missingOrders.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center justify-between">
+                    <span>Missing Orders Detail ({reconcileResult.missingOrders.length})</span>
+                    <span className="text-[11px] text-slate-500 font-normal">
+                      Will be assigned unique TL-XXXXX ticket IDs
+                    </span>
+                  </h4>
+
+                  <div className="max-h-56 overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950/60 divide-y divide-slate-800/80">
+                    {reconcileResult.missingOrders.map((ord: any) => (
+                      <div key={ord.paymentId} className="p-3 text-xs flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-bold text-white truncate">{ord.buyerName}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                            {ord.email} • {ord.phone}
+                          </p>
+                          <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                            {ord.paymentId} • ₹{ord.amount}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="inline-block px-2.5 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 font-bold text-[11px]">
+                            +{ord.missingTickets} pass{ord.missingTickets > 1 ? "es" : ""} missing
+                          </span>
+                          <p className="text-[10px] text-slate-500 mt-1">
+                            {new Date(ord.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+              <span>Razorpay Key: Live Mode (`rzp_live_...`)</span>
+              <button
+                type="button"
+                onClick={() => setShowReconcileModal(false)}
+                className="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-all cursor-pointer"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
