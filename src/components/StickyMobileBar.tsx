@@ -7,8 +7,19 @@ import { EVENT_CONFIG, isBookingClosed } from "@/lib/constants";
 export default function StickyMobileBar() {
   const [isVisible, setIsVisible] = useState(false);
   const [bookingClosed, setBookingClosed] = useState(false);
+  const [isTestMode, setIsTestMode] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const isTestParam = params.get("test") === "true";
+      const isStored = sessionStorage.getItem("taalsya_test_mode") === "true";
+      const isEnv = process.env.NEXT_PUBLIC_TEST_MODE === "true";
+      if (isTestParam || isStored || isEnv) {
+        setIsTestMode(true);
+      }
+    }
+
     setBookingClosed(isBookingClosed());
     const statusInterval = setInterval(() => {
       setBookingClosed(isBookingClosed());
@@ -38,7 +49,7 @@ export default function StickyMobileBar() {
     };
   }, []);
 
-  if (!isVisible || bookingClosed) return null;
+  if (!isVisible || (bookingClosed && !isTestMode)) return null;
 
   return (
     <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 p-3 bg-[#06090e]/95 backdrop-blur-2xl border-t border-white/[0.1] shadow-2xl animate-in slide-in-from-bottom duration-250">

@@ -4,7 +4,15 @@ import { EVENT_CONFIG, getTierPrice, isBookingClosed } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
   try {
-    if (isBookingClosed()) {
+    const body = await req.json();
+    const { name, email, phone, college, quantity = 1, attendeeNames, isTest } = body;
+
+    const isTestMode =
+      Boolean(isTest) ||
+      process.env.NEXT_PUBLIC_TEST_MODE === "true" ||
+      process.env.TEST_MODE === "true";
+
+    if (isBookingClosed() && !isTestMode) {
       return NextResponse.json(
         {
           error: `Online ticket bookings for ${EVENT_CONFIG.shortName} closed at ${EVENT_CONFIG.bookingCloseDisplayTime}. New bookings are not accepted.`,
@@ -13,9 +21,6 @@ export async function POST(req: NextRequest) {
         { status: 403 }
       );
     }
-
-    const body = await req.json();
-    const { name, email, phone, college, quantity = 1, attendeeNames } = body;
 
     if (!name || !email || !phone) {
       return NextResponse.json(

@@ -170,7 +170,10 @@ export default function RegistrationForm() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("test") === "true") {
+      const isTestParam = params.get("test") === "true";
+      const isStored = sessionStorage.getItem("taalsya_test_mode") === "true";
+      const isEnv = process.env.NEXT_PUBLIC_TEST_MODE === "true";
+      if (isTestParam || isStored || isEnv) {
         setIsTestModeActive(true);
       }
     }
@@ -609,7 +612,7 @@ export default function RegistrationForm() {
     setErrorMessage("");
   };
 
-  if (bookingClosed) {
+  if (bookingClosed && !isTestModeActive) {
     return (
       <section id="register" className="py-8 sm:py-16 scroll-mt-16">
         <div className="max-w-3xl mx-auto px-3.5 sm:px-6">
@@ -672,9 +675,23 @@ export default function RegistrationForm() {
                 </div>
               </div>
 
-              {/* Footer info without helpline numbers */}
-              <div className="pt-3 text-xs text-slate-400 border-t border-white/[0.06] max-w-xl mx-auto text-center">
+              {/* Footer info & Test Mode switch */}
+              <div className="pt-3 text-xs text-slate-400 border-t border-white/[0.06] max-w-xl mx-auto flex items-center justify-between gap-2">
                 <span>Organized by {EVENT_CONFIG.societyName} • {EVENT_CONFIG.institution}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTestModeActive(true);
+                    if (typeof window !== "undefined") {
+                      sessionStorage.setItem("taalsya_test_mode", "true");
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 text-[11px] font-bold transition-all cursor-pointer"
+                  title="Enable test mode to create passes"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Test Mode (Create Passes)</span>
+                </button>
               </div>
             </div>
           </div>
@@ -727,16 +744,47 @@ export default function RegistrationForm() {
               </div>
             </div>
 
-            {/* Closing Soon Notice */}
-            <div className="mt-4 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3 text-amber-300 text-xs">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-400 shrink-0" />
-                <span><strong>Notice:</strong> Online bookings close today at <strong>{EVENT_CONFIG.bookingCloseDisplayTime}</strong>!</span>
+            {/* Test Mode Active Banner or Closing Notice */}
+            {isTestModeActive ? (
+              <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-purple-950/70 via-indigo-950/70 to-pink-950/70 border-2 border-purple-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-purple-200 shadow-xl shadow-purple-950/40">
+                <div className="flex items-start gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-300 shrink-0">
+                    <Sparkles className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="font-extrabold text-white text-sm">🧪 Test Pass Mode Active</p>
+                    <p className="text-purple-300/90 mt-0.5">
+                      Public bookings are closed, but Test Mode is enabled. You can generate real passes with QR codes without Razorpay payment.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTestModeActive(false);
+                    if (typeof window !== "undefined") {
+                      sessionStorage.removeItem("taalsya_test_mode");
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("test");
+                      window.history.replaceState({}, "", url.toString());
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-purple-500/30 text-purple-300 hover:text-white hover:bg-slate-800 text-xs font-bold transition-colors cursor-pointer shrink-0"
+                >
+                  Exit Test Mode
+                </button>
               </div>
-              <span className="hidden sm:inline-block text-[10px] uppercase font-bold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-md">
-                Closing Today
-              </span>
-            </div>
+            ) : (
+              <div className="mt-4 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3 text-amber-300 text-xs">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span><strong>Notice:</strong> Online bookings close today at <strong>{EVENT_CONFIG.bookingCloseDisplayTime}</strong>!</span>
+                </div>
+                <span className="hidden sm:inline-block text-[10px] uppercase font-bold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-md">
+                  Closing Today
+                </span>
+              </div>
+            )}
 
             {errorMessage && (
               <div className="mt-5 p-3.5 sm:p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-3 text-rose-300 text-xs sm:text-sm animate-in fade-in duration-200">
@@ -1384,6 +1432,11 @@ export default function RegistrationForm() {
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
                     <span>Processing &amp; Generating {formData.quantity} Passes...</span>
+                  </>
+                ) : isTestModeActive ? (
+                  <>
+                    <Sparkles className="w-5 h-5 text-amber-300" />
+                    <span>Generate {formData.quantity > 1 ? `${formData.quantity} Test Passes` : "Test Pass"} (Test Mode / Free)</span>
                   </>
                 ) : (
                   <>
