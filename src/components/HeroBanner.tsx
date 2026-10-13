@@ -2,21 +2,24 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Calendar, MapPin, Clock, ShieldCheck, Zap, ArrowRight, Sparkles, AlertCircle } from "lucide-react";
-import { EVENT_CONFIG } from "@/lib/constants";
+import { Calendar, MapPin, Clock, ShieldCheck, Zap, ArrowRight, Sparkles, AlertCircle, Ticket, Lock } from "lucide-react";
+import { EVENT_CONFIG, isBookingClosed } from "@/lib/constants";
 
 export default function HeroBanner() {
+  const [bookingClosed, setBookingClosed] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
-    days: 42,
-    hours: 14,
-    minutes: 36,
-    seconds: 20,
+    days: 0,
+    hours: 4,
+    minutes: 48,
+    seconds: 0,
   });
 
   useEffect(() => {
+    setBookingClosed(isBookingClosed());
     const targetDate = new Date(EVENT_CONFIG.eventDateISO).getTime();
 
     const interval = setInterval(() => {
+      setBookingClosed(isBookingClosed());
       const now = new Date().getTime();
       const distance = targetDate - now;
 
@@ -157,20 +160,37 @@ export default function HeroBanner() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 pt-2">
-            <a
-              href="#register"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 shadow-lg shadow-pink-500/25 active:scale-95 transition-all cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Get Early Bird Pass — <span className="line-through opacity-75 font-normal mr-0.5">₹399</span> ₹{EVENT_CONFIG.priceInINR}</span>
-              <ArrowRight className="w-4 h-4 ml-0.5" />
-            </a>
-            <a
-              href="#details"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-semibold text-xs sm:text-sm text-slate-300 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 transition-all active:scale-95"
-            >
-              Show Lineup &amp; Details
-            </a>
+            {bookingClosed ? (
+              <>
+                <div className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-bold text-sm text-rose-300 bg-rose-500/15 border border-rose-500/30 shadow-lg shadow-rose-500/10 cursor-default">
+                  <Lock className="w-4 h-4 text-rose-400" />
+                  <span>Online Bookings Closed</span>
+                </div>
+                <a
+                  href="#details"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-semibold text-xs sm:text-sm text-slate-300 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 transition-all active:scale-95"
+                >
+                  Show Lineup &amp; Details
+                </a>
+              </>
+            ) : (
+              <>
+                <a
+                  href="#register"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 shadow-lg shadow-pink-500/25 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Get Early Bird Pass — <span className="line-through opacity-75 font-normal mr-0.5">₹399</span> ₹{EVENT_CONFIG.priceInINR}</span>
+                  <ArrowRight className="w-4 h-4 ml-0.5" />
+                </a>
+                <a
+                  href="#details"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-semibold text-xs sm:text-sm text-slate-300 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 transition-all active:scale-95"
+                >
+                  Show Lineup &amp; Details
+                </a>
+              </>
+            )}
           </div>
 
           {/* Trust badges */}

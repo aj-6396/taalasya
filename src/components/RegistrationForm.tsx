@@ -20,8 +20,11 @@ import {
   X,
   Flame,
   GraduationCap,
+  Clock,
+  ArrowRight,
+  Lock,
 } from "lucide-react";
-import { EVENT_CONFIG, PASS_TIERS, getTierPrice } from "@/lib/constants";
+import { EVENT_CONFIG, PASS_TIERS, getTierPrice, isBookingClosed } from "@/lib/constants";
 import { generateShortTicketId } from "@/lib/ticketId";
 import TermsModal from "@/components/TermsModal";
 
@@ -162,6 +165,8 @@ export default function RegistrationForm() {
     }
   };
 
+  const [bookingClosed, setBookingClosed] = useState(false);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -169,6 +174,11 @@ export default function RegistrationForm() {
         setIsTestModeActive(true);
       }
     }
+    setBookingClosed(isBookingClosed());
+    const interval = setInterval(() => {
+      setBookingClosed(isBookingClosed());
+    }, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   const totalAmount = getTierPrice(formData.quantity);
@@ -599,6 +609,58 @@ export default function RegistrationForm() {
     setErrorMessage("");
   };
 
+  if (bookingClosed) {
+    return (
+      <section id="register" className="py-8 sm:py-16 scroll-mt-16">
+        <div className="max-w-3xl mx-auto px-3.5 sm:px-6">
+          <div className="relative rounded-3xl bg-[#0b101b]/95 border border-white/[0.08] shadow-2xl overflow-hidden backdrop-blur-2xl">
+            {/* Subtle gradient bar at top */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-rose-500 via-pink-600 to-purple-600" />
+
+            <div className="p-6 sm:p-10 md:p-12 text-center space-y-6">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/10 text-rose-400 text-xs font-bold border border-rose-500/20">
+                <Lock className="w-3.5 h-3.5 text-rose-400" />
+                <span>Ticket Bookings Closed</span>
+              </div>
+
+              {/* Heading */}
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+                  Online Bookings Have Closed
+                </h2>
+                <p className="text-sm sm:text-base text-slate-300 max-w-xl mx-auto">
+                  Online ticket bookings for <strong className="text-white">{EVENT_CONFIG.shortName}</strong> officially closed today at <strong className="text-pink-400">{EVENT_CONFIG.bookingCloseDisplayTime}</strong>. Thank you for your overwhelming support!
+                </p>
+              </div>
+
+              {/* Event Timings Card */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl mx-auto pt-2 text-left">
+                <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.05]">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Gate Entry Opens</p>
+                  <p className="text-xs sm:text-sm font-bold text-slate-200 mt-0.5">{EVENT_CONFIG.entryTime}</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.05]">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Gate Closing (Strict)</p>
+                  <p className="text-xs sm:text-sm font-bold text-rose-400 mt-0.5">{EVENT_CONFIG.gateCloseTime}</p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.05]">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Event Venue</p>
+                  <p className="text-xs sm:text-sm font-bold text-slate-200 mt-0.5 truncate">{EVENT_CONFIG.shortVenue}</p>
+                </div>
+              </div>
+
+              {/* Footer info without helpline numbers */}
+              <div className="pt-3 text-xs text-slate-400 border-t border-white/[0.06] max-w-xl mx-auto text-center">
+                <span>Organized by {EVENT_CONFIG.societyName} • {EVENT_CONFIG.institution}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section id="register" className="py-8 sm:py-16 scroll-mt-16">
       <div className="max-w-3xl mx-auto px-3.5 sm:px-6">
@@ -641,6 +703,17 @@ export default function RegistrationForm() {
                   ⚡ Save ₹{EVENT_CONFIG.originalPriceInINR - EVENT_CONFIG.priceInINR} • 0% Fee
                 </span>
               </div>
+            </div>
+
+            {/* Closing Soon Notice */}
+            <div className="mt-4 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3 text-amber-300 text-xs">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-400 shrink-0" />
+                <span><strong>Notice:</strong> Online bookings close today at <strong>{EVENT_CONFIG.bookingCloseDisplayTime}</strong>!</span>
+              </div>
+              <span className="hidden sm:inline-block text-[10px] uppercase font-bold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-md">
+                Closing Today
+              </span>
             </div>
 
             {errorMessage && (

@@ -1,13 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sparkles, ArrowRight } from "lucide-react";
-import { EVENT_CONFIG } from "@/lib/constants";
+import { Sparkles, ArrowRight, Ticket, Lock } from "lucide-react";
+import { EVENT_CONFIG, isBookingClosed } from "@/lib/constants";
 
 export default function StickyMobileBar() {
   const [isVisible, setIsVisible] = useState(false);
+  const [bookingClosed, setBookingClosed] = useState(false);
 
   useEffect(() => {
+    setBookingClosed(isBookingClosed());
+    const statusInterval = setInterval(() => {
+      setBookingClosed(isBookingClosed());
+    }, 2000);
+
     const handleScroll = () => {
       const registerElement = document.getElementById("register");
       if (!registerElement) return;
@@ -26,10 +32,13 @@ export default function StickyMobileBar() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      clearInterval(statusInterval);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
-  if (!isVisible) return null;
+  if (!isVisible || bookingClosed) return null;
 
   return (
     <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 p-3 bg-[#06090e]/95 backdrop-blur-2xl border-t border-white/[0.1] shadow-2xl animate-in slide-in-from-bottom duration-250">

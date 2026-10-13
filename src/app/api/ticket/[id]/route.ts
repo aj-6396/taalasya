@@ -31,13 +31,12 @@ export async function GET(
 
       const orClauses = clauses.join(",");
 
-      const { data: ticket, error } = await supabase
+      const { data: ticketsFound, error } = await supabase
         .from("tickets")
         .select("*")
-        .or(orClauses)
-        .maybeSingle();
+        .or(orClauses);
 
-      if (error || !ticket) {
+      if (error || !ticketsFound || ticketsFound.length === 0) {
         if (id.startsWith("demo_") || id.startsWith("order_demo_")) {
           return NextResponse.json({
             ticket: {
@@ -49,20 +48,37 @@ export async function GET(
               status: "Valid",
               createdAt: new Date().toISOString(),
             },
+            tickets: [],
           });
         }
-        return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+        return NextResponse.json(
+          { error: "No confirmed pass found for this reference. Please check your phone number, email, or payment reference." },
+          { status: 404 }
+        );
       }
 
-      // If part of an order with multiple passes, return all
-      const { data: allTickets } = await supabase
-        .from("tickets")
-        .select("*")
-        .or(`orderId.eq.${ticket.orderId},paymentId.eq.${ticket.paymentId}`);
+      const primary = ticketsFound[0];
+
+      // If part of an order with multiple passes, fetch all sibling tickets
+      const ordId = primary.orderId || primary.order_id;
+      const payId = primary.paymentId || primary.payment_id;
+      let allTickets = ticketsFound;
+
+      if (ordId || payId) {
+        const { data: siblings } = await supabase
+          .from("tickets")
+          .select("*")
+          .or(`orderId.eq.${ordId || "none"},paymentId.eq.${payId || "none"}`)
+          .order("createdAt", { ascending: true });
+
+        if (siblings && siblings.length > allTickets.length) {
+          allTickets = siblings;
+        }
+      }
 
       return NextResponse.json({
-        ticket,
-        tickets: allTickets && allTickets.length > 0 ? allTickets : [ticket],
+        ticket: primary,
+        tickets: allTickets,
       });
     } catch (err: any) {
       // In demo test mode:

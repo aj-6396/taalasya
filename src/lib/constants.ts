@@ -31,11 +31,32 @@ export const EVENT_CONFIG = {
   instagramPostUrl:
     "https://www.instagram.com/taalasyadancesociety_bhu/p/Dd1H4mRi0QP/",
   maxTicketsPerBooking: 5,
+  bookingCloseTimeISO:
+    process.env.NEXT_PUBLIC_BOOKING_CLOSE_TIME || "2026-10-13T10:00:00+05:30",
+  bookingCloseDisplayTime: "10:00 AM IST (13 Oct 2026)",
+  isBookingForceClosed:
+    process.env.NEXT_PUBLIC_FORCE_CLOSE_BOOKING === "true",
   contacts: [
     { name: "Avinash", role: "Secretary", phone: "8677953892" },
     { name: "Agrimaa", role: "Joint Secretary", phone: "9289399669" },
   ],
 };
+
+export function isBookingClosed(): boolean {
+  if (process.env.NEXT_PUBLIC_FORCE_CLOSE_BOOKING === "true") {
+    return true;
+  }
+  if (process.env.NEXT_PUBLIC_FORCE_CLOSE_BOOKING === "false") {
+    return false;
+  }
+  if (EVENT_CONFIG.bookingCloseTimeISO) {
+    const deadline = new Date(EVENT_CONFIG.bookingCloseTimeISO).getTime();
+    if (!isNaN(deadline) && Date.now() >= deadline) {
+      return true;
+    }
+  }
+  return false;
+}
 
 export const PASS_TIERS = [
   {
@@ -96,7 +117,7 @@ export const DEFAULT_MARSHALS: GateMarshal[] = [
 
 export const FEATURE_FLAGS = {
   // Public pass retrieval & re-download lookup on frontend (Navbar, Footer, /success)
-  // Set to true to activate, false to deactivate without deleting code
+  // Disabled as requested
   enablePublicPassRetrieval: false,
 };
 

@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRazorpayClient } from "@/lib/razorpay";
-import { EVENT_CONFIG, getTierPrice } from "@/lib/constants";
+import { EVENT_CONFIG, getTierPrice, isBookingClosed } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
   try {
+    if (isBookingClosed()) {
+      return NextResponse.json(
+        {
+          error: `Online ticket bookings for ${EVENT_CONFIG.shortName} closed at ${EVENT_CONFIG.bookingCloseDisplayTime}. New bookings are not accepted.`,
+          bookingClosed: true,
+        },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const { name, email, phone, college, quantity = 1, attendeeNames } = body;
 

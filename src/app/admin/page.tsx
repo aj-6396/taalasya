@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { isTestTicket } from "@/lib/isTestTicket";
+import { EVENT_CONFIG, isBookingClosed } from "@/lib/constants";
 
 type TicketRecord = {
   ticketId: string;
@@ -427,6 +428,48 @@ export default function AdminPage() {
                 >
                   <RefreshCw className={`w-4 h-4 ${loadingData ? "animate-spin text-pink-400" : ""}`} />
                 </button>
+              </div>
+            </div>
+
+            {/* Booking Status Banner */}
+            <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+              isBookingClosed()
+                ? "bg-rose-500/10 border-rose-500/30 text-rose-300"
+                : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl shrink-0 ${
+                  isBookingClosed() ? "bg-rose-500/20 text-rose-400" : "bg-amber-500/20 text-amber-400"
+                }`}>
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-extrabold text-sm text-white">
+                      Online Ticket Booking: {isBookingClosed() ? "OFFICIALLY CLOSED" : "ACTIVE (CLOSING TODAY)"}
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                      isBookingClosed() ? "bg-rose-500/20 text-rose-300" : "bg-amber-500/20 text-amber-300"
+                    }`}>
+                      {isBookingClosed() ? "Closed" : "Closes 10:00 AM"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {isBookingClosed()
+                      ? `Public registrations closed at ${EVENT_CONFIG.bookingCloseDisplayTime}. Razorpay checkout creation is disabled.`
+                      : `Online registrations will automatically close today at ${EVENT_CONFIG.bookingCloseDisplayTime}.`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Link
+                  href="/admin/special-pass"
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:border-pink-500 text-xs font-bold text-pink-300 transition-colors inline-flex items-center gap-1.5"
+                >
+                  <Ticket className="w-3.5 h-3.5" />
+                  <span>Issue VIP/Organizer Pass</span>
+                </Link>
               </div>
             </div>
 
