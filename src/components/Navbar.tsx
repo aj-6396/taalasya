@@ -72,7 +72,7 @@ export default function Navbar() {
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-amber-300 bg-amber-500/15 border border-amber-500/25 hover:bg-amber-500/20 transition-all"
               >
                 <Ticket className="w-3.5 h-3.5 text-amber-400" />
-                <span>Offline Passes: 1 PM – 3 PM</span>
+                <span>Offline Passes: 2 PM – 3 PM</span>
               </a>
             ) : (
               <Link

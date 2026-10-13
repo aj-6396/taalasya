@@ -644,11 +644,11 @@ export default function RegistrationForm() {
                     Offline Passes Available at Venue
                   </span>
                   <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 ml-auto shrink-0">
-                    1:00 PM – 3:00 PM
+                    2:00 PM – 3:00 PM
                   </span>
                 </div>
                 <p className="text-xs text-amber-100/90 leading-relaxed">
-                  Didn&apos;t get a pass online? Offline passes will be available today at the <strong>Swatantrata Bhawan registration desk</strong> from <strong>01:00 PM to 03:00 PM</strong>. Passes are limited and available on a first-come, first-served basis.
+                  Didn&apos;t get a pass online? Offline passes will be available today at the <strong>Swatantrata Bhawan registration desk</strong> from <strong>02:00 PM to 03:00 PM</strong>. Passes are limited and available on a first-come, first-served basis.
                 </p>
               </div>
 

@@ -61,7 +61,7 @@ export default function HeroBanner() {
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${bookingClosed ? "bg-amber-500" : "bg-pink-500"}`}></span>
               </span>
               <span className="text-[11px] sm:text-xs font-semibold text-purple-200 tracking-wide uppercase">
-                {bookingClosed ? "Offline Passes: 1:00 PM – 3:00 PM at Swatantrata Bhawan" : "Taalasya Dance Society • BHU Presents"}
+                {bookingClosed ? "Offline Passes: 2:00 PM – 3:00 PM at Swatantrata Bhawan" : "Taalasya Dance Society • BHU Presents"}
               </span>
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function HeroBanner() {
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm text-amber-300 bg-amber-500/15 border border-amber-500/35 hover:bg-amber-500/25 shadow-lg shadow-amber-500/10 active:scale-95 transition-all cursor-pointer"
                 >
                   <Ticket className="w-4 h-4 text-amber-400" />
-                  <span>Offline Passes: 1:00 PM – 3:00 PM at Venue</span>
+                  <span>Offline Passes: 2:00 PM – 3:00 PM at Venue</span>
                 </a>
                 <a
                   href="#details"
