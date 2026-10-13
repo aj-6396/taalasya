@@ -61,7 +61,7 @@ export default function HeroBanner() {
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${bookingClosed ? "bg-amber-500" : "bg-pink-500"}`}></span>
               </span>
               <span className="text-[11px] sm:text-xs font-semibold text-purple-200 tracking-wide uppercase">
-                {bookingClosed ? "Offline Passes: 2:00 PM – 3:00 PM at Swatantrata Bhawan" : "Taalasya Dance Society • BHU Presents"}
+                {bookingClosed ? "Offline Passes: 2:00 PM – 3:00 PM at Swatantrata Bhawan" : "⚡ On-The-Spot Registration Live Now! • Swatantrata Bhawan"}
               </span>
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function HeroBanner() {
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 shadow-lg shadow-pink-500/25 active:scale-95 transition-all cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Get Early Bird Pass — <span className="line-through opacity-75 font-normal mr-0.5">₹399</span> ₹{EVENT_CONFIG.priceInINR}</span>
+                  <span>Get On-The-Spot Pass — <span className="line-through opacity-75 font-normal mr-0.5">₹399</span> ₹{EVENT_CONFIG.priceInINR}</span>
                   <ArrowRight className="w-4 h-4 ml-0.5" />
                 </a>
                 <a

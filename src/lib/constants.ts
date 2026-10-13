@@ -33,8 +33,8 @@ export const EVENT_CONFIG = {
     "https://www.instagram.com/taalasyadancesociety_bhu/p/Dd1H4mRi0QP/",
   maxTicketsPerBooking: 5,
   bookingCloseTimeISO:
-    process.env.NEXT_PUBLIC_BOOKING_CLOSE_TIME || "2026-10-13T10:00:00+05:30",
-  bookingCloseDisplayTime: "10:00 AM IST (13 Oct 2026)",
+    process.env.NEXT_PUBLIC_BOOKING_CLOSE_TIME || "2026-10-13T20:00:00+05:30",
+  bookingCloseDisplayTime: "On-The-Spot Registration Active",
   isBookingForceClosed:
     process.env.NEXT_PUBLIC_FORCE_CLOSE_BOOKING === "true",
   contacts: [

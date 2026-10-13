@@ -270,18 +270,7 @@ export default function RegistrationForm() {
       document.getElementById("primary-college-input")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-    if (!primaryIdCard) {
-      const msg = "Please upload Attendee 1's Namaste BHU ID or Aadhar Card.";
-      setErrorMessage(msg);
-      showPromptToast(msg);
-      setMissingIdError(1);
-      setTimeout(() => {
-        document.getElementById("attendee-1-id-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 50);
-      return;
-    }
-
-    // Additional Attendees Validation
+    // Additional Attendees Validation (Names only, ID card skipped)
     for (let i = 0; i < extraAttendees.length; i++) {
       if (!extraAttendees[i].name.trim()) {
         const msg = `Please enter the full legal name for Attendee ${i + 2}.`;
@@ -289,16 +278,6 @@ export default function RegistrationForm() {
         showPromptToast(msg);
         document.getElementById(`extra-attendee-${i}-name`)?.focus();
         document.getElementById(`extra-attendee-${i}-name`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-        return;
-      }
-      if (!extraAttendees[i].idCard) {
-        const msg = `Please upload Attendee ${i + 2}'s Namaste BHU ID or Aadhar Card.`
-        setErrorMessage(msg);
-        showPromptToast(msg);
-        setMissingIdError(i + 2);
-        setTimeout(() => {
-          document.getElementById(`attendee-${i + 2}-id-section`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 50);
         return;
       }
     }
@@ -696,22 +675,22 @@ export default function RegistrationForm() {
             {/* Header section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.07]">
               <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/10 text-pink-400 text-[11px] font-bold mb-2 border border-pink-500/20">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-bold mb-2 border border-emerald-500/20">
                   <Sparkles className="w-3 h-3" />
-                  JHOOM &apos;26 • Dance Fest cum Dandiya Night
+                  ⚡ ON-THE-SPOT REGISTRATION LIVE • JHOOM &apos;26
                 </div>
                 <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight">
-                  Book Your Fest &amp; Dandiya Pass
+                  Book Your On-The-Spot Pass
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                  Early bird passes available for 1, 2, 4, and 5 attendees with special group discounts!
+                  Instant registration for 1, 2, 4, and 5 attendees. Fast instant QR entry pass!
                 </p>
               </div>
 
               <div className="p-3 sm:p-4 rounded-2xl bg-[#070b13] border border-white/[0.06] text-left sm:text-right min-w-[140px] flex sm:flex-col items-center sm:items-end justify-between sm:justify-center">
                 <div>
                   <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
-                    Early Bird Offer
+                    On-The-Spot Entry
                   </p>
                   <div className="flex items-baseline gap-1.5 sm:justify-end">
                     <span className="text-sm sm:text-base text-slate-500 line-through font-semibold">
@@ -729,14 +708,14 @@ export default function RegistrationForm() {
               </div>
             </div>
 
-            {/* Closing Soon Notice */}
-            <div className="mt-4 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3 text-amber-300 text-xs">
+            {/* On-The-Spot Registration Live Notice */}
+            <div className="mt-4 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/30 flex items-center justify-between gap-3 text-emerald-200 text-xs">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-400 shrink-0" />
-                <span><strong>Notice:</strong> Online bookings close today at <strong>{EVENT_CONFIG.bookingCloseDisplayTime}</strong>!</span>
+                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span><strong>On-The-Spot Registration Open:</strong> Fill details to generate your official QR entry pass instantly. Physical ID to be shown at gate only.</span>
               </div>
-              <span className="hidden sm:inline-block text-[10px] uppercase font-bold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-md">
-                Closing Today
+              <span className="hidden sm:inline-block text-[10px] uppercase font-extrabold text-emerald-300 bg-emerald-500/20 px-2.5 py-1 rounded-full border border-emerald-500/30 shrink-0">
+                Live Now
               </span>
             </div>
 
@@ -957,119 +936,6 @@ export default function RegistrationForm() {
                     </p>
                   </div>
                 </div>
-
-                {/* ID Card Upload for Attendee 1 */}
-                <div id="attendee-1-id-section" className="space-y-2 pt-2 border-t border-slate-800/80">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                      <UploadCloud className="w-3.5 h-3.5 text-pink-400" />
-                      Namaste BHU ID Card or Aadhar Card <span className="text-pink-500">*</span>
-                    </label>
-                    <span className="text-[10px] text-slate-400">
-                      Required for entry verification
-                    </span>
-                  </div>
-
-                  {!primaryIdCard ? (
-                    <label className={`border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group ${
-                      missingIdError === 1 || (errorMessage.includes("Attendee 1") && errorMessage.includes("ID"))
-                        ? "border-rose-500 bg-rose-950/20 ring-2 ring-rose-500/40 animate-pulse"
-                        : "border-slate-700/80 hover:border-pink-500/60 bg-slate-900/40 hover:bg-slate-900"
-                    }`}>
-                      <div className="w-10 h-10 rounded-full bg-pink-500/10 flex items-center justify-center text-pink-400 group-hover:scale-110 transition-transform">
-                        <UploadCloud className="w-5 h-5" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs font-semibold text-slate-200">
-                          Click to upload or drag ID card
-                        </p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          Namaste BHU screenshot or Aadhar Card (PNG, JPG, WebP)
-                        </p>
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            processIdCardFile(
-                              file,
-                              (base64, filename) => {
-                                setPrimaryIdCard(base64);
-                                setPrimaryIdCardName(filename);
-                                setMissingIdError(null);
-                                setErrorMessage("");
-                                setToastMessage(null);
-                              },
-                              (err) => {
-                                setErrorMessage(err);
-                                showPromptToast(err);
-                              }
-                            );
-                          }
-                        }}
-                      />
-                    </label>
-                  ) : (
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/90 border border-emerald-500/30">
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        <div
-                          onClick={() => setPreviewModalUrl(primaryIdCard)}
-                          className="relative w-12 h-12 rounded-lg overflow-hidden border border-white/10 shrink-0 cursor-pointer group bg-black"
-                          title="Click to view full preview"
-                        >
-                          <img
-                            src={primaryIdCard}
-                            alt="Attendee 1 ID Card"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <Eye className="w-4 h-4 text-white" />
-                          </div>
-                        </div>
-                        <div className="truncate">
-                          <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
-                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                            <span>ID Card Attached</span>
-                          </div>
-                          <p className="text-[11px] text-slate-400 truncate max-w-[180px] sm:max-w-xs">
-                            {primaryIdCardName || "id_card.jpg"}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => setPreviewModalUrl(primaryIdCard)}
-                          className="px-2.5 py-1.5 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">View</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPrimaryIdCard("");
-                            setPrimaryIdCardName("");
-                          }}
-                          className="p-1.5 text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 rounded-lg transition-colors cursor-pointer"
-                          title="Remove ID Screenshot"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {(!primaryIdCard && (missingIdError === 1 || (errorMessage.includes("Attendee 1") && errorMessage.includes("ID")))) && (
-                    <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2 text-rose-300 text-xs font-semibold animate-in fade-in duration-200">
-                      <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                      <span>Please attach Attendee 1&apos;s Namaste BHU ID or Aadhar Card screenshot to continue.</span>
-                    </div>
-                  )}
-                </div>
               </div>
 
               {/* Additional Attendees Fields (when quantity > 1) */}
@@ -1156,109 +1022,6 @@ export default function RegistrationForm() {
                             }
                             className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
                           />
-                        </div>
-
-                        {/* ID Card for Extra Attendee */}
-                        <div id={`attendee-${idx + 2}-id-section`} className="space-y-1.5 pt-2 border-t border-slate-800">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1">
-                            <UploadCloud className="w-3 h-3 text-pink-400" />
-                            Namaste BHU ID Card or Aadhar Card <span className="text-pink-500">*</span>
-                          </label>
-
-                          {!att.idCard ? (
-                            <label className={`border border-dashed rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all group ${
-                              missingIdError === idx + 2 || (errorMessage.includes(`Attendee ${idx + 2}`) && errorMessage.includes("ID"))
-                                ? "border-rose-500 bg-rose-950/20 ring-2 ring-rose-500/40 animate-pulse"
-                                : "border-slate-700/80 hover:border-pink-500/60 bg-slate-900/40 hover:bg-slate-900"
-                            }`}>
-                              <UploadCloud className="w-4 h-4 text-pink-400 group-hover:scale-110 transition-transform" />
-                              <span className="text-[11px] font-semibold text-slate-300">
-                                Upload Attendee {idx + 2}&apos;s Namaste BHU ID or Aadhar Card
-                              </span>
-                              <span className="text-[9.5px] text-slate-500">
-                                Namaste BHU screenshot or Aadhar Card (PNG, JPG, WebP)
-                              </span>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    processIdCardFile(
-                                      file,
-                                      (base64, filename) => {
-                                        handleExtraAttendeeChange(idx, "idCard", base64);
-                                        handleExtraAttendeeChange(idx, "idCardName", filename);
-                                        setMissingIdError(null);
-                                        setErrorMessage("");
-                                        setToastMessage(null);
-                                      },
-                                      (err) => {
-                                        setErrorMessage(err);
-                                        showPromptToast(err);
-                                      }
-                                    );
-                                  }
-                                }}
-                              />
-                            </label>
-                          ) : (
-                            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 border border-emerald-500/30">
-                              <div className="flex items-center gap-2.5 overflow-hidden">
-                                <div
-                                  onClick={() => setPreviewModalUrl(att.idCard)}
-                                  className="relative w-10 h-10 rounded-lg overflow-hidden border border-white/10 shrink-0 cursor-pointer group bg-black"
-                                  title="Click to view preview"
-                                >
-                                  <img
-                                    src={att.idCard}
-                                    alt={`Attendee ${idx + 2} ID Card`}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                  />
-                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                    <Eye className="w-3.5 h-3.5 text-white" />
-                                  </div>
-                                </div>
-                                <div className="truncate">
-                                  <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
-                                    <CheckCircle2 className="w-3 h-3 shrink-0" />
-                                    <span>ID Card Attached</span>
-                                  </div>
-                                  <p className="text-[10px] text-slate-400 truncate max-w-[150px] sm:max-w-xs">
-                                    {att.idCardName || `attendee_${idx + 2}_id.jpg`}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <button
-                                  type="button"
-                                  onClick={() => setPreviewModalUrl(att.idCard)}
-                                  className="px-2 py-1 text-[11px] text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
-                                >
-                                  View
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    handleExtraAttendeeChange(idx, "idCard", "");
-                                    handleExtraAttendeeChange(idx, "idCardName", "");
-                                  }}
-                                  className="p-1.5 text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 rounded-lg transition-colors cursor-pointer"
-                                  title="Remove ID Screenshot"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {(!att.idCard && (missingIdError === idx + 2 || (errorMessage.includes(`Attendee ${idx + 2}`) && errorMessage.includes("ID")))) && (
-                            <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2 text-rose-300 text-xs font-semibold animate-in fade-in duration-200">
-                              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                              <span>Please attach Attendee {idx + 2}&apos;s Namaste BHU ID or Aadhar Card screenshot to continue.</span>
-                            </div>
-                          )}
                         </div>
                       </div>
                     ))}
