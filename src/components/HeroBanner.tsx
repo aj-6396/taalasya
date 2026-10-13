@@ -57,11 +57,11 @@ export default function HeroBanner() {
             </div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900/90 border border-purple-500/30 shadow-sm backdrop-blur-md">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${bookingClosed ? "bg-amber-400" : "bg-pink-400"} opacity-75`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${bookingClosed ? "bg-amber-500" : "bg-pink-500"}`}></span>
               </span>
               <span className="text-[11px] sm:text-xs font-semibold text-purple-200 tracking-wide uppercase">
-                Taalasya Dance Society • BHU Presents
+                {bookingClosed ? "Offline Passes: 1:00 PM – 3:00 PM at Swatantrata Bhawan" : "Taalasya Dance Society • BHU Presents"}
               </span>
             </div>
           </div>
@@ -162,10 +162,13 @@ export default function HeroBanner() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 pt-2">
             {bookingClosed ? (
               <>
-                <div className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-bold text-sm text-rose-300 bg-rose-500/15 border border-rose-500/30 shadow-lg shadow-rose-500/10 cursor-default">
-                  <Lock className="w-4 h-4 text-rose-400" />
-                  <span>Online Bookings Closed</span>
-                </div>
+                <a
+                  href="#register"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm text-amber-300 bg-amber-500/15 border border-amber-500/35 hover:bg-amber-500/25 shadow-lg shadow-amber-500/10 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Ticket className="w-4 h-4 text-amber-400" />
+                  <span>Offline Passes: 1:00 PM – 3:00 PM at Venue</span>
+                </a>
                 <a
                   href="#details"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-semibold text-xs sm:text-sm text-slate-300 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 transition-all active:scale-95"

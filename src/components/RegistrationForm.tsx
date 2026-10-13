@@ -634,18 +634,40 @@ export default function RegistrationForm() {
                 </p>
               </div>
 
+              {/* Offline Passes Announcement */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-pink-500/15 border border-amber-500/30 text-left max-w-xl mx-auto space-y-2 shadow-lg shadow-amber-500/5">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300">
+                    <Ticket className="w-4 h-4" />
+                  </span>
+                  <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wide">
+                    Offline Passes Available at Venue
+                  </span>
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 ml-auto shrink-0">
+                    1:00 PM – 3:00 PM
+                  </span>
+                </div>
+                <p className="text-xs text-amber-100/90 leading-relaxed">
+                  Didn&apos;t get a pass online? Offline passes will be available today at the <strong>Swatantrata Bhawan registration desk</strong> from <strong>01:00 PM to 03:00 PM</strong>. Passes are limited and available on a first-come, first-served basis.
+                </p>
+              </div>
+
               {/* Event Timings Card */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl mx-auto pt-2 text-left">
-                <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.05]">
-                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Gate Entry Opens</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 max-w-xl mx-auto pt-2 text-left">
+                <div className="p-3 sm:p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25">
+                  <p className="text-[10px] text-amber-400 uppercase font-bold tracking-wider">Offline Passes</p>
+                  <p className="text-xs sm:text-sm font-bold text-amber-200 mt-0.5">{EVENT_CONFIG.offlinePassTime}</p>
+                </div>
+                <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.05]">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Gate Entry</p>
                   <p className="text-xs sm:text-sm font-bold text-slate-200 mt-0.5">{EVENT_CONFIG.entryTime}</p>
                 </div>
-                <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.05]">
-                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Gate Closing (Strict)</p>
+                <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.05]">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Gate Close (Strict)</p>
                   <p className="text-xs sm:text-sm font-bold text-rose-400 mt-0.5">{EVENT_CONFIG.gateCloseTime}</p>
                 </div>
-                <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.05]">
-                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Event Venue</p>
+                <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900/60 border border-white/[0.05]">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Venue</p>
                   <p className="text-xs sm:text-sm font-bold text-slate-200 mt-0.5 truncate">{EVENT_CONFIG.shortVenue}</p>
                 </div>
               </div>

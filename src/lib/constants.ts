@@ -15,6 +15,7 @@ export const EVENT_CONFIG = {
   time: "03:00 PM - 08:00 PM IST",
   entryTime: "02:30 PM - 04:30 PM",
   gateCloseTime: "04:30 PM",
+  offlinePassTime: "01:00 PM - 03:00 PM",
   venue: "Swatantrata Bhawan, Banaras Hindu University (BHU), Varanasi",
   shortVenue: "Swatantrata Bhawan",
   city: "Varanasi, Uttar Pradesh",
