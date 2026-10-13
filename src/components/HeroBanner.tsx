@@ -7,7 +7,6 @@ import { EVENT_CONFIG, isBookingClosed } from "@/lib/constants";
 
 export default function HeroBanner() {
   const [bookingClosed, setBookingClosed] = useState(false);
-  const [isTestMode, setIsTestMode] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 4,
@@ -16,16 +15,6 @@ export default function HeroBanner() {
   });
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const isTestParam = params.get("test") === "true";
-      const isStored = sessionStorage.getItem("taalsya_test_mode") === "true";
-      const isEnv = process.env.NEXT_PUBLIC_TEST_MODE === "true";
-      if (isTestParam || isStored || isEnv) {
-        setIsTestMode(true);
-      }
-    }
-
     setBookingClosed(isBookingClosed());
     const targetDate = new Date(EVENT_CONFIG.eventDateISO).getTime();
 
@@ -171,24 +160,7 @@ export default function HeroBanner() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 pt-2">
-            {isTestMode ? (
-              <>
-                <a
-                  href="#register"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-500/25 active:scale-95 transition-all cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                  <span>Generate Test Pass (Test Mode Active)</span>
-                  <ArrowRight className="w-4 h-4 ml-0.5" />
-                </a>
-                <a
-                  href="#details"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-semibold text-xs sm:text-sm text-slate-300 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 transition-all active:scale-95"
-                >
-                  Show Lineup &amp; Details
-                </a>
-              </>
-            ) : bookingClosed ? (
+            {bookingClosed ? (
               <>
                 <a
                   href="#register"

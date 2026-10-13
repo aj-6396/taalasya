@@ -8,19 +8,8 @@ import { EVENT_CONFIG, FEATURE_FLAGS, isBookingClosed } from "@/lib/constants";
 
 export default function Navbar() {
   const [bookingClosed, setBookingClosed] = useState(false);
-  const [isTestMode, setIsTestMode] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const isTestParam = params.get("test") === "true";
-      const isStored = sessionStorage.getItem("taalsya_test_mode") === "true";
-      const isEnv = process.env.NEXT_PUBLIC_TEST_MODE === "true";
-      if (isTestParam || isStored || isEnv) {
-        setIsTestMode(true);
-      }
-    }
-
     setBookingClosed(isBookingClosed());
     const interval = setInterval(() => {
       setBookingClosed(isBookingClosed());
@@ -77,15 +66,7 @@ export default function Navbar() {
               <span>{EVENT_CONFIG.instagramHandle}</span>
             </a>
 
-            {isTestMode ? (
-              <Link
-                href="#register"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 shadow-md shadow-purple-500/20 hover:opacity-95 transition-all active:scale-95"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span>Test Mode</span>
-              </Link>
-            ) : bookingClosed ? (
+            {bookingClosed ? (
               <a
                 href="#register"
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-amber-300 bg-amber-500/15 border border-amber-500/25 hover:bg-amber-500/20 transition-all"
