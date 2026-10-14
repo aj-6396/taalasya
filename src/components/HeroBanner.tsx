@@ -2,11 +2,22 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Calendar, MapPin, Clock, ShieldCheck, Zap, ArrowRight, Sparkles, AlertCircle, Ticket, Lock } from "lucide-react";
-import { EVENT_CONFIG, isBookingClosed } from "@/lib/constants";
+import { Calendar, MapPin, Clock, ShieldCheck, Zap, ArrowRight, Sparkles, AlertCircle, Ticket, Lock, Heart, MessageSquareHeart } from "lucide-react";
+import { EVENT_CONFIG, isBookingClosed, isEventOver } from "@/lib/constants";
+
+function InstagramIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
 
 export default function HeroBanner() {
   const [bookingClosed, setBookingClosed] = useState(false);
+  const [eventOver, setEventOver] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 4,
@@ -16,6 +27,7 @@ export default function HeroBanner() {
 
   useEffect(() => {
     setBookingClosed(isBookingClosed());
+    setEventOver(isEventOver());
     const targetDate = new Date(EVENT_CONFIG.eventDateISO).getTime();
 
     const interval = setInterval(() => {
@@ -57,11 +69,15 @@ export default function HeroBanner() {
             </div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900/90 border border-purple-500/30 shadow-sm backdrop-blur-md">
               <span className="relative flex h-2 w-2">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${bookingClosed ? "bg-amber-400" : "bg-pink-400"} opacity-75`}></span>
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${bookingClosed ? "bg-amber-500" : "bg-pink-500"}`}></span>
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${eventOver ? "bg-pink-400" : bookingClosed ? "bg-amber-400" : "bg-pink-400"} opacity-75`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${eventOver ? "bg-pink-500" : bookingClosed ? "bg-amber-500" : "bg-pink-500"}`}></span>
               </span>
               <span className="text-[11px] sm:text-xs font-semibold text-purple-200 tracking-wide uppercase">
-                {bookingClosed ? "Offline Passes: 2:00 PM – 3:00 PM at Swatantrata Bhawan" : "⚡ On-The-Spot Registration Live Now! • Swatantrata Bhawan"}
+                {eventOver
+                  ? "🎉 JHOOM '26 Concluded • Hope You Enjoyed The Event!"
+                  : bookingClosed
+                  ? "Offline Passes: 2:00 PM – 3:00 PM at Swatantrata Bhawan"
+                  : "⚡ On-The-Spot Registration Live Now! • Swatantrata Bhawan"}
               </span>
             </div>
           </div>
@@ -79,11 +95,17 @@ export default function HeroBanner() {
             </p>
           </div>
 
-          <p className="text-xs sm:text-base text-slate-300 leading-relaxed max-w-xl mx-auto">
-            The biggest <strong>Dandiya Night in BHU Varanasi</strong>! Experience the ultimate fusion of Garba, DJ and high-energy stage performances by <strong>Taalasya Dance Society</strong> at Swatantrata Bhawan, Banaras Hindu University (BHU). Passes starting at{" "}
-            <span className="line-through text-slate-500 mr-1 font-semibold">₹399</span>
-            <strong className="text-pink-400 font-bold">₹{EVENT_CONFIG.priceInINR} only</strong>!
-          </p>
+          {eventOver ? (
+            <p className="text-xs sm:text-base text-slate-300 leading-relaxed max-w-2xl mx-auto">
+              A heartfelt <strong>THANK YOU</strong> to all students, faculties, performers, and Dandiya lovers for making <strong>JHOOM &apos;26</strong> an electrifying grand success at Swatantrata Bhawan! Hope you thoroughly enjoyed every moment of the dance, music, and festive celebration.
+            </p>
+          ) : (
+            <p className="text-xs sm:text-base text-slate-300 leading-relaxed max-w-xl mx-auto">
+              The biggest <strong>Dandiya Night in BHU Varanasi</strong>! Experience the ultimate fusion of Garba, DJ and high-energy stage performances by <strong>Taalasya Dance Society</strong> at Swatantrata Bhawan, Banaras Hindu University (BHU). Passes starting at{" "}
+              <span className="line-through text-slate-500 mr-1 font-semibold">₹399</span>
+              <strong className="text-pink-400 font-bold">₹{EVENT_CONFIG.priceInINR} only</strong>!
+            </p>
+          )}
 
           {/* Mobile-first compact key event fact chips */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 max-w-2xl sm:max-w-3xl mx-auto pt-1">
@@ -100,17 +122,18 @@ export default function HeroBanner() {
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mx-auto mb-1 shrink-0">
                 <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Entry Time</p>
-              <p className="text-[11px] sm:text-xs font-black text-white leading-tight mt-0.5 whitespace-nowrap">2:30 PM - 4:30 PM</p>
-              <p className="text-[8.5px] sm:text-[9.5px] text-purple-400 font-semibold whitespace-nowrap">Gate Closes @ 4:30 PM</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">{eventOver ? "Event Status" : "Entry Time"}</p>
+              <p className="text-[11px] sm:text-xs font-black text-white leading-tight mt-0.5 whitespace-nowrap">{eventOver ? "Concluded" : "2:30 PM - 4:30 PM"}</p>
+              <p className="text-[8.5px] sm:text-[9.5px] text-purple-400 font-semibold whitespace-nowrap">{eventOver ? "Grand Success" : "Gate Closes @ 4:30 PM"}</p>
             </div>
 
             <div className="p-2 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center flex flex-col items-center justify-center min-h-[96px] sm:min-h-[105px]">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto mb-1 shrink-0">
                 <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Event Timing</p>
-              <p className="text-[11px] sm:text-xs font-black text-white leading-tight mt-0.5 whitespace-nowrap">3:00 PM - 8:00 PM</p>
+              <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider">Attendance</p>
+              <p className="text-[11px] sm:text-xs font-black text-white leading-tight mt-0.5 whitespace-nowrap">1000+ Guests</p>
+              <p className="text-[8.5px] sm:text-[9.5px] text-amber-400 font-semibold whitespace-nowrap">Packed House</p>
             </div>
 
             <div className="p-2 sm:p-3 rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-sm text-center flex flex-col items-center justify-center min-h-[96px] sm:min-h-[105px]">
@@ -123,44 +146,82 @@ export default function HeroBanner() {
             </div>
           </div>
 
-          {/* Single Entry & Re-entry Notice Badge */}
-          <div className="mx-auto max-w-xl px-3.5 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs sm:text-[13px] font-medium flex items-center justify-center gap-2 shadow-sm text-center">
-            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>
-              <strong className="text-amber-300 font-bold">Notice:</strong> Passes are valid for a single entry. Re-entry is not permitted hence do not leave the venue.
-            </span>
-          </div>
-
-          {/* Countdown timer */}
-          <div className="pt-2 sm:pt-4">
-            <p className="text-[10px] sm:text-xs uppercase tracking-widest text-pink-400 font-bold mb-2.5">
-              Countdown to Dandiya Night • 13th Oct 2026
-            </p>
-            <div className="flex items-center justify-center gap-2 sm:gap-3">
-              {[
-                { label: "Days", value: timeLeft.days },
-                { label: "Hours", value: timeLeft.hours },
-                { label: "Mins", value: timeLeft.minutes },
-                { label: "Secs", value: timeLeft.seconds },
-              ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex flex-col items-center justify-center w-14 sm:w-16 h-14 sm:h-16 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-md backdrop-blur-sm"
-                >
-                  <span className="text-base sm:text-xl font-black text-white font-mono leading-none">
-                    {String(item.value).padStart(2, "0")}
-                  </span>
-                  <span className="text-[9px] sm:text-[10px] font-semibold uppercase text-slate-400 mt-1">
-                    {item.label}
-                  </span>
-                </div>
-              ))}
+          {/* Single Entry & Re-entry Notice Badge / Thank you note */}
+          {eventOver ? (
+            <div className="mx-auto max-w-xl px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-indigo-500/10 border border-pink-500/30 text-pink-200 text-xs sm:text-[13px] font-medium flex items-center justify-center gap-2 shadow-sm text-center">
+              <Heart className="w-4 h-4 text-pink-400 fill-pink-400 shrink-0 animate-pulse" />
+              <span>
+                <strong className="text-white font-bold">Hope you enjoyed JHOOM &apos;26!</strong> Please share your valuable event &amp; website feedback below.
+              </span>
             </div>
-          </div>
+          ) : (
+            <div className="mx-auto max-w-xl px-3.5 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs sm:text-[13px] font-medium flex items-center justify-center gap-2 shadow-sm text-center">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>
+                <strong className="text-amber-300 font-bold">Notice:</strong> Passes are valid for a single entry. Re-entry is not permitted hence do not leave the venue.
+              </span>
+            </div>
+          )}
+
+          {/* Countdown timer / Celebration message */}
+          {eventOver ? (
+            <div className="pt-2 sm:pt-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900/80 border border-slate-800 text-pink-300 text-xs sm:text-sm font-semibold shadow-md">
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Event Concluded on 13th October 2026 • Swatantrata Bhawan</span>
+              </div>
+            </div>
+          ) : (
+            <div className="pt-2 sm:pt-4">
+              <p className="text-[10px] sm:text-xs uppercase tracking-widest text-pink-400 font-bold mb-2.5">
+                Countdown to Dandiya Night • 13th Oct 2026
+              </p>
+              <div className="flex items-center justify-center gap-2 sm:gap-3">
+                {[
+                  { label: "Days", value: timeLeft.days },
+                  { label: "Hours", value: timeLeft.hours },
+                  { label: "Mins", value: timeLeft.minutes },
+                  { label: "Secs", value: timeLeft.seconds },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex flex-col items-center justify-center w-14 sm:w-16 h-14 sm:h-16 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-md backdrop-blur-sm"
+                  >
+                    <span className="text-base sm:text-xl font-black text-white font-mono leading-none">
+                      {String(item.value).padStart(2, "0")}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] font-semibold uppercase text-slate-400 mt-1">
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 pt-2">
-            {bookingClosed ? (
+            {eventOver ? (
+              <>
+                <a
+                  href="#feedback"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:from-pink-600 hover:to-indigo-700 shadow-lg shadow-pink-500/25 active:scale-95 transition-all cursor-pointer"
+                >
+                  <MessageSquareHeart className="w-4 h-4 text-pink-300" />
+                  <span>Share Your Event Feedback</span>
+                  <ArrowRight className="w-4 h-4 ml-0.5" />
+                </a>
+                <a
+                  href={EVENT_CONFIG.instagramUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl font-semibold text-xs sm:text-sm text-slate-300 bg-slate-900/80 hover:bg-slate-800 border border-slate-800 transition-all active:scale-95"
+                >
+                  <InstagramIcon className="w-4 h-4 text-pink-400" />
+                  <span>Watch Highlights on Instagram</span>
+                </a>
+              </>
+            ) : bookingClosed ? (
               <>
                 <a
                   href="#register"

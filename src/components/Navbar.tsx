@@ -3,16 +3,19 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Sparkles, Ticket } from "lucide-react";
-import { EVENT_CONFIG, FEATURE_FLAGS, isBookingClosed } from "@/lib/constants";
+import { Sparkles, Ticket, Heart, MessageSquareHeart } from "lucide-react";
+import { EVENT_CONFIG, FEATURE_FLAGS, isBookingClosed, isEventOver } from "@/lib/constants";
 
 export default function Navbar() {
   const [bookingClosed, setBookingClosed] = useState(false);
+  const [eventOver, setEventOver] = useState(false);
 
   useEffect(() => {
     setBookingClosed(isBookingClosed());
+    setEventOver(isEventOver());
     const interval = setInterval(() => {
       setBookingClosed(isBookingClosed());
+      setEventOver(isEventOver());
     }, 2000);
     return () => clearInterval(interval);
   }, []);
@@ -66,7 +69,15 @@ export default function Navbar() {
               <span>{EVENT_CONFIG.instagramHandle}</span>
             </a>
 
-            {bookingClosed ? (
+            {eventOver ? (
+              <a
+                href="#feedback"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 shadow-md shadow-pink-500/20 hover:opacity-95 transition-all active:scale-95"
+              >
+                <Heart className="w-3.5 h-3.5 text-pink-300 fill-pink-300" />
+                <span>Feedback</span>
+              </a>
+            ) : bookingClosed ? (
               <a
                 href="#register"
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-amber-300 bg-amber-500/15 border border-amber-500/25 hover:bg-amber-500/20 transition-all"

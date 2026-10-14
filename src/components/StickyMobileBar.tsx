@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sparkles, ArrowRight, Ticket, Lock } from "lucide-react";
-import { EVENT_CONFIG, isBookingClosed } from "@/lib/constants";
+import { Sparkles, ArrowRight, Ticket, Lock, Heart } from "lucide-react";
+import { EVENT_CONFIG, isBookingClosed, isEventOver } from "@/lib/constants";
 
 export default function StickyMobileBar() {
   const [isVisible, setIsVisible] = useState(false);
   const [bookingClosed, setBookingClosed] = useState(false);
+  const [eventOver, setEventOver] = useState(false);
   const [isTestMode, setIsTestMode] = useState(false);
 
   useEffect(() => {
@@ -21,19 +22,21 @@ export default function StickyMobileBar() {
     }
 
     setBookingClosed(isBookingClosed());
+    setEventOver(isEventOver());
     const statusInterval = setInterval(() => {
       setBookingClosed(isBookingClosed());
+      setEventOver(isEventOver());
     }, 2000);
 
     const handleScroll = () => {
-      const registerElement = document.getElementById("register");
+      const registerElement = document.getElementById("register") || document.getElementById("feedback");
       if (!registerElement) return;
 
       const rect = registerElement.getBoundingClientRect();
       const windowHeight = window.innerHeight;
 
       // Show sticky bar only when user has scrolled past top hero,
-      // and hide when the user is actively inside the registration form
+      // and hide when the user is actively inside the registration/feedback form
       const isPastHero = window.scrollY > 250;
       const isViewingForm = rect.top < windowHeight * 0.7 && rect.bottom > 200;
 
@@ -48,6 +51,31 @@ export default function StickyMobileBar() {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  if (eventOver) {
+    if (!isVisible) return null;
+    return (
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 p-3 bg-[#06090e]/95 backdrop-blur-2xl border-t border-white/[0.1] shadow-2xl animate-in slide-in-from-bottom duration-250">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Heart className="w-4 h-4 text-pink-400 fill-pink-400 shrink-0" />
+            <div>
+              <p className="text-xs font-bold text-white leading-tight">Hope you enjoyed JHOOM &apos;26!</p>
+              <p className="text-[10px] text-pink-300 font-medium">Share your event feedback</p>
+            </div>
+          </div>
+
+          <a
+            href="#feedback"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 shadow-lg shadow-pink-500/25 active:scale-95 transition-all shrink-0 cursor-pointer"
+          >
+            <span>Feedback</span>
+            <ArrowRight className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   if (!isVisible || (bookingClosed && !isTestMode)) return null;
 

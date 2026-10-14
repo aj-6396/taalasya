@@ -24,9 +24,10 @@ import {
   ArrowRight,
   Lock,
 } from "lucide-react";
-import { EVENT_CONFIG, PASS_TIERS, getTierPrice, isBookingClosed } from "@/lib/constants";
+import { EVENT_CONFIG, PASS_TIERS, getTierPrice, isBookingClosed, isEventOver } from "@/lib/constants";
 import { generateShortTicketId } from "@/lib/ticketId";
 import TermsModal from "@/components/TermsModal";
+import PostEventFeedback from "./PostEventFeedback";
 
 declare global {
   interface Window {
@@ -589,6 +590,14 @@ export default function RegistrationForm() {
     });
     setErrorMessage("");
   };
+
+  if (isEventOver() && !isTestModeActive) {
+    return (
+      <div id="register" className="scroll-mt-16">
+        <PostEventFeedback />
+      </div>
+    );
+  }
 
   if (bookingClosed && !isTestModeActive) {
     return (
