@@ -137,3 +137,52 @@ DROP POLICY IF EXISTS "Allow service role all scan_logs" ON public.scan_logs;
 CREATE POLICY "Allow public read scan_logs" ON public.scan_logs FOR SELECT TO anon, authenticated USING (true);
 CREATE POLICY "Allow public insert scan_logs" ON public.scan_logs FOR INSERT TO anon, authenticated WITH CHECK (true);
 CREATE POLICY "Allow service role all scan_logs" ON public.scan_logs FOR ALL TO service_role USING (true);
+
+-- ==============================================================================
+-- 9. Event & Website Feedback Table
+-- Stores attendee ratings, highlights, comments and suggestions
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.event_feedback (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT,
+  contact TEXT,
+  college TEXT,
+  overall_rating INTEGER NOT NULL DEFAULT 5,
+  event_rating INTEGER NOT NULL DEFAULT 5,
+  website_rating INTEGER NOT NULL DEFAULT 5,
+  highlights TEXT,
+  comments TEXT,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
+);
+
+-- Index for ordering by latest feedback
+CREATE INDEX IF NOT EXISTS idx_event_feedback_created_at ON public.event_feedback (created_at DESC);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE public.event_feedback ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public insert event_feedback" ON public.event_feedback;
+DROP POLICY IF EXISTS "Allow service role all event_feedback" ON public.event_feedback;
+DROP POLICY IF EXISTS "Allow public read event_feedback" ON public.event_feedback;
+
+-- Allow anyone to submit feedback
+CREATE POLICY "Allow public insert event_feedback"
+ON public.event_feedback
+FOR INSERT
+TO anon, authenticated
+WITH CHECK (true);
+
+-- Allow service role full access
+CREATE POLICY "Allow service role all event_feedback"
+ON public.event_feedback
+FOR ALL
+TO service_role
+USING (true);
+
+-- Allow read access
+CREATE POLICY "Allow public read event_feedback"
+ON public.event_feedback
+FOR SELECT
+TO anon, authenticated
+USING (true);
+
