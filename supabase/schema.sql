@@ -144,7 +144,7 @@ CREATE POLICY "Allow service role all scan_logs" ON public.scan_logs FOR ALL TO 
 -- ==============================================================================
 CREATE TABLE IF NOT EXISTS public.event_feedback (
   id BIGSERIAL PRIMARY KEY,
-  name TEXT,
+  name TEXT NOT NULL,
   contact TEXT,
   college TEXT,
   overall_rating INTEGER NOT NULL DEFAULT 5,
@@ -154,6 +154,14 @@ CREATE TABLE IF NOT EXISTS public.event_feedback (
   comments TEXT,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
 );
+
+-- Ensure name column is NOT NULL if table already existed
+DO $$
+BEGIN
+  ALTER TABLE public.event_feedback ALTER COLUMN name SET NOT NULL;
+EXCEPTION
+  WHEN others THEN NULL;
+END $$;
 
 -- Index for ordering by latest feedback
 CREATE INDEX IF NOT EXISTS idx_event_feedback_created_at ON public.event_feedback (created_at DESC);

@@ -50,7 +50,7 @@ const RATING_LABELS: Record<number, { text: string; emoji: string }> = {
 const HIGHLIGHT_OPTIONS = [
   { id: "dandiya", label: "🪩 Dandiya Raas" },
   { id: "dance", label: "💃 Dance Face-Offs" },
-  { id: "dj", label: "🎧 DJ & Dhol Beats" },
+  { id: "dj", label: "🎧 DJ Beats" },
   { id: "qr_entry", label: "🎟️ Fast QR Gate Entry" },
   { id: "website", label: "⚡ Website Pass Booking" },
   { id: "venue", label: "🏛️ Venue Atmosphere" },
@@ -97,6 +97,10 @@ export default function PostEventFeedback() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name.trim()) {
+      setErrorMsg("Please enter your full name to submit feedback.");
+      return;
+    }
     setLoading(true);
     setErrorMsg("");
 
@@ -164,7 +168,7 @@ export default function PostEventFeedback() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 max-w-2xl mx-auto pt-2">
               <div className="p-3 rounded-2xl bg-slate-900/80 border border-white/[0.06] text-center">
                 <Users className="w-4 h-4 text-pink-400 mx-auto mb-1" />
-                <p className="text-xs sm:text-sm font-black text-white">1000+ Guests</p>
+                <p className="text-xs sm:text-sm font-black text-white">600+ Guests</p>
                 <p className="text-[10px] text-slate-400">Packed House</p>
               </div>
               <div className="p-3 rounded-2xl bg-slate-900/80 border border-white/[0.06] text-center">
@@ -415,39 +419,55 @@ export default function PostEventFeedback() {
                   />
                 </div>
 
-                {/* Question 5: Optional Attendee Details */}
-                <div className="space-y-2 pt-2 border-t border-white/[0.06]">
-                  <p className="text-xs font-bold text-slate-300">
-                    Your Details (Optional — helps us attribute your review or reach out)
+                {/* Question 5: Attendee Details */}
+                <div className="space-y-3 pt-2 border-t border-white/[0.06]">
+                  <p className="text-xs font-bold text-slate-200">
+                    Your Details (Name is required)
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <input
-                      type="text"
-                      placeholder="Your Name (Optional)"
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, name: e.target.value }))
-                      }
-                      className="px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-1 focus:ring-pink-500"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Email or Instagram Handle"
-                      value={formData.contact}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, contact: e.target.value }))
-                      }
-                      className="px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-1 focus:ring-pink-500"
-                    />
-                    <input
-                      type="text"
-                      placeholder="College / Faculty (e.g. Science, BHU)"
-                      value={formData.college}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, college: e.target.value }))
-                      }
-                      className="px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-1 focus:ring-pink-500"
-                    />
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                        Your Full Name <span className="text-pink-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Rahul Sharma"
+                        value={formData.name}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, name: e.target.value }))
+                        }
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                        Email or Instagram Handle
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="@username or email"
+                        value={formData.contact}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, contact: e.target.value }))
+                        }
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-1 focus:ring-pink-500 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                        College / Faculty
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Science, BHU"
+                        value={formData.college}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, college: e.target.value }))
+                        }
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-1 focus:ring-pink-500 transition-all"
+                      />
+                    </div>
                   </div>
                 </div>
 
